@@ -1,0 +1,94 @@
+---
+title: "Exercise template — TODO: real title"
+description: "TODO: one-sentence summary of what this exercise shows."
+date: 2026-07-07
+categories: [template, forecasting]
+---
+
+::: {.callout-note}
+## 🚧 Placeholder — replace before publishing
+
+This post is a structural template, not a finished exercise. The synthetic data and toy
+model below stand in for a real one so the page always renders. Replace each section,
+then delete this callout.
+:::
+
+## Motivation
+
+<!-- TODO: why does this exercise matter? What question does it answer, and why would
+     an employer reading this care? 2-4 sentences. -->
+
+A short paragraph framing the empirical question — e.g. "central banks have long
+struggled to explain [X]; this note replicates [paper/report] and checks whether the
+result holds with more recent Brazilian data."
+
+## Data
+
+<!-- TODO: name the real public source (BCB SGS, IBGE SIDRA, FRED, Eurostat, OECD) and
+     pull it via API instead of the synthetic series below. -->
+
+For now, a synthetic quarterly series stands in for the real data pull:
+
+```{r}
+#| label: data
+set.seed(42)
+n <- 80
+series <- arima.sim(model = list(ar = 0.6), n = n) |> as.numeric()
+dates <- seq.Date(from = as.Date("2006-01-01"), by = "quarter", length.out = n)
+df <- data.frame(date = dates, y = series)
+tail(df)
+```
+
+## Method
+
+<!-- TODO: state the actual model/method in LaTeX. Example below: a simple AR(1). -->
+
+A simple AR(1) forecasting model:
+
+$$
+y_t = \phi \, y_{t-1} + \varepsilon_t, \qquad \varepsilon_t \sim \mathcal{N}(0, \sigma^2)
+$$
+
+## Code
+
+```{r}
+#| label: model
+fit <- arima(df$y, order = c(1, 0, 0))
+fc <- predict(fit, n.ahead = 4)
+
+fc_df <- data.frame(
+  date = seq.Date(from = max(df$date), by = "quarter", length.out = 5)[-1],
+  y = as.numeric(fc$pred),
+  lower = as.numeric(fc$pred - 1.96 * fc$se),
+  upper = as.numeric(fc$pred + 1.96 * fc$se)
+)
+
+fit
+```
+
+## Figure
+
+```{r}
+#| label: fig-forecast
+#| fig-cap: "TODO: real caption. Synthetic AR(1) series with a 4-quarter forecast."
+library(ggplot2)
+
+ggplot(df, aes(date, y)) +
+  geom_line(color = "#0f766e") +
+  geom_ribbon(data = fc_df, aes(ymin = lower, ymax = upper), alpha = 0.15, fill = "#14b8a6") +
+  geom_line(data = fc_df, color = "#14b8a6", linewidth = 1) +
+  labs(x = NULL, y = NULL) +
+  theme_minimal(base_size = 12)
+```
+
+::: {.zoomable-figure}
+<!-- Wrap any rendered image you want tap-to-zoom on mobile in a div with this class,
+     e.g. an externally-inserted PNG: ![](path/to/chart.png) -->
+:::
+
+## Takeaway
+
+<!-- TODO: 2-3 sentences — what did this show, and what would extending it involve? -->
+
+One or two sentences on what the result implies, and an honest note on the model's
+limitations.

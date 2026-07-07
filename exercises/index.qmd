@@ -1,0 +1,15 @@
+---
+title: "Exercises"
+page-layout: full
+listing:
+  contents: .
+  type: grid
+  categories: true
+  sort: "date desc"
+  fields: [title, description, categories, date]
+toc: false
+---
+
+A growing collection of quantitative economics exercises — replications and extensions
+of public empirical work from central banks, academic papers, and sell-side research,
+built on public data.

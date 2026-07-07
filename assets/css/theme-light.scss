@@ -1,0 +1,18 @@
+/*-- scss:defaults --*/
+$body-bg: #f4f6f8;
+$body-color: #1a212b;
+$primary: #0d9488;
+$link-color: #0f766e;
+
+/*-- scss:rules --*/
+:root {
+  --accent: #0d9488;
+  --accent-strong: #0f766e;
+  --surface: #ffffff;
+  --surface-glass: rgba(255, 255, 255, 0.72);
+  --border: rgba(15, 118, 110, 0.16);
+  --grad-1: #f4f6f8;
+  --grad-2: #e7edf1;
+  --grad-3: #dbe6e4;
+  --grad-4: #cfe3df;
+}

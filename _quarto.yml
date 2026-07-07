@@ -1,0 +1,51 @@
+project:
+  type: website
+  output-dir: docs
+  resources:
+    - .nojekyll
+
+website:
+  title: "Raphael Ludwig"
+  site-url: "https://raphaludwig.github.io"
+  description: "Quantitative economist — macro research, forecasting & applied econometrics."
+  favicon: assets/img/favicon.png
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: exercises/index.qmd
+        text: Exercises
+      - href: about.qmd
+        text: About
+      - href: cv/cv.pdf
+        text: "CV (PDF)"
+    right:
+      # TODO: confirm LinkedIn URL and swap in for the placeholder below
+      - icon: linkedin
+        href: "https://www.linkedin.com/in/raphaludwig/"
+        aria-label: LinkedIn
+      - icon: envelope
+        href: "mailto:raphaludwig@gmail.com"
+        aria-label: Email
+  page-footer:
+    left: "© 2026 Raphael Ludwig"
+    center: "Built with [Quarto](https://quarto.org)"
+    right:
+      - icon: envelope
+        href: mailto:raphaludwig@gmail.com
+      - icon: linkedin
+        href: "https://www.linkedin.com/in/raphaludwig/"
+
+format:
+  html:
+    theme:
+      light: [flatly, assets/css/theme-light.scss]
+      dark: [darkly, assets/css/theme-dark.scss]
+    css: assets/css/site.css
+    toc: false
+    grid:
+      body-width: 900px
+    link-external-newwindow: true
+
+execute:
+  freeze: auto

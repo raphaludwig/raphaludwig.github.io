@@ -1,0 +1,5 @@
+code-fold: true
+code-summary: "Show code"
+toc: true
+freeze: auto
+include-after-body: ../assets/html/lightbox-embed.html

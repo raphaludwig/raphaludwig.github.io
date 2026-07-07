@@ -1,0 +1,28 @@
+---
+pagetitle: "Raphael Ludwig"
+page-layout: custom
+toc: false
+title-block-banner: false
+include-before-body: assets/html/particles-embed.html
+include-after-body: assets/html/particles-scripts.html
+---
+
+::: {.hero}
+::: {.hero-inner}
+
+# Raphael Ludwig
+
+::: {.hero-subtitle}
+Quantitative Economist — Macro Research & Applied Econometrics
+:::
+
+Forecasting, nowcasting, and applied macro-econometrics — rigorous, reproducible
+replications of central-bank and academic empirical work, built on public data.
+
+::: {.hero-cta}
+[Browse Exercises →](exercises/index.qmd){.btn-hero .btn-primary}
+[Download CV →](cv/cv.pdf){.btn-hero .btn-outline}
+:::
+
+:::
+:::

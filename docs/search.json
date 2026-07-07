@@ -1,0 +1,100 @@
+[
+  {
+    "objectID": "exercises/0000-template.html",
+    "href": "exercises/0000-template.html",
+    "title": "Exercise template — TODO: real title",
+    "section": "",
+    "text": "Note🚧 Placeholder — replace before publishing\n\n\n\nThis post is a structural template, not a finished exercise. The synthetic data and toy model below stand in for a real one so the page always renders. Replace each section, then delete this callout."
+  },
+  {
+    "objectID": "exercises/0000-template.html#motivation",
+    "href": "exercises/0000-template.html#motivation",
+    "title": "Exercise template — TODO: real title",
+    "section": "Motivation",
+    "text": "Motivation\n\nA short paragraph framing the empirical question — e.g. “central banks have long struggled to explain [X]; this note replicates [paper/report] and checks whether the result holds with more recent Brazilian data.”"
+  },
+  {
+    "objectID": "exercises/0000-template.html#data",
+    "href": "exercises/0000-template.html#data",
+    "title": "Exercise template — TODO: real title",
+    "section": "Data",
+    "text": "Data\n\nFor now, a synthetic quarterly series stands in for the real data pull:\n\n\nShow code\nset.seed(42)\nn &lt;- 80\nseries &lt;- arima.sim(model = list(ar = 0.6), n = n) |&gt; as.numeric()\ndates &lt;- seq.Date(from = as.Date(\"2006-01-01\"), by = \"quarter\", length.out = n)\ndf &lt;- data.frame(date = dates, y = series)\ntail(df)\n\n\n         date       y\n75 2024-07-01 -0.3268\n76 2024-10-01  0.7373\n77 2025-01-01  1.2641\n78 2025-04-01  2.1506\n79 2025-07-01  0.8142\n80 2025-10-01  1.1389"
+  },
+  {
+    "objectID": "exercises/0000-template.html#method",
+    "href": "exercises/0000-template.html#method",
+    "title": "Exercise template — TODO: real title",
+    "section": "Method",
+    "text": "Method\n\nA simple AR(1) forecasting model:\n\\[\ny_t = \\phi \\, y_{t-1} + \\varepsilon_t, \\qquad \\varepsilon_t \\sim \\mathcal{N}(0, \\sigma^2)\n\\]"
+  },
+  {
+    "objectID": "exercises/0000-template.html#code",
+    "href": "exercises/0000-template.html#code",
+    "title": "Exercise template — TODO: real title",
+    "section": "Code",
+    "text": "Code\n\n\nShow code\nfit &lt;- arima(df$y, order = c(1, 0, 0))\nfc &lt;- predict(fit, n.ahead = 4)\n\nfc_df &lt;- data.frame(\n  date = seq.Date(from = max(df$date), by = \"quarter\", length.out = 5)[-1],\n  y = as.numeric(fc$pred),\n  lower = as.numeric(fc$pred - 1.96 * fc$se),\n  upper = as.numeric(fc$pred + 1.96 * fc$se)\n)\n\nfit\n\n\n\nCall:\narima(x = df$y, order = c(1, 0, 0))\n\nCoefficients:\n        ar1  intercept\n      0.596     -0.043\ns.e.  0.089      0.275\n\nsigma^2 estimated as 1.02:  log likelihood = -114.5,  aic = 235"
+  },
+  {
+    "objectID": "exercises/0000-template.html#figure",
+    "href": "exercises/0000-template.html#figure",
+    "title": "Exercise template — TODO: real title",
+    "section": "Figure",
+    "text": "Figure\n\n\nShow code\nlibrary(ggplot2)\n\nggplot(df, aes(date, y)) +\n  geom_line(color = \"#0f766e\") +\n  geom_ribbon(data = fc_df, aes(ymin = lower, ymax = upper), alpha = 0.15, fill = \"#14b8a6\") +\n  geom_line(data = fc_df, color = \"#14b8a6\", linewidth = 1) +\n  labs(x = NULL, y = NULL) +\n  theme_minimal(base_size = 12)\n\n\n\n\n\n\n\n\nFigure 1: TODO: real caption. Synthetic AR(1) series with a 4-quarter forecast."
+  },
+  {
+    "objectID": "exercises/0000-template.html#takeaway",
+    "href": "exercises/0000-template.html#takeaway",
+    "title": "Exercise template — TODO: real title",
+    "section": "Takeaway",
+    "text": "Takeaway\n\nOne or two sentences on what the result implies, and an honest note on the model’s limitations."
+  },
+  {
+    "objectID": "about.html",
+    "href": "about.html",
+    "title": "About",
+    "section": "",
+    "text": "Raphael Ludwig\nQuantitative economist with five years at Vista Capital, where I helped build a macro research desk from the ground up — covering Brazil and Europe, developing forecasting and nowcasting models, and applying AI to research workflows. MSc in Economics from PUC-Rio.\nI’m currently looking for new opportunities in quantitative/macro research roles. This site collects exercises that replicate and extend public empirical work — central bank studies, academic papers, and sell-side research — as a demonstration of method.\nraphaludwig@gmail.com · LinkedIn  · CV (PDF)"
+  },
+  {
+    "objectID": "about.html#experience",
+    "href": "about.html#experience",
+    "title": "About",
+    "section": "Experience",
+    "text": "Experience\nEconomist — Vista Capital · Dec 2020 – May 2026\nStructuring the desk, data infrastructure and operational routines\n\nStructured, alongside chief economist Alexandre Maia, the Macro Research area from its inception — defining processes, analytical routines, data infrastructure, and research products used daily by the fund.\nBuilt a proprietary macroeconomic data platform running on Docker on a Linux VM (later migrated to Prefect), with autonomous monitoring of updates, alerts, and automatic reports.\nMaintained 250+ internal routines for collecting, validating, and disseminating global data, focused on robustness, traceability, and fast reaction to releases.\n\nModeling, quantitative research and applied AI\n\nDeveloped and coordinated the architecture of macro projection models, including a proprietary model-selection algorithm and an automated short/medium-term forecasting system.\nReplicated and adapted empirical exercises from central banks, academic papers, policy blogs, and sell-side research reports.\nBuilt internal AI-based tools (using Claude Code), including dashboard/workflow automation, routine and algorithm optimization, and data infrastructure.\n\nMacro coverage, policy, and insight generation\n\nLed Brazil coverage — combining data monitoring, quantitative modeling, macro-political scenario analysis, trips to Brasília, meetings with policy actors, and internal scenario discussions.\nLed Europe coverage — focused on the Euro Area and the UK, extending to Eastern Europe when relevant, integrating data, macro-political scenario, fiscal risk, inflation, activity, elections, and central banks.\nLed thematic coverage on topics with significant macro/market impact, including Covid-19 and supply-chain disruption.\nProduced and presented weekly briefings on relevant macro topics; participated daily in the morning news call, responsible for the initial Brazil and Europe read.\n\nTraining, technical leadership and talent development\n\nTrained multiple intern cohorts in programming and macro topics, and collaborated on their applied research, including thesis supervision.\nLed internal trainings on economics, programming, automation, and applied AI — including a corporate crash course on AI and Claude Code usage."
+  },
+  {
+    "objectID": "about.html#education",
+    "href": "about.html#education",
+    "title": "About",
+    "section": "Education",
+    "text": "Education\nMSc in Economics — PUC-Rio · Jan 2019 – Jul 2021 Dissertation: “On the Missing Disinflation Puzzle: A Data-Driven Approach”, advised by Prof. Eduardo Zilberman and Prof. Marcelo Medeiros.\nBSc in Economics — PUC-Rio · Jan 2013 – Jul 2017 Participated in the PET and PIBIC research programs with Prof. Pedro Souza (Queen Mary University of London), focused on forecasting models and machine-learning applications. Teaching assistant for Programming Techniques for Economics II, applied to microeconomics, forecasting, and time series. Undergraduate thesis: “Nowcasting Unemployment with Google Trends: Evidence from the Brazilian Labor Market”, advised by Prof. Pedro Souza."
+  },
+  {
+    "objectID": "about.html#skills",
+    "href": "about.html#skills",
+    "title": "About",
+    "section": "Skills",
+    "text": "Skills\nQuantitative macro research — forecasting, nowcasting, short/medium-term models, applied econometrics, machine learning, macro-political scenario analysis.\nProgramming & data — R, Python, MATLAB/Octave, Dynare, Git.\nInfrastructure & automation — Docker, Linux/VMs, Prefect, Airflow, automated pipelines, Slack integrations, Shiny, Streamlit, JavaScript.\nApplied research & AI — replication of empirical exercises from central banks, academic papers, and sell-side research; using Claude Code for automation, refactoring, and routine optimization."
+  },
+  {
+    "objectID": "about.html#languages",
+    "href": "about.html#languages",
+    "title": "About",
+    "section": "Languages",
+    "text": "Languages\nPortuguese (native) · English (advanced) · German (advanced) · Spanish (basic)"
+  },
+  {
+    "objectID": "about.html#beyond-economics",
+    "href": "about.html#beyond-economics",
+    "title": "About",
+    "section": "Beyond economics",
+    "text": "Beyond economics\nEducated at Escola Alemã Corcovado (German School) through the German track, completing the Abitur among the top three of the year. Federated volleyball player through adolescence, team captain across several seasons. Ongoing interest in music, literature, film, photography, and philosophy."
+  },
+  {
+    "objectID": "exercises/index.html",
+    "href": "exercises/index.html",
+    "title": "Exercises",
+    "section": "",
+    "text": "A growing collection of quantitative economics exercises — replications and extensions of public empirical work from central banks, academic papers, and sell-side research, built on public data.\n\n\n\n\n\n\n\n\n\n\n\nExercise template — TODO: real title\n\n\n\ntemplate\n\nforecasting\n\n\n\nTODO: one-sentence summary of what this exercise shows.\n\n\n\nJul 7, 2026\n\n\n\n\n\n\nNo matching items"
+  }
+]

@@ -1,0 +1,61 @@
+---
+title: "Raphael Ludwig"
+format:
+  typst:
+    papersize: a4
+    margin:
+      x: 1.8cm
+      y: 1.6cm
+    fontsize: 10pt
+    mainfont: "Georgia"
+execute:
+  echo: false
+---
+
+<!--
+TODO (Raphael): review this English translation of the original Portuguese CV before
+sharing. Phone and home address are intentionally omitted from this public-download
+version — add them back here if you want them on the PDF.
+-->
+
+Quantitative Economist \| raphaludwig@gmail.com \| linkedin.com/in/raphaludwig <!-- TODO: confirm LinkedIn URL -->
+
+## Experience
+
+**Economist — Vista Capital**, Dec 2020 – May 2026
+
+- Structured the Macro Research area from inception with the chief economist — processes,
+  analytical routines, data infrastructure, and research products used daily by the fund.
+- Built a proprietary macroeconomic data platform (Docker on Linux, later migrated to
+  Prefect) with autonomous monitoring, alerts, and automatic reports; maintained 250+
+  internal data routines.
+- Developed and coordinated macro projection models, including a proprietary
+  model-selection algorithm and an automated short/medium-term forecasting system.
+- Replicated and adapted empirical exercises from central banks, academic papers, and
+  sell-side research; built internal AI-based automation tools (Claude Code).
+- Led Brazil and Europe (Euro Area, UK) macro coverage — data, scenario analysis,
+  meetings with policy actors — plus thematic coverage (e.g., Covid-19, supply chains).
+- Trained intern cohorts in programming and macro topics; led internal trainings on
+  economics, automation, and applied AI.
+
+## Education
+
+**MSc in Economics — PUC-Rio**, Jan 2019 – Jul 2021
+Dissertation: *"On the Missing Disinflation Puzzle: A Data-Driven Approach"* (advisors:
+E. Zilberman, M. Medeiros).
+
+**BSc in Economics — PUC-Rio**, Jan 2013 – Jul 2017
+PET/PIBIC research programs (forecasting, machine learning); TA for Programming
+Techniques for Economics II. Thesis: *"Nowcasting Unemployment with Google Trends:
+Evidence from the Brazilian Labor Market"*.
+
+## Skills
+
+**Quant macro research** — forecasting, nowcasting, applied econometrics, machine
+learning, scenario analysis.
+**Programming & data** — R, Python, MATLAB/Octave, Dynare, Git.
+**Infrastructure** — Docker, Linux/VMs, Prefect, Airflow, Shiny, Streamlit, JavaScript.
+
+## Languages
+
+Portuguese (native) · English (advanced) · German (advanced) · Spanish (basic)
