@@ -41,12 +41,14 @@ BSc Economics, PUC-Rio (2013–2017)
 
 ::: {.about-block}
 ### Interests
-Macroeconomic research, Forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
+Macroeconomic research, forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
 :::
 
 ::: {.contact-links}
-[LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414) ·
-[Email](mailto:raphaludwig@gmail.com) ·
+[LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414)
+
+[Email](mailto:raphaludwig@gmail.com)
+
 [CV](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline target="_blank"}
 :::
 

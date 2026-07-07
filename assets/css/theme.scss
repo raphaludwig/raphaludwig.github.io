@@ -50,6 +50,17 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   color: var(--pal-accent) !important;
 }
 
+.navbar .nav-link {
+  font-size: 1.08rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border-radius: 8px;
+  transition: color 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
+}
+.navbar .nav-link:hover { background-color: var(--pal-border); }
+.navbar .nav-link.active { background-color: var(--pal-border); color: var(--pal-accent) !important; }
+.navbar .nav-link:active { transform: scale(0.94); }
+
 .quarto-listing .card,
 .quarto-grid-item,
 .glass-card {
@@ -134,7 +145,16 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   margin-bottom: 0.35rem;
 }
 
-.contact-links a { margin-right: 0.75rem; }
+/* Each link renders as its own <p> (blank lines in index.qmd), so flex gap
+   gives pixel-equal spacing on both sides of the separator — regardless of
+   the CV link's own button padding, since gap measures box-edge to box-edge. */
+.contact-links { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.contact-links p { margin: 0; }
+.contact-links p:not(:last-child)::after {
+  content: "·";
+  margin-left: 0.6rem;
+  color: var(--pal-text-mute);
+}
 
 .home-right .view-more { display: inline-block; margin-top: 0.5rem; font-weight: 600; }
 
@@ -150,6 +170,13 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   border-radius: 10px;
   font-weight: 600;
   text-decoration: none !important;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 .btn-hero.btn-primary { background: var(--pal-accent); color: #ffffff !important; }
 .btn-hero.btn-outline { background: transparent; border: 1.5px solid var(--pal-accent); color: var(--pal-accent) !important; }
+.btn-hero.btn-outline:hover {
+  background: var(--pal-accent);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(82, 121, 111, 0.28);
+}

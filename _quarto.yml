@@ -11,6 +11,7 @@ website:
   description: "Quantitative economist — macro research, forecasting & applied econometrics."
   favicon: assets/img/monogram.svg
   navbar:
+    title: false
     left:
       - href: index.qmd
         text: Home
