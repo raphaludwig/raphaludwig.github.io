@@ -50,9 +50,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   color: var(--pal-accent) !important;
 }
 
+.navbar-nav { gap: 0.6rem; }
+
 .navbar .nav-link {
   font-size: 1.08rem;
-  font-weight: 600;
+  font-weight: 500;
   padding: 0.4rem 0.85rem;
   border-radius: 8px;
   transition: color 0.18s ease, background-color 0.18s ease, transform 0.12s ease;
