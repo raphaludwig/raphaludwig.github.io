@@ -14,6 +14,6 @@ toc: false
 
 ::: {.prose-glass}
 A growing collection of quantitative economics exercises — replications and extensions
-of public empirical work from central banks, academic papers, and sell-side research,
+of public empirical work from central banks, academic papers, and primary research,
 built on public data.
 :::
