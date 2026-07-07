@@ -2,13 +2,13 @@
   {
     "listing": "/index.html",
     "items": [
-      "/exercises/0000-template.html"
+      "/blog/0000-template.html"
     ]
   },
   {
-    "listing": "/exercises/index.html",
+    "listing": "/blog/index.html",
     "items": [
-      "/exercises/0000-template.html"
+      "/blog/0000-template.html"
     ]
   }
 ]

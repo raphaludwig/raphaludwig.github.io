@@ -7,58 +7,58 @@
     "text": "Latest exercises\n\n\n\n\n\nExercise template — TODO: real title\n\n\n\ntemplate\n\nforecasting\n\n\n\nTODO: one-sentence summary of what this exercise shows.\n\n\n\n\n\nJul 7, 2026\n\n\n\n\n\nNo matching items\n\nView more →"
   },
   {
-    "objectID": "exercises/0000-template.html",
-    "href": "exercises/0000-template.html",
+    "objectID": "blog/0000-template.html",
+    "href": "blog/0000-template.html",
     "title": "Exercise template — TODO: real title",
     "section": "",
     "text": "Note🚧 Placeholder — replace before publishing\n\n\n\nThis post is a structural template, not a finished exercise. The synthetic data and toy model below stand in for a real one so the page always renders. Replace each section, then delete this callout."
   },
   {
-    "objectID": "exercises/0000-template.html#motivation",
-    "href": "exercises/0000-template.html#motivation",
+    "objectID": "blog/0000-template.html#motivation",
+    "href": "blog/0000-template.html#motivation",
     "title": "Exercise template — TODO: real title",
     "section": "Motivation",
     "text": "Motivation\n\nA short paragraph framing the empirical question — e.g. “central banks have long struggled to explain [X]; this note replicates [paper/report] and checks whether the result holds with more recent Brazilian data.”"
   },
   {
-    "objectID": "exercises/0000-template.html#data",
-    "href": "exercises/0000-template.html#data",
+    "objectID": "blog/0000-template.html#data",
+    "href": "blog/0000-template.html#data",
     "title": "Exercise template — TODO: real title",
     "section": "Data",
     "text": "Data\n\nFor now, a synthetic quarterly series stands in for the real data pull:\n\n\nShow code\nset.seed(42)\nn &lt;- 80\nseries &lt;- arima.sim(model = list(ar = 0.6), n = n) |&gt; as.numeric()\ndates &lt;- seq.Date(from = as.Date(\"2006-01-01\"), by = \"quarter\", length.out = n)\ndf &lt;- data.frame(date = dates, y = series)\ntail(df)\n\n\n         date       y\n75 2024-07-01 -0.3268\n76 2024-10-01  0.7373\n77 2025-01-01  1.2641\n78 2025-04-01  2.1506\n79 2025-07-01  0.8142\n80 2025-10-01  1.1389"
   },
   {
-    "objectID": "exercises/0000-template.html#method",
-    "href": "exercises/0000-template.html#method",
+    "objectID": "blog/0000-template.html#method",
+    "href": "blog/0000-template.html#method",
     "title": "Exercise template — TODO: real title",
     "section": "Method",
     "text": "Method\n\nA simple AR(1) forecasting model:\n\\[\ny_t = \\phi \\, y_{t-1} + \\varepsilon_t, \\qquad \\varepsilon_t \\sim \\mathcal{N}(0, \\sigma^2)\n\\]"
   },
   {
-    "objectID": "exercises/0000-template.html#code",
-    "href": "exercises/0000-template.html#code",
+    "objectID": "blog/0000-template.html#code",
+    "href": "blog/0000-template.html#code",
     "title": "Exercise template — TODO: real title",
     "section": "Code",
     "text": "Code\n\n\nShow code\nfit &lt;- arima(df$y, order = c(1, 0, 0))\nfc &lt;- predict(fit, n.ahead = 4)\n\nfc_df &lt;- data.frame(\n  date = seq.Date(from = max(df$date), by = \"quarter\", length.out = 5)[-1],\n  y = as.numeric(fc$pred),\n  lower = as.numeric(fc$pred - 1.96 * fc$se),\n  upper = as.numeric(fc$pred + 1.96 * fc$se)\n)\n\nfit\n\n\n\nCall:\narima(x = df$y, order = c(1, 0, 0))\n\nCoefficients:\n        ar1  intercept\n      0.596     -0.043\ns.e.  0.089      0.275\n\nsigma^2 estimated as 1.02:  log likelihood = -114.5,  aic = 235"
   },
   {
-    "objectID": "exercises/0000-template.html#figure",
-    "href": "exercises/0000-template.html#figure",
+    "objectID": "blog/0000-template.html#figure",
+    "href": "blog/0000-template.html#figure",
     "title": "Exercise template — TODO: real title",
     "section": "Figure",
     "text": "Figure\n\n\nShow code\nlibrary(ggplot2)\n\nggplot(df, aes(date, y)) +\n  geom_line(color = \"#0f766e\") +\n  geom_ribbon(data = fc_df, aes(ymin = lower, ymax = upper), alpha = 0.15, fill = \"#14b8a6\") +\n  geom_line(data = fc_df, color = \"#14b8a6\", linewidth = 1) +\n  labs(x = NULL, y = NULL) +\n  theme_minimal(base_size = 12)\n\n\n\n\n\n\n\n\nFigure 1: TODO: real caption. Synthetic AR(1) series with a 4-quarter forecast."
   },
   {
-    "objectID": "exercises/0000-template.html#takeaway",
-    "href": "exercises/0000-template.html#takeaway",
+    "objectID": "blog/0000-template.html#takeaway",
+    "href": "blog/0000-template.html#takeaway",
     "title": "Exercise template — TODO: real title",
     "section": "Takeaway",
     "text": "Takeaway\n\nOne or two sentences on what the result implies, and an honest note on the model’s limitations."
   },
   {
-    "objectID": "exercises/index.html",
-    "href": "exercises/index.html",
-    "title": "Exercises",
+    "objectID": "blog/index.html",
+    "href": "blog/index.html",
+    "title": "Blog",
     "section": "",
     "text": "A growing collection of quantitative economics exercises — replications and extensions of public empirical work from central banks, academic papers, and sell-side research, built on public data.\n\n\n\n\n\n\n\n\n\n\n\nExercise template — TODO: real title\n\n\n\ntemplate\n\nforecasting\n\n\n\nTODO: one-sentence summary of what this exercise shows.\n\n\n\nJul 7, 2026\n\n\n\n\n\n\nNo matching items"
   }

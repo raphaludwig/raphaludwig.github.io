@@ -6,30 +6,21 @@
 
 /*-- scss:rules --*/
 
-/* ── Palette definitions (PROVISIONAL — remove all but the winner once picked) ── */
+/* ── Palette definitions (PROVISIONAL — remove the loser once a final pick is made) ── */
 
 :root, :root[data-palette="p3"] {
-  /* p3 — sage + slate (user's favorite default) */
-  --pal-bg: #2f3e46;
-  --pal-surface: #354f52;
-  --pal-surface-glass: rgba(53, 79, 82, 0.68);
-  --pal-text: #cad2c5;
-  --pal-text-mute: #9fb3a8;
-  --pal-accent: #84a98c;
-  --pal-link: #9fc2a8;
-  --pal-border: rgba(132, 169, 140, 0.28);
-}
-
-:root[data-palette="p1"] {
-  /* p1 — purple-gray */
-  --pal-bg: #f2f1f4;
+  /* p3 — sage + slate, LIGHT variant (was dark in the 6-option round; this is a
+     from-scratch light build since the light version hadn't been seen yet).
+     Accent darkened from #84a98c to #52796f for AA text contrast on a light bg —
+     it will read differently than the dark version that was the original favorite. */
+  --pal-bg: #eef1ec;
   --pal-surface: #ffffff;
   --pal-surface-glass: rgba(255, 255, 255, 0.78);
-  --pal-text: #3a3846;
-  --pal-text-mute: #6c698d;
-  --pal-accent: #6c698d;
-  --pal-link: #55536e;
-  --pal-border: rgba(108, 105, 141, 0.28);
+  --pal-text: #2f3e46;
+  --pal-text-mute: #52796f;
+  --pal-accent: #52796f;
+  --pal-link: #3f5f56;
+  --pal-border: rgba(82, 121, 111, 0.28);
 }
 
 :root[data-palette="p2"] {
@@ -42,42 +33,6 @@
   --pal-accent: #a5766a;
   --pal-link: #8a5a4e;
   --pal-border: rgba(165, 118, 106, 0.28);
-}
-
-:root[data-palette="c1"] {
-  /* c1 — graphite + teal (original, for comparison) */
-  --pal-bg: #11151c;
-  --pal-surface: #1a212b;
-  --pal-surface-glass: rgba(26, 33, 43, 0.68);
-  --pal-text: #e8edf2;
-  --pal-text-mute: #9aa7b5;
-  --pal-accent: #14b8a6;
-  --pal-link: #2dd4bf;
-  --pal-border: rgba(20, 184, 166, 0.22);
-}
-
-:root[data-palette="c2"] {
-  /* c2 — navy + slate */
-  --pal-bg: #0f1729;
-  --pal-surface: #16203a;
-  --pal-surface-glass: rgba(22, 32, 58, 0.68);
-  --pal-text: #e6ecf5;
-  --pal-text-mute: #93a3c0;
-  --pal-accent: #3b82f6;
-  --pal-link: #60a5fa;
-  --pal-border: rgba(59, 130, 246, 0.24);
-}
-
-:root[data-palette="c3"] {
-  /* c3 — deep forest */
-  --pal-bg: #10201a;
-  --pal-surface: #17342a;
-  --pal-surface-glass: rgba(23, 52, 42, 0.68);
-  --pal-text: #cfe9dd;
-  --pal-text-mute: #8fb8a8;
-  --pal-accent: #5fd39b;
-  --pal-link: #7de6b3;
-  --pal-border: rgba(95, 211, 155, 0.24);
 }
 
 /* ── Apply palette to the whole page (explicit, not relying on Bootstrap's
@@ -125,10 +80,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 .quarto-listing .card-title, .quarto-listing .card-text { color: var(--pal-text) !important; }
 .listing-categories .listing-category { border-color: var(--pal-border) !important; color: var(--pal-text-mute) !important; }
 
-/* Native Quarto day/night toggle hidden during the palette-preview phase
-   (having two independent color switches at once is confusing).
-   TODO: remove this rule once the winning palette is picked and the
-   provisional switcher is deleted — restore the native toggle then. */
+/* This is a light-only site (no dark mode), so the native Quarto day/night
+   toggle should never appear. Kept as a defensive rule rather than relying on
+   the single-theme config alone — Quarto's boilerplate floats a toggle "if
+   there isn't one" and this was never empirically confirmed absent. */
 .quarto-color-scheme-toggle { display: none !important; }
 
 /* ── Provisional palette switcher UI ── */
@@ -179,11 +134,18 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   top: 5.5rem;
 }
 
+/* Rectangular frame (not a circle) — the playful photo is a landscape/panorama
+   shot, not a portrait, so a small circle would crop the subject unrecognizably.
+   object-position is a starting guess (subject is lower-middle of frame);
+   nudge it live once the photo is in place. */
 .home-photo {
-  width: 160px;
-  height: 160px;
-  border-radius: 50%;
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: 200px;
+  border-radius: 14px;
   object-fit: cover;
+  object-position: center 65%;
   border: 3px solid var(--pal-border);
   margin-bottom: 1rem;
 }

@@ -8,12 +8,8 @@
 
   var STORAGE_KEY = 'site-palette';
   var PALETTES = [
-    { id: 'p3', label: 'Sage + slate (favorite)', swatch: '#84a98c' },
-    { id: 'p1', label: 'Purple-gray', swatch: '#6c698d' },
-    { id: 'p2', label: 'Warm + terracotta', swatch: '#a5766a' },
-    { id: 'c1', label: 'Graphite + teal (original)', swatch: '#14b8a6' },
-    { id: 'c2', label: 'Navy + slate', swatch: '#3b82f6' },
-    { id: 'c3', label: 'Deep forest', swatch: '#5fd39b' }
+    { id: 'p3', label: 'Sage + slate, light (favorite)', swatch: '#52796f' },
+    { id: 'p2', label: 'Warm + terracotta', swatch: '#a5766a' }
   ];
   var DEFAULT_PALETTE = 'p3';
 

@@ -14,10 +14,8 @@ website:
     left:
       - href: index.qmd
         text: Home
-      - href: exercises/index.qmd
-        text: Exercises
-      - href: cv/Raphael_Ludwig_CV.pdf
-        text: "CV (PDF)"
+      - href: blog/index.qmd
+        text: Blog
     right:
       - icon: linkedin
         href: "https://www.linkedin.com/in/raphael-ludwig-167347414"

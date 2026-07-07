@@ -10,8 +10,8 @@ include-after-body:
 listing:
   id: home-listing
   contents:
-    - exercises/*.qmd
-    - "!exercises/index.qmd"
+    - blog/*.qmd
+    - "!blog/index.qmd"
   type: default
   sort: "date desc"
   max-items: 3
@@ -22,9 +22,10 @@ listing:
 
 ::: {.home-left}
 
-![](assets/img/monogram.svg){.home-photo}
+![](assets/img/roraima.jpg){.home-photo}
 
-<!-- TODO: replace with a playful photo, e.g. ![](assets/img/photo.jpg){.home-photo} -->
+<!-- Testing this photo per Raphael's request (Mount Roraima, Brazil). Object-position
+     in theme.scss (.home-photo) is a starting guess — tune live if needed. -->
 
 # Raphael Ludwig
 Quantitative Economist — Macro Research & Applied Econometrics
@@ -47,7 +48,7 @@ Forecasting & nowcasting, applied econometrics, macro-political scenario analysi
 ::: {.contact-links}
 [LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414) ·
 [Email](mailto:raphaludwig@gmail.com) ·
-[CV (PDF)](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline}
+[CV](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline}
 :::
 
 :::
@@ -58,7 +59,7 @@ Forecasting & nowcasting, applied econometrics, macro-political scenario analysi
 :::{#home-listing}
 :::
 
-[View more →](exercises/index.qmd){.view-more}
+[View more →](blog/index.qmd){.view-more}
 :::
 
 :::
