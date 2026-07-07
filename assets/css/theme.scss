@@ -139,6 +139,12 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 }
 
 .about-block { margin-bottom: 1.1rem; }
+.thesis-link {
+  display: inline-block;
+  margin-left: 1.25rem;
+  font-style: italic;
+  font-size: 0.85rem;
+}
 .about-block h3 {
   font-size: 0.78rem;
   text-transform: uppercase;

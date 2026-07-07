@@ -36,6 +36,7 @@ Economist, Vista Capital (2020–2026)
 ::: {.about-block}
 ### Education
 MSc Economics, PUC-Rio (2019–2021)\
+[Master's thesis](https://www.econ.puc-rio.br/api/uploads/adm/trabalhos/files/15_set_2021_1912142_2021_Completo.pdf){.thesis-link}\
 BSc Economics, PUC-Rio (2013–2017)
 :::
 
