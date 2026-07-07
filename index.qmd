@@ -4,9 +4,7 @@ page-layout: custom
 toc: false
 title-block-banner: false
 include-before-body: assets/html/particles-embed.html
-include-after-body:
-  - assets/html/particles-scripts.html
-  - assets/html/palette-switcher-embed.html
+include-after-body: assets/html/particles-scripts.html
 listing:
   id: home-listing
   contents:
@@ -14,7 +12,7 @@ listing:
     - "!blog/index.qmd"
   type: default
   sort: "date desc"
-  max-items: 3
+  max-items: 5
   fields: [title, description, date, categories]
 ---
 
@@ -22,13 +20,13 @@ listing:
 
 ::: {.home-left}
 
-![](assets/img/roraima.jpg){.home-photo}
+![](assets/img/patagonia.jpg){.home-photo}
 
-<!-- Testing this photo per Raphael's request (Mount Roraima, Brazil). Object-position
-     in theme.scss (.home-photo) is a starting guess — tune live if needed. -->
+<!-- Torres del Paine, Patagonia, Chile. Photo is a native 3:4 portrait, matching
+     the .home-photo aspect-ratio in theme.scss, so it renders full-frame. -->
 
 # Raphael Ludwig
-Quantitative Economist — Macro Research & Applied Econometrics
+Economist
 
 ::: {.about-block}
 ### Previous positions
@@ -37,18 +35,19 @@ Economist, Vista Capital (2020–2026)
 
 ::: {.about-block}
 ### Education
-MSc Economics, PUC-Rio (2019–2021) · BSc Economics, PUC-Rio (2013–2017)
+MSc Economics, PUC-Rio (2019–2021)\
+BSc Economics, PUC-Rio (2013–2017)
 :::
 
 ::: {.about-block}
 ### Interests
-Forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
+Macroeconomic research, Forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
 :::
 
 ::: {.contact-links}
 [LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414) ·
 [Email](mailto:raphaludwig@gmail.com) ·
-[CV](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline}
+[CV](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline target="_blank"}
 :::
 
 :::

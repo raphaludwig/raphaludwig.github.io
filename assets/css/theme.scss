@@ -1,18 +1,13 @@
 /*-- scss:defaults --*/
 // Single theme (no flatly/darkly Bootswatch pair): all color comes from the
-// --pal-* CSS custom properties below, driven by the provisional palette
-// switcher (assets/js/palette-switcher.js). This avoids Bootswatch's
-// hardcoded navbar/footer colors fighting the switcher.
+// --pal-* CSS custom properties below. This avoids Bootswatch's hardcoded
+// navbar/footer colors fighting the palette.
 
 /*-- scss:rules --*/
 
-/* ── Palette definitions (PROVISIONAL — remove the loser once a final pick is made) ── */
+/* ── Palette: sage + slate ── */
 
-:root, :root[data-palette="p3"] {
-  /* p3 — sage + slate, LIGHT variant (was dark in the 6-option round; this is a
-     from-scratch light build since the light version hadn't been seen yet).
-     Accent darkened from #84a98c to #52796f for AA text contrast on a light bg —
-     it will read differently than the dark version that was the original favorite. */
+:root {
   --pal-bg: #eef1ec;
   --pal-surface: #ffffff;
   --pal-surface-glass: rgba(255, 255, 255, 0.78);
@@ -21,18 +16,6 @@
   --pal-accent: #52796f;
   --pal-link: #3f5f56;
   --pal-border: rgba(82, 121, 111, 0.28);
-}
-
-:root[data-palette="p2"] {
-  /* p2 — warm + terracotta */
-  --pal-bg: #f4f3ee;
-  --pal-surface: #ffffff;
-  --pal-surface-glass: rgba(255, 255, 255, 0.78);
-  --pal-text: #463f3a;
-  --pal-text-mute: #8a817c;
-  --pal-accent: #a5766a;
-  --pal-link: #8a5a4e;
-  --pal-border: rgba(165, 118, 106, 0.28);
 }
 
 /* ── Apply palette to the whole page (explicit, not relying on Bootstrap's
@@ -70,7 +53,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 .quarto-listing .card,
 .quarto-grid-item,
 .glass-card {
-  background: var(--pal-surface-glass) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
   border: 1px solid var(--pal-border) !important;
   color: var(--pal-text) !important;
   backdrop-filter: blur(10px);
@@ -80,41 +63,35 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 .quarto-listing .card-title, .quarto-listing .card-text { color: var(--pal-text) !important; }
 .listing-categories .listing-category { border-color: var(--pal-border) !important; color: var(--pal-text-mute) !important; }
 
+/* Home "Latest exercises" listing (type: default) renders items as .quarto-post,
+   not .card, so they don't get the frosted rule above — give them a near-opaque
+   card here so the particles behind the home page don't show through. */
+#listing-home-listing .quarto-post {
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid var(--pal-border);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Frosted prose block for blog page text (e.g. the intro paragraph) — same look
+   as .glass-card but with padding, since prose isn't wrapped in a Bootstrap card. */
+.prose-glass {
+  background: var(--pal-surface-glass);
+  border: 1px solid var(--pal-border);
+  border-radius: 14px;
+  padding: 1.1rem 1.3rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 /* This is a light-only site (no dark mode), so the native Quarto day/night
    toggle should never appear. Kept as a defensive rule rather than relying on
    the single-theme config alone — Quarto's boilerplate floats a toggle "if
    there isn't one" and this was never empirically confirmed absent. */
 .quarto-color-scheme-toggle { display: none !important; }
-
-/* ── Provisional palette switcher UI ── */
-#palette-switcher {
-  position: fixed;
-  right: 1rem;
-  bottom: 1rem;
-  z-index: 2000;
-  display: flex;
-  gap: 0.4rem;
-  padding: 0.5rem;
-  background: var(--pal-surface-glass);
-  border: 1px solid var(--pal-border);
-  border-radius: 999px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-#palette-switcher button {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  cursor: pointer;
-  padding: 0;
-}
-
-#palette-switcher button[aria-pressed="true"] {
-  border-color: var(--pal-text);
-  transform: scale(1.15);
-}
 
 /* ── Two-column home layout ── */
 .home-grid {
@@ -134,18 +111,16 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   top: 5.5rem;
 }
 
-/* Rectangular frame (not a circle) — the playful photo is a landscape/panorama
-   shot, not a portrait, so a small circle would crop the subject unrecognizably.
-   object-position is a starting guess (subject is lower-middle of frame);
-   nudge it live once the photo is in place. */
+/* Rectangular frame (not a circle), portrait orientation — taller than wide.
+   Photo is a native 3:4 portrait shot, so object-position stays centered. */
 .home-photo {
   display: block;
   width: 100%;
-  max-width: 280px;
-  height: 200px;
+  max-width: 320px;
+  aspect-ratio: 3 / 4;
   border-radius: 14px;
   object-fit: cover;
-  object-position: center 65%;
+  object-position: center center;
   border: 3px solid var(--pal-border);
   margin-bottom: 1rem;
 }

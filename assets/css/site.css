@@ -10,6 +10,10 @@
 }
 #particles-bg canvas { display: block; pointer-events: auto; }
 
+/* Blog page content has no local stacking context (unlike home's .home-grid),
+   so lift it above the fixed particle layer once particles are added there. */
+#quarto-content { position: relative; z-index: 1; }
+
 @media (prefers-reduced-motion: reduce) {
   #particles-bg { display: none; }
 }
