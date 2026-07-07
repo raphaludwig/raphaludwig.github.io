@@ -1,20 +1,7 @@
-/* ── Shared, theme-agnostic rules (reads --accent / --surface / --border / --grad-* set per-theme) ── */
+/* ── Shared, palette-agnostic rules. Palette colors + two-column layout live
+      in theme.scss (they need to compile alongside Bootstrap's SCSS). ── */
 
-@media (prefers-reduced-motion: no-preference) {
-  body {
-    background: linear-gradient(135deg, var(--grad-1), var(--grad-2), var(--grad-3), var(--grad-4));
-    background-size: 500% 500%;
-    animation: gradientShift 70s linear infinite;
-  }
-}
-
-@keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* ── Particle canvas layer (landing page only) ── */
+/* ── Particle canvas layer ── */
 #particles-bg {
   position: fixed;
   inset: 0;
@@ -25,82 +12,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   #particles-bg { display: none; }
-}
-
-/* ── Hero (landing page) ── */
-.hero {
-  position: relative;
-  z-index: 1;
-  min-height: min(80vh, 640px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1.25rem;
-}
-
-.hero-inner {
-  max-width: 720px;
-  text-align: center;
-  background: var(--surface-glass);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 3rem 2.5rem;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 20px 48px -20px rgba(0, 0, 0, 0.25);
-}
-
-.hero-inner h1 {
-  font-size: 2.4rem;
-  margin-bottom: 0.4rem;
-}
-
-.hero-inner .hero-subtitle {
-  color: var(--accent-strong);
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
-.hero-cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-}
-
-.btn-hero {
-  display: inline-block;
-  padding: 0.65rem 1.4rem;
-  border-radius: 10px;
-  font-weight: 600;
-  text-decoration: none !important;
-}
-
-.btn-hero.btn-primary {
-  background: var(--accent);
-  color: #ffffff !important;
-}
-
-.btn-hero.btn-outline {
-  background: transparent;
-  border: 1.5px solid var(--accent);
-  color: var(--accent-strong) !important;
-}
-
-@media (max-width: 640px) {
-  .hero-inner { padding: 2rem 1.25rem; }
-  .hero-inner h1 { font-size: 1.85rem; }
-}
-
-/* ── Glass cards (About sections, exercise listing) ── */
-.glass-card {
-  background: var(--surface-glass);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 1.25rem 1.5rem;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
 
 /* ── Figure lightbox (tap-to-zoom on mobile) ── */

@@ -4,25 +4,61 @@ page-layout: custom
 toc: false
 title-block-banner: false
 include-before-body: assets/html/particles-embed.html
-include-after-body: assets/html/particles-scripts.html
+include-after-body:
+  - assets/html/particles-scripts.html
+  - assets/html/palette-switcher-embed.html
+listing:
+  id: home-listing
+  contents:
+    - exercises/*.qmd
+    - "!exercises/index.qmd"
+  type: default
+  sort: "date desc"
+  max-items: 3
+  fields: [title, description, date, categories]
 ---
 
-::: {.hero}
-::: {.hero-inner}
+::: {.home-grid}
+
+::: {.home-left}
+
+![](assets/img/monogram.svg){.home-photo}
+
+<!-- TODO: replace with a playful photo, e.g. ![](assets/img/photo.jpg){.home-photo} -->
 
 # Raphael Ludwig
-
-::: {.hero-subtitle}
 Quantitative Economist — Macro Research & Applied Econometrics
+
+::: {.about-block}
+### Previous positions
+Economist, Vista Capital (2020–2026)
 :::
 
-Forecasting, nowcasting, and applied macro-econometrics — rigorous, reproducible
-replications of central-bank and academic empirical work, built on public data.
+::: {.about-block}
+### Education
+MSc Economics, PUC-Rio (2019–2021) · BSc Economics, PUC-Rio (2013–2017)
+:::
 
-::: {.hero-cta}
-[Browse Exercises →](exercises/index.qmd){.btn-hero .btn-primary}
-[Download CV →](cv/cv.pdf){.btn-hero .btn-outline}
+::: {.about-block}
+### Interests
+Forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
+:::
+
+::: {.contact-links}
+[LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414) ·
+[Email](mailto:raphaludwig@gmail.com) ·
+[CV (PDF)](cv/Raphael_Ludwig_CV.pdf){.btn-hero .btn-outline}
 :::
 
 :::
+
+::: {.home-right}
+## Latest exercises
+
+:::{#home-listing}
+:::
+
+[View more →](exercises/index.qmd){.view-more}
+:::
+
 :::

@@ -3,26 +3,24 @@ project:
   output-dir: docs
   resources:
     - .nojekyll
+    - cv/Raphael_Ludwig_CV.pdf
 
 website:
   title: "Raphael Ludwig"
   site-url: "https://raphaludwig.github.io"
   description: "Quantitative economist — macro research, forecasting & applied econometrics."
-  favicon: assets/img/favicon.png
+  favicon: assets/img/monogram.svg
   navbar:
     left:
       - href: index.qmd
         text: Home
       - href: exercises/index.qmd
         text: Exercises
-      - href: about.qmd
-        text: About
-      - href: cv/cv.pdf
+      - href: cv/Raphael_Ludwig_CV.pdf
         text: "CV (PDF)"
     right:
-      # TODO: confirm LinkedIn URL and swap in for the placeholder below
       - icon: linkedin
-        href: "https://www.linkedin.com/in/raphaludwig/"
+        href: "https://www.linkedin.com/in/raphael-ludwig-167347414"
         aria-label: LinkedIn
       - icon: envelope
         href: "mailto:raphaludwig@gmail.com"
@@ -34,18 +32,17 @@ website:
       - icon: envelope
         href: mailto:raphaludwig@gmail.com
       - icon: linkedin
-        href: "https://www.linkedin.com/in/raphaludwig/"
+        href: "https://www.linkedin.com/in/raphael-ludwig-167347414"
 
 format:
   html:
-    theme:
-      light: [flatly, assets/css/theme-light.scss]
-      dark: [darkly, assets/css/theme-dark.scss]
+    theme: [cosmo, assets/css/theme.scss]
     css: assets/css/site.css
     toc: false
     grid:
       body-width: 900px
     link-external-newwindow: true
+    include-after-body: assets/html/palette-switcher-embed.html
 
 execute:
   freeze: auto

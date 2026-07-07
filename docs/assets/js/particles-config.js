@@ -2,18 +2,15 @@
   'use strict';
 
   // Retuned from vista-library's particles-config.js:
-  // - color follows the site's teal accent + current light/dark theme (was hard-coded brown)
+  // - color follows the active palette's accent (--pal-accent, set by the
+  //   provisional palette-switcher.js), was hard-coded brown originally
   // - lighter particle count + fps on small screens (mobile perf)
   // - no hover-grab on touch devices (hover doesn't exist there)
   // - fully disabled when the user prefers reduced motion
 
-  function isDark() {
-    var html = document.documentElement;
-    return html.getAttribute('data-bs-theme') === 'dark' || html.classList.contains('quarto-dark');
-  }
-
   function accentColor() {
-    return isDark() ? '#2dd4bf' : '#0f766e';
+    var v = getComputedStyle(document.documentElement).getPropertyValue('--pal-accent').trim();
+    return v || '#84a98c';
   }
 
   function isTouch() {
@@ -33,7 +30,7 @@
       background: { color: { value: 'transparent' } },
       fpsLimit: small ? 30 : 60,
       particles: {
-        number: { value: small ? 40 : 90, density: { enable: true, area: 800 } },
+        number: { value: small ? 55 : 130, density: { enable: true, area: 800 } },
         color: { value: accent },
         opacity: { value: 0.45, random: { enable: true, minimumValue: 0.2 } },
         size: { value: { min: 1.2, max: 2.6 } },
@@ -57,14 +54,14 @@
       },
       detectRetina: true
     }).then(function (container) {
-      // Keep particle color in sync when the user toggles light/dark.
+      // Keep particle color in sync when the user switches palettes.
       var observer = new MutationObserver(function () {
         var c = accentColor();
         container.options.particles.color.value = c;
         container.options.particles.links.color.value = c;
         container.refresh();
       });
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-bs-theme', 'class'] });
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-palette'] });
     });
   });
 })();
