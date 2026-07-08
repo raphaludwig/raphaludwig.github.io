@@ -8,7 +8,7 @@
 /* ── Palette: sage + slate ── */
 
 :root {
-  --pal-bg: #eef1ec;
+  --pal-bg: #f4f6f2;
   --pal-surface: #ffffff;
   --pal-surface-glass: rgba(255, 255, 255, 0.78);
   --pal-text: #2f3e46;
@@ -147,7 +147,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   font-size: 0.85rem;
 }
 .thesis-link::before {
-  content: "›";
+  content: "→";
   margin-right: 0.35rem;
   font-style: normal;
   font-weight: 700;
