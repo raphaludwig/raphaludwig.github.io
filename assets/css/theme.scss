@@ -141,6 +141,7 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 .about-block { margin-bottom: 1.1rem; }
 .thesis-link {
   display: inline-block;
+  vertical-align: top;
   margin-left: 1.25rem;
   font-style: italic;
   font-size: 0.85rem;
