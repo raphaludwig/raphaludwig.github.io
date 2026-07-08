@@ -124,6 +124,10 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   top: 5.5rem;
 }
 
+.home-left h1 {
+  margin-bottom: 0.4rem;
+}
+
 /* Rectangular frame (not a circle), portrait orientation — taller than wide.
    Photo is a native 3:4 portrait shot, so object-position stays centered. */
 .home-photo {
