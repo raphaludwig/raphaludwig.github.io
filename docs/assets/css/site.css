@@ -1,0 +1,82 @@
+/* ── Shared, palette-agnostic rules. Palette colors + two-column layout live
+      in theme.scss (they need to compile alongside Bootstrap's SCSS). ── */
+
+/* ── Particle canvas layer ── */
+#particles-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+#particles-bg canvas { display: block; pointer-events: auto; }
+
+/* Blog page content has no local stacking context (unlike home's .home-grid),
+   so lift it above the fixed particle layer once particles are added there. */
+#quarto-content { position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  #particles-bg { display: none; }
+}
+
+/* ── Page & card motion ──
+   Cross-fade between separate pages (Home/Blog) via the View Transitions API —
+   supported in Chrome/Edge, silently ignored elsewhere (plain navigation). */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration: 0.35s;
+}
+
+@keyframes contentFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* #quarto-content wraps every page's main content (including .home-grid),
+     so targeting it alone covers Home and Blog without double-stacking. */
+  #quarto-content {
+    animation: contentFadeIn 0.4s ease both;
+  }
+
+  /* Blog grid cards cascade in on load, staggered like vista-library's
+     card grid — via nth-child since the listing has no JS renderer here. */
+  .quarto-grid-item { animation: cardFadeIn 0.4s ease backwards; }
+  .quarto-grid-item:nth-child(1)  { animation-delay: 0s; }
+  .quarto-grid-item:nth-child(2)  { animation-delay: 0.05s; }
+  .quarto-grid-item:nth-child(3)  { animation-delay: 0.1s; }
+  .quarto-grid-item:nth-child(4)  { animation-delay: 0.15s; }
+  .quarto-grid-item:nth-child(5)  { animation-delay: 0.2s; }
+  .quarto-grid-item:nth-child(6)  { animation-delay: 0.25s; }
+  .quarto-grid-item:nth-child(n+7) { animation-delay: 0.3s; }
+}
+
+/* ── Figure lightbox (tap-to-zoom on mobile) ── */
+.zoomable-figure img {
+  cursor: zoom-in;
+}
+
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1.5rem;
+  cursor: zoom-out;
+}
+
+.lightbox-overlay.open { display: flex; }
+
+.lightbox-overlay img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+}
