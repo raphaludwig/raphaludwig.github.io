@@ -26,7 +26,14 @@ listing:
      the .home-photo aspect-ratio in theme.scss, so it renders full-frame. -->
 
 # Raphael Ludwig
-Economist
+
+::: {.contact-links}
+[LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414)
+
+[Email](mailto:raphaludwig@gmail.com)
+
+[CV](cv/Raphael_Ludwig_CV.pdf){target="_blank"}
+:::
 
 ::: {.about-block}
 ### Previous positions
@@ -43,14 +50,6 @@ BSc Economics, PUC-Rio (2013–2017)
 ::: {.about-block}
 ### Interests
 Macroeconomic research, forecasting & nowcasting, applied econometrics, macro-political scenario analysis, time series, machine learning
-:::
-
-::: {.contact-links}
-[LinkedIn](https://www.linkedin.com/in/raphael-ludwig-167347414)
-
-[Email](mailto:raphaludwig@gmail.com)
-
-[CV](cv/Raphael_Ludwig_CV.pdf){target="_blank"}
 :::
 
 :::
