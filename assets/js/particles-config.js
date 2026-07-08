@@ -32,9 +32,9 @@
       particles: {
         number: { value: small ? 55 : 130, density: { enable: true, area: 800 } },
         color: { value: accent },
-        opacity: { value: 0.45, random: { enable: true, minimumValue: 0.2 } },
+        opacity: { value: 0.28, random: { enable: true, minimumValue: 0.1 } },
         size: { value: { min: 1.2, max: 2.6 } },
-        links: { enable: true, distance: 140, color: accent, opacity: 0.25, width: 1 },
+        links: { enable: true, distance: 140, color: accent, opacity: 0.15, width: 1 },
         move: {
           enable: true,
           speed: 0.6,
@@ -50,7 +50,7 @@
           onHover: { enable: !isTouch(), mode: 'grab' },
           resize: true
         },
-        modes: { grab: { distance: 130, links: { opacity: 0.5 } } }
+        modes: { grab: { distance: 130, links: { opacity: 0.35 } } }
       },
       detectRetina: true
     }).then(function (container) {
