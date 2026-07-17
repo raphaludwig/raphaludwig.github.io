@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-15">
+<meta name="dcterms.date" content="2026-07-17">
 <meta name="description" content="O que é um filtro de Kalman, a intuição por trás dele, uma derivação matemática simples e como usá-lo para estimar uma NAIRU variante no tempo. Replicando um exercício do Banco Central com três pacotes de R diferentes.">
 
 <title>Filtro de Kalman Pt 1: Estimando NAIRU para o Brasil através de uma Curva de Phillips – Raphael Ludwig</title>
@@ -247,7 +247,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 15, 2026</p>
+      <p class="date">July 17, 2026</p>
     </div>
   </div>
   
@@ -261,11 +261,11 @@ window.Quarto = {
 
 <section id="motivação" class="level2">
 <h2 class="anchored" data-anchor-id="motivação">Motivação</h2>
-<p>Em janeiro de 2025, o <a href="https://www.bcb.gov.br/noticiablogbc/29/noticia">BC Blog do Banco Central do Brasil</a> publicou um post investigando um suposto descasamento entre o cenário macroeconômico brasileiro e a teoria econômica: a taxa de desemprego brasileira estava na mínima em duas décadas, enquanto a inflação de serviços ano contra ano estava rodando em um nível bem abaixo (~5%) daquele registrado na última vez em que o desemprego foi igualmente baixo (~8.5%, em 2014). Se o mercado de trabalho estava tão aquecido, por que a morosidade da pressão inflacionária?</p>
+<p>Em janeiro de 2025, o <a href="https://www.bcb.gov.br/noticiablogbc/29/noticia">BC Blog do Banco Central do Brasil</a> publicou um post investigando um suposto descasamento entre o cenário macroeconômico brasileiro e a teoria econômica: a taxa de desemprego brasileira estava na mínima em duas décadas, enquanto a inflação de serviços ano contra ano estava rodando em um nível bem abaixo (~5%) daquele registrado (~8.5%) na última vez em que o desemprego foi igualmente baixo, em 2014. Se o mercado de trabalho estava tão aquecido, por que a morosidade da pressão inflacionária?</p>
 <p>A resposta dos autores passa por uma ideia central em macroeconomia empírica: a <strong>NAIRU</strong> (a taxa de desemprego “neutra”, que não acelera a inflação). A intuição básica é que quando a taxa de desemprego está abaixo da NAIRU, o mercado de trabalho está aquecido. Isso pressiona a inflação, especialmente via abertura de serviços dada a maior sensibilidade do setor ao fator de produção trabalho nos custos. Essa variável, contudo, além de não ser diretamente observável, também não é uma constante (<em>economics in a nutshell</em>). Ela se move ao longo do tempo, podendo assumir valores distintos em diferentes pontos do intervalo analisado. Para recuperá-la dos dados e tentar responder a pergunta posta, os autores utilizaram o arcabouço de uma <strong>Curva de Phillips</strong> e a técnica de <strong>filtro de Kalman</strong> para chegar nessa variável latente.</p>
 <p>Como indicado por eles:</p>
 <blockquote class="blockquote">
-<p>Nossos resultados indicam que o mercado de trabalho está aquecido <em>(desemprego abaixo da NAIRU)</em>, com o modelo prevendo uma inflação subjacente de serviços acima da observada recentemente, embora bem abaixo dos níveis registrados em meados da década passada. Afinal, tanto a inflação esperada quanto a passada são atualmente menores, assim como a nossa estimativa da NAIRU, que recuou após 2018, situando-se atualmente próxima da mínima histórica. Esses resultados, no entanto, estão sujeitos a uma elevada incerteza, especialmente no que se refere à NAIRU. Portanto, nossas conclusões, embora indicativas, não devem ser tomadas como definitivas.</p>
+<p>Nossos resultados indicam que o mercado de trabalho está aquecido [desemprego abaixo da NAIRU], com o modelo prevendo uma inflação subjacente de serviços acima da observada recentemente, embora bem abaixo dos níveis registrados em meados da década passada. Afinal, tanto a inflação esperada quanto a passada são atualmente menores, assim como a nossa estimativa da NAIRU, que recuou após 2018, situando-se atualmente próxima da mínima histórica. Esses resultados, no entanto, estão sujeitos a uma elevada incerteza, especialmente no que se refere à NAIRU. Portanto, nossas conclusões, embora indicativas, não devem ser tomadas como definitivas.</p>
 </blockquote>
 <p>Como alguém que já sofreu (<em>bastante</em>) para conseguir replicar exercícios de filtro de Kalman usando R, esse post tem dois objetivos:</p>
 <ul>
@@ -301,7 +301,7 @@ x_0 \sim MVN(\hat x_0, P_0) \qquad \text{(estado inicial)}
 <li><span class="math inline">\(G_t, H_t\)</span>: matrizes de escala do ruído de estado e de observação. Na prática, costumam ser a matriz identidade, e portanto ficam implícitas.</li>
 <li><span class="math inline">\(x_0\)</span> é uma escolha de modelagem que ancora a recursão antes da primeira observação (voltarei nisso).</li>
 </ul>
-<p><strong>Por que usar essa técnica?</strong> Sob as premissas acima (linearidade e normalidade), esse filtro não é só <em>uma</em> forma de responder a essa pergunta — é a solução <strong>ótima</strong> (menor erro quadrático médio) e em <strong>forma fechada</strong>. Filtragem bayesiana em geral, atualiza a crença sobre um estado latente à medida que chegam dados e não tem solução analítica, exigindo simulação. O caso linear-gaussiano é a exceção em que a resposta exata sai de um punhado de operações matriciais.</p>
+<p><strong>Por que usar essa técnica?</strong> Sob as premissas acima (linearidade e normalidade), esse filtro não é só <em>uma</em> forma de responder a essa pergunta — é a solução <strong>ótima</strong> (menor erro quadrático médio) e em <strong>forma fechada</strong>. Filtragem bayesiana, em geral, atualiza a crença sobre um estado latente à medida que chegam dados e não tem solução analítica, exigindo simulação. O caso linear-gaussiano é a exceção em que a resposta exata sai de um punhado de operações matriciais.</p>
 <p><strong>A mesma matemática, aplicações diferentes.</strong> O que muda de uma aplicação para outra é só o que <span class="math inline">\(x_t\)</span> e <span class="math inline">\(Z_t\)</span> <em>representam</em>. As equações continuam sendo as mesmas.</p>
 <ul>
 <li><strong>Rastreamento</strong> (a motivação original de Kalman, anos 1960): <span class="math inline">\(x_t\)</span> = posição e velocidade verdadeiras de um objeto (um foguete, um avião); <span class="math inline">\(y_t\)</span> = leitura ruidosa de um radar. Aqui o estado é uma quantidade física real, só não observada diretamente.</li>
@@ -321,11 +321,9 @@ x_0 \sim MVN(\hat x_0, P_0) \qquad \text{(estado inicial)}
 <p>A partir daqui, vou usar um caso particular mais simples das equações apresentadas acima:</p>
 <p><span class="math display">\[
 y_t = Z_t x_t + v_t, \qquad v_t \sim N(0, R_t) \qquad \text{(equação de observação)}
-\label{eq:obs_simplified}
 \]</span></p>
 <p><span class="math display">\[
 x_t = B_t x_{t-1} + w_t, \qquad w_t \sim N(0, Q_t) \qquad \text{(equação de estado)}
-\label{eq:state_simplified}
 \]</span></p>
 <p>Por mais que jogue alguns termos fora, esse formato é mais que suficiente para compreender a lógica da atualização em um filtro de Kalman. Aqui troquei MVN por N, pois vou trabalhar com um exemplo em que <span class="math inline">\(y_t\)</span> e <span class="math inline">\(x_t\)</span> são escalares, i.e., apenas uma variável cada (inflação de serviços subjacentes e NAIRU, por exemplo).</p>
 <p>Para ilustrar a derivação, vamos nos debruçar sobre o caso de nível não observado: <span class="math inline">\(x_t\)</span> escalar, como mencionado, com <span class="math inline">\(Z_t\)</span> e <span class="math inline">\(B_t\)</span> conhecidos (a notação continua seguindo o pacote <code>MARSS</code>).</p>
@@ -363,7 +361,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <section id="condicionando-direto-em-y_t" class="level3">
 <h3 class="anchored" data-anchor-id="condicionando-direto-em-y_t">Condicionando direto em <span class="math inline">\(y_t\)</span></h3>
 <p><span class="math inline">\(x_t\)</span> e <span class="math inline">\(y_t\)</span> vêm dos mesmos choques gaussianos primitivos. A história inteira de ruídos de estado <span class="math inline">\(w_1,\dots,w_t\)</span> e de observação <span class="math inline">\(v_1,\dots,v_t\)</span> (mais o estado inicial, também gaussiano). <span class="math inline">\(x_t\)</span> é combinação linear direta dessas peças, via a equação de estado aplicada recursivamente; <span class="math inline">\(y_t = Z_t x_t + v_t\)</span> também é, acrescido de um ruído igualmente gaussiano.</p>
-<p>Portanto, <span class="math inline">\(x_t\)</span> e <span class="math inline">\(y_t\)</span> são duas combinações lineares diferentes, com coeficientes diferentes, do mesmíssimo conjunto de choques primitivos (<span class="math inline">\(w_1 \dots,w_t\)</span>, <span class="math inline">\(v_1,\dots,v_t\)</span> e o estado inicial). Como combinações lineares de variáveis gaussianas independentes quaisquer têm distribuição conjuntamente normal, o par <span class="math inline">\((x_t, y_t)\)</span> é <strong>conjuntamente normal</strong>.</p>
+<p>Portanto, <span class="math inline">\(x_t\)</span> e <span class="math inline">\(y_t\)</span> são duas combinações lineares diferentes, com coeficientes diferentes, do mesmíssimo conjunto de choques primitivos (<span class="math inline">\(w_1, \dots, w_t\)</span>, <span class="math inline">\(v_1,\dots,v_t\)</span> e o estado inicial). Como combinações lineares de variáveis gaussianas independentes quaisquer têm distribuição conjuntamente normal, o par <span class="math inline">\((x_t, y_t)\)</span> é <strong>conjuntamente normal</strong>.</p>
 <p>Assim, dado <span class="math inline">\(y_{1:t-1}\)</span>, com <span class="math inline">\(\hat x_{t\mid t-1}\)</span> e <span class="math inline">\(P_{t\mid t-1}\)</span> já calculados no passo de previsão:</p>
 <p><span class="math display">\[
 \begin{pmatrix} x_t \\ y_t \end{pmatrix} \Bigg| y_{1:t-1} \;\sim\; N\left(\begin{pmatrix}\hat{x}_{t\mid t-1}\\ Z_t\hat{x}_{t\mid t-1}\end{pmatrix},\; \begin{pmatrix} P_{t\mid t-1} &amp; P_{t\mid t-1}Z_t' \\ Z_t P_{t\mid t-1} &amp; Z_t P_{t\mid t-1}Z_t' + R_t\end{pmatrix}\right)
@@ -377,7 +375,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <p>Com essa notação, a atualização acima fica <span class="math inline">\(\hat x_{t\mid t} = \hat x_{t\mid t-1} + K_te_t\)</span>.</p>
 <p><span class="math inline">\(K_t\)</span>, o <strong>ganho de Kalman</strong>, é uma razão sinal-ruído. Quanto maior a incerteza prévia <span class="math inline">\(P_{t|t-1}\)</span> relativa ao ruído de medição <span class="math inline">\(R_t\)</span>, mais peso a atualização dá à nova observação <span class="math inline">\(e_t\)</span>; quanto mais confiável a crença prévia ou mais ruidosa a medição, menos ela se move. Repetindo esse ciclo previsão → observação → atualização a cada <span class="math inline">\(t\)</span>, o filtro percorre a série inteira, produzindo uma estimativa de <span class="math inline">\(x_t\)</span> (e sua incerteza) a cada período.</p>
 <blockquote class="blockquote">
-<p>Note que essa derivação nos dá pistas de por que o filtro de Kalman é <strong>exato apenas no caso linear-gaussiano</strong>. As três propriedades usadas das distribuições gaussianas dependem de <span class="math inline">\(x_t\)</span> ser combinação linear/afim de <span class="math inline">\(x_{t-1}\)</span>, e de <span class="math inline">\(y_t\)</span> ser combinação linear/afim de <span class="math inline">\(x_t\)</span>, com ruídos gaussianos. Se a dinâmica do estado ou a equação de observação forem não-lineares, ou os ruídos não forem gaussianos, a posterior <span class="math inline">\(p(x_t\mid y_{1:t})\)</span> geralmente deixa de ser normal e o filtro exato, em forma fechada, deixa de existir. Por esse motivo instrumentos como <strong>filtro de Kalman estendido</strong>, o <strong>filtro de Kalman unscented</strong> ou os <strong>filtros de partículas</strong> existem.</p>
+<p>Note que essa derivação nos dá pistas de por que o filtro de Kalman é <strong>exato apenas no caso linear-gaussiano</strong>. As três propriedades usadas das distribuições gaussianas dependem de <span class="math inline">\(x_t\)</span> ser combinação linear/afim de <span class="math inline">\(x_{t-1}\)</span>, e de <span class="math inline">\(y_t\)</span> ser combinação linear/afim de <span class="math inline">\(x_t\)</span>, com ruídos gaussianos. Se a dinâmica do estado ou a equação de observação forem não-lineares, ou os ruídos não forem gaussianos, a posterior <span class="math inline">\(p(x_t\mid y_{1:t})\)</span> geralmente deixa de ser normal e o filtro exato, em forma fechada, deixa de existir. Por esse motivo, instrumentos como o <strong>filtro de Kalman estendido</strong>, o <strong>filtro de Kalman unscented</strong> ou os <strong>filtros de partículas</strong> existem.</p>
 </blockquote>
 </section>
 <section id="suavizador-smoother-e-o-algoritmo-em" class="level3">
@@ -416,7 +414,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 \pi_t^{ss} = \underbrace{\alpha + \beta\cdot\pi_{t-1}^{12m} + (1-\beta)\cdot E_t(\pi^{LP}) + \theta\cdot \text{IPPCV}_t - \gamma\cdot u_t}_{\text{conhecido, coeficiente fixo}} + \underbrace{\gamma\cdot u_t^*}_{Z_t\cdot x_t} + \underbrace{\varepsilon_t}_{v_t}
 \]</span></p>
 <p>com a NAIRU seguindo um passeio aleatório: <span class="math inline">\(u_t^* = u_{t-1}^* + \vartheta_t\)</span>. Isso já é a equação de observação e de estado de um filtro de Kalman, mas repare que <span class="math inline">\(\gamma\)</span> aparece <strong>duas vezes</strong>. Uma vez como coeficiente do regressor observado <span class="math inline">\(u_t\)</span> (sinal negativo), outra como <span class="math inline">\(Z_t\)</span> multiplicando o estado <span class="math inline">\(u_t^*\)</span> (sinal positivo). Isso não é acidente — vem de o verdadeiro regressor ser o <em>hiato</em> <span class="math inline">\((u_t-u_t^*)\)</span>, não os dois termos separados — mas cria um problema prático. Teríamos que impor essa restrição (mesmo valor de <span class="math inline">\(\gamma\)</span> nos dois lugares) em cada pacote de R.</p>
-<p>Uma saída mais simples é ao invés de tratar <span class="math inline">\(u_t^*\)</span> como estado, definimos o estado como a <strong>NAIRU já escalada</strong> por <span class="math inline">\(\gamma\)</span>:</p>
+<p>Uma saída mais simples: ao invés de tratar <span class="math inline">\(u_t^*\)</span> como estado, definimos o estado como a <strong>NAIRU já escalada</strong> por <span class="math inline">\(\gamma\)</span>:</p>
 <p><span class="math display">\[x_t \equiv \gamma \cdot u_t^*\]</span></p>
 <p>Com essa mudança de variável, <span class="math inline">\(Z_t=1\)</span> (fixo, sem restrição nenhuma) e <span class="math inline">\(\gamma\)</span> aparece uma única vez, como coeficiente do regressor <span class="math inline">\(u_t\)</span>. No fim, recuperamos a NAIRU de volta dividindo o estado estimado por <span class="math inline">\(\hat\gamma\)</span>: <span class="math inline">\(u_t^* = x_t / \hat\gamma\)</span>.</p>
 <p>O mesmo truque resolve <span class="math inline">\(\beta\)</span>. Podemos reescrever <span class="math inline">\(\beta\cdot\pi_{t-1}^{12m} + (1-\beta)\cdot E_t(...)\)</span> como <span class="math inline">\(E_t(...) + \beta\cdot(\pi_{t-1}^{12m}-E_t(...))\)</span>, deixando <span class="math inline">\(\beta\)</span> aparecer uma única vez, como coeficiente de uma única covariável construída <span class="math inline">\((\pi_{t-1}^{12m}-E_t(...))\)</span>.</p>
@@ -697,7 +695,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>theta_marss <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_marss_2)<span class="sc">$</span>D[<span class="dv">1</span>]</span>
 <span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Escala concentrada: com R=1 fixo, o filtro acerta o FORMATO da incerteza do</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co"># estado mas não a escala absoluta. recupera-se via sigma2_hat = mean(e_t^2/F_t)</span></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co"># estado mas não a escala absoluta. Recupera-se via sigma2_hat = mean(e_t^2/F_t)</span></span>
 <span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a><span class="co"># e reescala a variância do estado por sigma2_hat antes de formar o IC.</span></span>
 <span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>kf_marss <span class="ot">&lt;-</span> <span class="fu">MARSSkfss</span>(fit_marss_2)</span>
 <span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>sigma2_marss <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">as.numeric</span>(kf_marss<span class="sc">$</span>Innov)<span class="sc">^</span><span class="dv">2</span> <span class="sc">/</span> <span class="fu">as.numeric</span>(kf_marss<span class="sc">$</span>Sigma))</span>
@@ -720,7 +718,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 </section>
 <section id="kfas" class="level3">
 <h3 class="anchored" data-anchor-id="kfas">KFAS</h3>
-<p><a href="https://cran.r-project.org/package=KFAS">KFAS</a> vem da tradição de Durbin &amp; Koopman, na qual implementa o filtro de Kalman com <strong>inicialização difusa exata</strong>. O estado inicial pode ter variância infinita, tratada analiticamente, não aproximada. Isso é particularmente relevante aqui, pois a NAIRU é não-estacionária, como passeio aleatório puro, então não existe uma variância “de equilíbrio” natural para inicializar o filtro.</p>
+<p><a href="https://cran.r-project.org/package=KFAS">KFAS</a> vem da tradição de Durbin &amp; Koopman, na qual implementa o filtro de Kalman com <strong>inicialização difusa exata</strong>. O estado inicial pode ter variância infinita, tratada analiticamente, não aproximada. Isso é particularmente relevante aqui, pois a NAIRU é não-estacionária, como um passeio aleatório puro, então não existe uma variância “de equilíbrio” natural para inicializar o filtro.</p>
 <p>A sintaxe é baseada em fórmula. O modelo é descrito como uma soma de componentes (<code>SSMregression</code> para regressores comuns, <code>SSMcustom</code> para um bloco de estado sob medida).</p>
 <section id="º-estágio-2" class="level4">
 <h4 class="anchored" data-anchor-id="º-estágio-2">1º estágio</h4>
@@ -748,7 +746,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <pre><code>beta = 0.2193  gamma = 0.6933 </code></pre>
 </div>
 </div>
-<p>Repare no código acima que aqui <code>beta</code>/<code>gamma</code> não são “parâmetros” no sentido de MLE explícito. No caso do <code>MARSS</code> existe uma chamada de otimizador, separada do filtro, cujo único trabalho é achar o <code>theta</code> que maximiza a log-verossimilhança. Aqui o <code>beta</code> e <code>gamma</code> não vêm de nenhum <code>optim()</code>. Eles são coeficientes de <code>SSMregression</code> que entra no mesmo vetor de estado que o nível <code>SSMcustom</code>. Porém com <code>Q=0</code> (constante disfarçada de estado) e <code>P1 = diag(c(1e6, 1e6))</code> (prior não informativo) são tratados como estados com prior difuso e variância zero, logo, constantes no tempo. Nesse regime específico o suavizador entrega o mesmo ponto que MLE entregaria, só que embutido no próprio filtro.</p>
+<p>Repare no código acima que aqui <code>beta</code>/<code>gamma</code> não são “parâmetros” no sentido de MLE explícito. No caso do <code>MARSS</code> existe uma chamada de otimizador, separada do filtro, cujo único trabalho é achar o <code>theta</code> que maximiza a log-verossimilhança. Aqui o <code>beta</code> e <code>gamma</code> não vêm de nenhum <code>optim()</code>. Eles são coeficientes de <code>SSMregression</code> que entra no mesmo vetor de estado que o nível <code>SSMcustom</code>. Porém, com <code>Q=0</code> (constante disfarçada de estado) e <code>P1 = diag(c(1e6, 1e6))</code> (prior não informativo), eles são tratados como estados com prior difuso e variância zero, logo, constantes no tempo. Nesse regime específico o suavizador entrega o mesmo ponto que MLE entregaria, só que embutido no próprio filtro.</p>
 </section>
 <section id="º-estágio-3" class="level4">
 <h4 class="anchored" data-anchor-id="º-estágio-3">2º estágio</h4>
@@ -814,7 +812,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">Dm =</span> <span class="fu">array</span>(<span class="dv">0</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)),</span>
 <span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">Am =</span> <span class="fu">array</span>(beta <span class="sc">*</span> c_t <span class="sc">-</span> gamma <span class="sc">*</span> stage1<span class="sc">$</span>u_t, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)), <span class="co"># gamma aqui...</span></span>
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">Fm =</span> <span class="fu">array</span>(<span class="dv">1</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)),</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">Hm =</span> <span class="fu">array</span>(gamma, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)), <span class="co"># ...e aqui: mesma variável R</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">Hm =</span> <span class="fu">array</span>(gamma, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)), <span class="co"># ...e aqui: mesma variável gamma</span></span>
 <span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">Qm =</span> <span class="fu">array</span>(<span class="dv">1</span> <span class="sc">/</span> lambda, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1)),</span>
 <span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">Rm =</span> <span class="fu">array</span>(<span class="dv">1</span>, <span class="at">dim =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, Tn1))</span>
 <span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  )</span>
@@ -905,7 +903,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 </div>
 </div>
 <p>No <strong>1º estágio</strong>, o <code>kalmanfilter</code> chega em <span class="math inline">\(\gamma\)</span> visivelmente mais alto que MARSS/KFAS.</p>
-<p>A causa é a <strong>parametrização de <span class="math inline">\(\gamma\)</span></strong>. MARSS/KFAS usam o truque do estado reescalado (<span class="math inline">\(Z_t=1\)</span> fixo, <span class="math inline">\(\gamma\)</span> só como coeficiente de regressão). O <code>kalmanfilter</code>, como codificado, impõe a restrição compartilhada <em>diretamente</em>, com <span class="math inline">\(Z_t=\gamma\)</span>. A diferença não é só de sintaxe, muda a variância da inovação, <span class="math inline">\(F_t=\gamma^2 P_{t|t-1}+R_t\)</span>. Com <span class="math inline">\(Z_t=1\)</span>, <span class="math inline">\(\gamma\)</span> nunca entra em <span class="math inline">\(F_t\)</span>; com <span class="math inline">\(Z_t=\gamma\)</span>, entra, e enquanto <span class="math inline">\(P_{t|t-1}\)</span> não converge ao regime, essa dependência extra distorce a verossimilhança e empurra <span class="math inline">\(\hat\gamma\)</span> para cima.</p>
+<p>A causa é a <strong>parametrização de <span class="math inline">\(\gamma\)</span></strong>. MARSS/KFAS usam o truque do estado reescalado (<span class="math inline">\(Z_t=1\)</span> fixo, <span class="math inline">\(\gamma\)</span> só como coeficiente de regressão). O <code>kalmanfilter</code>, como codificado, impõe a restrição compartilhada <em>diretamente</em>, com <span class="math inline">\(Z_t=\gamma\)</span>. A diferença não é só de sintaxe — muda a variância da inovação, <span class="math inline">\(F_t=\gamma^2 P_{t|t-1}+R_t\)</span>. Com <span class="math inline">\(Z_t=1\)</span>, <span class="math inline">\(\gamma\)</span> nunca entra em <span class="math inline">\(F_t\)</span>; com <span class="math inline">\(Z_t=\gamma\)</span>, entra, e enquanto <span class="math inline">\(P_{t|t-1}\)</span> não converge ao regime, essa dependência extra distorce a verossimilhança e empurra <span class="math inline">\(\hat\gamma\)</span> para cima.</p>
 <p>Reescrevendo o <code>kalmanfilter</code> com <span class="math inline">\(Z_t=1\)</span>, mesmo truque de MARSS/KFAS, o resultado bate <strong>exato</strong> com os outros dois.</p>
 <p>No <strong>2º estágio</strong>, com <span class="math inline">\(\gamma\)</span> já fixo, esse problema desaparece. Os três pacotes convergem para praticamente o mesmo <span class="math inline">\(\theta\)</span> e a mesma trajetória de NAIRU, como veremos a seguir.</p>
 </section>
@@ -985,21 +983,21 @@ Table&nbsp;1
 <td style="text-align: right;">0.2193</td>
 <td style="text-align: right;">0.6933</td>
 <td style="text-align: right;">1.5253</td>
-<td style="text-align: right;">0.28</td>
+<td style="text-align: right;">0.22</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">KFAS</td>
 <td style="text-align: right;">0.2193</td>
 <td style="text-align: right;">0.6933</td>
 <td style="text-align: right;">1.5253</td>
-<td style="text-align: right;">0.02</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">kalmanfilter</td>
 <td style="text-align: right;">0.2365</td>
 <td style="text-align: right;">0.8468</td>
 <td style="text-align: right;">1.5876</td>
-<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">0.06</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Paper original (BCB)</td>
@@ -1068,7 +1066,7 @@ Figure&nbsp;1: NAIRU estimada (com IC 95%) pelos três pacotes, dez/2001–nov/2
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># "Expectativa LP" usam a série antes da transformação 100*log1p(x) exigida</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># só para a estimação do modelo. O observado de serviços vira acumulado 12m:</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># como ipca_ssubj só está salvo já anualizado (mensal composto por 12),</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># inverto essa anualização pra recuperar o mensal e compnho os 12 meses</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># inverto essa anualização pra recuperar o mensal e componho os 12 meses</span></span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># até target_date — mesma base do π^{ss,12m} da Tabela 2 do BCB.</span></span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>db_ord <span class="ot">&lt;-</span> db <span class="sc">%&gt;%</span></span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(date) <span class="sc">%&gt;%</span></span>

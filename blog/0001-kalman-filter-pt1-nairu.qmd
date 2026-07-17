@@ -1,7 +1,7 @@
 ---
 title: "Filtro de Kalman Pt 1: Estimando NAIRU para o Brasil através de uma Curva de Phillips"
 description: "O que é um filtro de Kalman, a intuição por trás dele, uma derivação matemática simples e como usá-lo para estimar uma NAIRU variante no tempo. Replicando um exercício do Banco Central com três pacotes de R diferentes."
-date: 2026-07-15
+date: 2026-07-17
 categories: [kalman filter, nairu, phillips curve, econometrics]
 ---
 
