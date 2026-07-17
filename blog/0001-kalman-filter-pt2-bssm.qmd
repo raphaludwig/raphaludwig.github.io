@@ -1,0 +1,635 @@
+---
+title: "Filtro de Kalman Pt 2: NAIRU Bayesiana, com `bssm`"
+description: "Reestimando a mesma NAIRU da Parte 1 com o pacote bssm, em duas versões — máxima verossimilhança e MCMC — para contrastar as abordagens frequentista e bayesiana dado exatamente o mesmo modelo."
+date: 2026-07-16
+categories: [kalman filter, nairu, phillips curve, econometrics, bssm, bayesian]
+draft: true
+---
+
+## Motivação
+
+Na [Parte 1](0001-kalman-filter-pt1-nairu.qmd) deste post, derivei o filtro de Kalman e o usei
+para replicar um exercício do Banco Central do Brasil: estimar uma NAIRU variante no tempo a
+partir de uma curva de Phillips de serviços, com três pacotes de R (`MARSS`, `KFAS`,
+`kalmanfilter`). Os três resolvem o mesmo problema de espaço de estados — um estado inicial
+difuso, dois estágios de estimação, $\lambda=120$ calibrado — por caminhos de implementação
+diferentes, mas convergindo (no 2º estágio) para essencialmente o mesmo resultado.
+
+Todos os três, porém, são **frequentistas**: tratam $\beta,\gamma,\theta$ como números fixos
+desconhecidos e recuperam um ponto ótimo por máxima verossimilhança. Esta Parte 2 reestima
+exatamente o mesmo modelo — mesmos dados, mesmo desenho em dois estágios, mesmo $\lambda=120$ —
+com o pacote [`bssm`](https://cran.r-project.org/package=bssm), em **duas versões**: uma via MLE
+(espelhando a mecânica dos três pacotes da Parte 1) e outra via MCMC, a forma idiomática de usar
+o pacote. O objetivo não é "mais um pacote" — é comparar as duas filosofias de inferência, dado o
+mesmo modelo e os mesmos dados, e discutir por que (e quando) elas concordam ou divergem.
+
+> Este post assume o modelo e a notação já estabelecidos na Parte 1 — vale a pena lê-la primeiro
+> se você caiu direto aqui. Recapitulando em uma frase: a curva de Phillips do BCB, com a NAIRU
+> reescalada como estado $x_t=\gamma\cdot u_t^*$, vira um filtro de Kalman de nível local com
+> regressor conhecido, estimado em dois estágios (1º: dez/2001–dez/2019, $\beta,\gamma$ livres;
+> 2º: dez/2001–nov/2024, $\beta,\gamma$ fixos do 1º estágio, só $\theta$ e o estado livres).
+
+## Dados e setup
+
+Mesma base da Parte 1 — `db_final.csv`, com desemprego dessazonalizado, inflação subjacente de
+serviços, IPCA cheio, expectativas do Focus e o índice de pressão de cadeia de suprimentos
+(IPPCV), já preparados via `datalake.utils` (ver Parte 1 para o código de coleta, não repetido
+aqui).
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+library(dplyr)
+library(ggplot2)
+library(knitr)
+library(MARSS)
+library(KFAS)
+library(kalmanfilter)
+library(bssm)
+source("R/theme_blog.R")
+
+db <- read.csv("data/kalman-filter/db_final.csv") |>
+  mutate(date = as.Date(date))
+
+db <- db |>
+  arrange(date) |>
+  mutate(
+    pi_ssubj = 100 * log1p(ipca_ssubj),
+    pi_full = 100 * log1p(ipca_full),
+    pi_full_lag1 = lag(pi_full, 1),
+    E_t = 100 * log1p(focus / 100),
+    u_t = 100 * u_rate
+  )
+
+alpha <- 1.1 # calibrado, não estimado
+lambda <- 120 # razão sinal-ruído central do exercício do BCB
+
+stage1 <- db |>
+  filter(date >= as.Date("2001-12-01"), date <= as.Date("2019-12-01")) |>
+  filter(!is.na(pi_full_lag1))
+
+stage2 <- db |>
+  filter(date >= as.Date("2001-12-01"), date <= as.Date("2024-11-01")) |>
+  filter(!is.na(pi_full_lag1))
+```
+
+### As três vozes da Parte 1, de novo
+
+Preciso das estimativas de NAIRU dos três pacotes anteriores para o gráfico comparativo mais
+adiante — como este é um documento separado, elas não sobrevivem da Parte 1 e precisam ser
+recalculadas. O código abaixo é idêntico ao já explicado lá (só recolhido aqui, sem repetir a
+explicação):
+
+```{r}
+#| label: refit-part1
+#| code-summary: "Mostrar código: MARSS, KFAS e kalmanfilter (idêntico à Parte 1)"
+## MARSS -----
+y1 <- matrix(stage1$pi_ssubj - alpha - stage1$E_t, nrow = 1)
+c_t <- stage1$pi_full_lag1 - stage1$E_t
+d_t <- -stage1$u_t
+
+model_marss_1 <- list(
+  B = matrix(1), U = matrix(0), Q = matrix(1 / lambda),
+  Z = matrix(1), A = matrix(0), R = matrix(1),
+  D = matrix(list("beta", "gamma"), 1, 2), d = rbind(c_t, d_t),
+  x0 = matrix("x0"), V0 = matrix(1e6), tinitx = 0
+)
+fit_marss_1 <- MARSS(
+  y1,
+  model = model_marss_1, method = "BFGS", silent = TRUE,
+  control = list(maxit = 2000, reltol = 1e-12)
+)
+beta_marss <- coef(fit_marss_1)$D[1]
+gamma_marss <- coef(fit_marss_1)$D[2]
+
+y2 <- matrix(
+  stage2$pi_ssubj - alpha - beta_marss * stage2$pi_full_lag1 -
+    (1 - beta_marss) * stage2$E_t + gamma_marss * stage2$u_t,
+  nrow = 1
+)
+model_marss_2 <- list(
+  B = matrix(1), U = matrix(0), Q = matrix(1 / lambda),
+  Z = matrix(1), A = matrix(0), R = matrix(1),
+  D = matrix(list("theta"), 1, 1), d = matrix(stage2$ippcv, nrow = 1),
+  x0 = matrix("x0"), V0 = matrix(1e6), tinitx = 0
+)
+fit_marss_2 <- MARSS(
+  y2,
+  model = model_marss_2, method = "BFGS", silent = TRUE,
+  control = list(maxit = 2000, reltol = 1e-12)
+)
+theta_marss <- coef(fit_marss_2)$D[1]
+
+kf_marss <- MARSSkfss(fit_marss_2)
+sigma2_marss <- mean(as.numeric(kf_marss$Innov)^2 / as.numeric(kf_marss$Sigma))
+sm_marss <- tsSmooth(fit_marss_2, type = "xtT")
+nairu_marss <- data.frame(
+  date = stage2$date, pkg = "MARSS",
+  nairu = sm_marss$.estimate / gamma_marss,
+  se = sm_marss$.se * sqrt(sigma2_marss) / gamma_marss
+)
+
+## KFAS -----
+y1_v <- stage1$pi_ssubj - alpha - stage1$E_t
+model_kfas_1 <- SSModel(
+  y1_v ~ -1 +
+    SSMregression(~ c_t + d_t, Q = 0, a1 = c(0, 0), P1 = diag(c(1e6, 1e6))) +
+    SSMcustom(Z = 1, T = 1, R = 1, Q = 1 / lambda, a1 = 0, P1inf = 1),
+  H = matrix(1)
+)
+out_kfas_1 <- KFS(model_kfas_1, smoothing = "state")
+beta_kfas <- out_kfas_1$alphahat[nrow(out_kfas_1$alphahat), "c_t"]
+gamma_kfas <- out_kfas_1$alphahat[nrow(out_kfas_1$alphahat), "d_t"]
+
+y2_v <- stage2$pi_ssubj -
+  alpha -
+  beta_kfas * stage2$pi_full_lag1 -
+  (1 - beta_kfas) * stage2$E_t +
+  gamma_kfas * stage2$u_t
+ippcv_t <- stage2$ippcv
+model_kfas_2 <- SSModel(
+  y2_v ~ -1 +
+    SSMregression(~ippcv_t, Q = 0, a1 = 0, P1 = matrix(1e6)) +
+    SSMcustom(Z = 1, T = 1, R = 1, Q = 1 / lambda, a1 = 0, P1inf = 1),
+  H = matrix(1)
+)
+out_kfas_2 <- KFS(model_kfas_2, smoothing = "state")
+theta_kfas <- out_kfas_2$alphahat[1, "ippcv_t"]
+
+innov_kfas <- as.numeric(out_kfas_2$v)
+Ft_kfas <- as.numeric(out_kfas_2$F)
+valid_kfas <- is.finite(innov_kfas) & is.finite(Ft_kfas) & Ft_kfas > 0
+sigma2_kfas <- mean(innov_kfas[valid_kfas]^2 / Ft_kfas[valid_kfas])
+nairu_kfas <- data.frame(
+  date = stage2$date, pkg = "KFAS",
+  nairu = out_kfas_2$alphahat[, 2] / gamma_kfas,
+  se = sqrt(out_kfas_2$V[2, 2, ] * sigma2_kfas) / gamma_kfas
+)
+
+## kalmanfilter -----
+y1_row <- matrix(stage1$pi_ssubj - alpha - stage1$E_t, nrow = 1)
+Tn1 <- ncol(y1_row)
+build_ssm_1 <- function(par) {
+  beta <- par[1]
+  gamma <- par[2]
+  list(
+    B0 = matrix(0), P0 = matrix(1e6),
+    Dm = array(0, dim = c(1, 1, Tn1)),
+    Am = array(beta * c_t - gamma * stage1$u_t, dim = c(1, 1, Tn1)),
+    Fm = array(1, dim = c(1, 1, Tn1)),
+    Hm = array(gamma, dim = c(1, 1, Tn1)),
+    Qm = array(1 / lambda, dim = c(1, 1, Tn1)),
+    Rm = array(1, dim = c(1, 1, Tn1))
+  )
+}
+objective_1 <- function(par) {
+  ll <- kalman_filter(build_ssm_1(par), y1_row, smooth = FALSE)$lnl
+  if (!is.finite(ll)) {
+    return(1e10)
+  }
+  -ll
+}
+fit_kf_1 <- optim(
+  par = c(beta = 0.2, gamma = 0.5), fn = objective_1, method = "BFGS",
+  control = list(maxit = 5000, reltol = 1e-14)
+)
+beta_kf <- fit_kf_1$par[1]
+gamma_kf <- fit_kf_1$par[2]
+
+y2_row <- matrix(
+  stage2$pi_ssubj -
+    alpha -
+    beta_kf * stage2$pi_full_lag1 -
+    (1 - beta_kf) * stage2$E_t +
+    gamma_kf * stage2$u_t,
+  nrow = 1
+)
+Tn2 <- ncol(y2_row)
+build_ssm_2 <- function(theta) {
+  list(
+    B0 = matrix(0), P0 = matrix(1e6),
+    Dm = array(0, dim = c(1, 1, Tn2)),
+    Am = array(theta * stage2$ippcv, dim = c(1, 1, Tn2)),
+    Fm = array(1, dim = c(1, 1, Tn2)),
+    Hm = array(1, dim = c(1, 1, Tn2)),
+    Qm = array(1 / lambda, dim = c(1, 1, Tn2)),
+    Rm = array(1, dim = c(1, 1, Tn2))
+  )
+}
+objective_2 <- function(theta) {
+  ll <- kalman_filter(build_ssm_2(theta), y2_row, smooth = FALSE)$lnl
+  if (!is.finite(ll)) {
+    return(1e10)
+  }
+  -ll
+}
+fit_kf_2 <- optimize(objective_2, interval = c(-5, 5), tol = 1e-10)
+theta_kf <- fit_kf_2$minimum
+
+filt_kf <- kalman_filter(build_ssm_2(theta_kf), y2_row, smooth = TRUE)
+innov_kf <- as.numeric(filt_kf$N_t)
+Ft_kf <- as.numeric(filt_kf$F_t)
+valid_kf <- is.finite(innov_kf) & is.finite(Ft_kf) & Ft_kf > 0
+sigma2_kf <- mean(innov_kf[valid_kf]^2 / Ft_kf[valid_kf])
+nairu_kf <- data.frame(
+  date = stage2$date, pkg = "kalmanfilter",
+  nairu = as.numeric(filt_kf$B_tt) / gamma_kf,
+  se = sqrt(as.numeric(filt_kf$P_tt) * sigma2_kf) / gamma_kf
+)
+```
+
+## `bssm`: a mesma matemática, uma sintaxe de propósito diferente
+
+O [`bssm`](https://cran.r-project.org/package=bssm) não foi construído para o caso
+linear-gaussiano — sua razão de existir são modelos de espaço de estados **fora** desse caso
+(observações de Poisson, binomiais, dinâmicas não-lineares), onde o filtro de Kalman exato não
+se aplica e a inferência exige simulação (MCMC via *particle filter*, no jargão do pacote,
+*importance sampling*). Usá-lo aqui, no caso exatamente linear-gaussiano em que o filtro de
+Kalman padrão já é ótimo, é down-grade proposital: serve como ponte, porque o mesmo objeto de
+modelo (`bsm_lg`, de *basic structural model, linear-gaussian*) aceita tanto `logLik()` +
+otimizador (replicando a mecânica frequentista da Parte 1) quanto `run_mcmc()` (a via bayesiana
+nativa do pacote) — o mesmo modelo, duas filosofias de estimação.
+
+Uma diferença de implementação vale registrar antes do código: ao contrário do `KFAS`, o `bssm`
+**não tem inicialização difusa exata** — `P1` precisa ser uma matriz finita, sem equivalente ao
+`P1inf` do `KFAS`. É a mesma limitação do `kalmanfilter` na Parte 1, e por isso construo o modelo
+nativamente (`bsm_lg` com `P1=1e6`), em vez de importar a especificação já difusa do `KFAS` via
+`as_bssm()` — o ponto aqui é usar o `bssm` como ferramenta independente, não como pós-processamento
+de um modelo já validado. Ao contrário do que a limitação formal sugere, $P_1=10^6$
+(grande-mas-finito) se revela numericamente equivalente ao difuso exato *para este modelo
+específico*: os coeficientes e a largura das bandas de incerteza batem com MARSS/KFAS até a
+3ª–4ª casa decimal, como os resultados abaixo confirmam. A divergência que o `kalmanfilter` mostrou
+na Parte 1, portanto, nunca foi sobre "$P_0$ grande-mas-finito vs. difuso exato" em geral — é um
+artefato específico daquela recursão.
+
+### `bssm-MLE`: espelhando a mecânica frequentista
+
+Mesmo desenho em dois estágios da Parte 1, agora com `bsm_lg` + `optim()`/`optimize()` maximizando
+`logLik()` diretamente. Uma diferença de sintaxe: o `xreg` do `bssm` só aceita coeficientes como
+objeto de *prior* (via `beta = normal(...)`), não como número fixo — não há como declarar "esse
+regressor tem coeficiente conhecido $\theta$". A saída é passar os regressores conhecidos pelo
+argumento `D` (o intercepto da equação de observação), reconstruído a cada chamada do otimizador
+— o mesmo truque de `Am` variante no tempo que o `kalmanfilter` já usava na Parte 1, só que aqui
+com outro nome de argumento.
+
+```{r}
+#| label: bssm-mle-stage1
+build_bssm_mle_1 <- function(par) {
+  bsm_lg(y1_v,
+    sd_y = 1, sd_level = sqrt(1 / lambda),
+    D = par[1] * c_t + par[2] * d_t,
+    a1 = 0, P1 = matrix(1e6)
+  )
+}
+objective_bssm_1 <- function(par) -logLik(build_bssm_mle_1(par))
+
+fit_bssm_mle_1 <- optim(
+  par = c(beta = 0.2, gamma = 0.5), fn = objective_bssm_1,
+  method = "BFGS", control = list(maxit = 2000, reltol = 1e-12)
+)
+beta_bssm_mle <- fit_bssm_mle_1$par[1]
+gamma_bssm_mle <- fit_bssm_mle_1$par[2]
+
+cat("beta =", round(beta_bssm_mle, 4), " gamma =", round(gamma_bssm_mle, 4), "\n")
+```
+
+```{r}
+#| label: bssm-mle-stage2
+y2_v_bssm_mle <- stage2$pi_ssubj -
+  alpha -
+  beta_bssm_mle * stage2$pi_full_lag1 -
+  (1 - beta_bssm_mle) * stage2$E_t +
+  gamma_bssm_mle * stage2$u_t
+
+build_bssm_mle_2 <- function(theta, y2v) {
+  bsm_lg(y2v,
+    sd_y = 1, sd_level = sqrt(1 / lambda), D = theta * ippcv_t,
+    a1 = 0, P1 = matrix(1e6)
+  )
+}
+fit_bssm_mle_2 <- optimize(
+  function(theta) -logLik(build_bssm_mle_2(theta, y2_v_bssm_mle)),
+  interval = c(-5, 5), tol = 1e-10
+)
+theta_bssm_mle <- fit_bssm_mle_2$minimum
+
+model_final_bssm_mle <- build_bssm_mle_2(theta_bssm_mle, y2_v_bssm_mle)
+kf_bssm_mle <- kfilter(model_final_bssm_mle)
+sm_bssm_mle <- smoother(model_final_bssm_mle)
+
+# escala concentrada, igual a MARSS/KFAS na Parte 1: com sd_y=1 fixo o filtro
+# acerta o FORMATO da incerteza do estado mas não a escala absoluta
+Tn2 <- nrow(stage2)
+innov_bssm_mle <- y2_v_bssm_mle - theta_bssm_mle * ippcv_t - as.numeric(kf_bssm_mle$at[1:Tn2])
+Ft_bssm_mle <- as.numeric(kf_bssm_mle$Pt[1, 1, 1:Tn2]) + 1
+sigma2_bssm_mle <- mean(innov_bssm_mle^2 / Ft_bssm_mle)
+
+nairu_bssm_mle <- data.frame(
+  date = stage2$date, pkg = "bssm-MLE",
+  nairu = as.numeric(sm_bssm_mle$alphahat[, 1]) / gamma_bssm_mle,
+  se = sqrt(as.numeric(sm_bssm_mle$Vt[1, 1, ]) * sigma2_bssm_mle) / gamma_bssm_mle
+)
+
+cat("theta =", round(theta_bssm_mle, 4), "\n")
+```
+
+### `bssm-MCMC`: a via bayesiana nativa
+
+Aqui a sintaxe muda de filosofia: em vez de otimizar uma verossimilhança, declaro **priors**
+sobre $\beta,\gamma$ (`normal(mean, mean_prior, sd_prior)` — centrados nos mesmos chutes iniciais
+do otimizador, com desvio-padrão 1, portanto pouco informativos) e chamo `run_mcmc()`, que amostra
+da distribuição posterior via *importance sampling*/MCMC em vez de buscar um único ponto ótimo.
+$\lambda=120$ continua **fixo** (`sd_y=1`, `sd_level=sqrt(1/120)`, números, não priors) — mesma
+calibração central do BCB, mesma razão já discutida na Parte 1 para não deixar essa razão livre.
+
+Preservo o mesmo desenho em dois estágios: a média posterior de $\beta,\gamma$ do 1º estágio vira
+um valor fixo (*plug-in*) no 2º, exatamente como o ponto de máxima verossimilhança fazia nos
+outros quatro pacotes. Isso **não é** estimação bayesiana conjunta pura — um bayesiano ortodoxo
+propagaria a incerteza de $\beta,\gamma$ para o 2º estágio via uma cadeia MCMC única sobre todos
+os parâmetros de uma vez. Mantive o plug-in por comparabilidade com a Tabela 1 do paper e com o
+resto da série de posts, não por ser a escolha bayesiana "correta" — vale registrar isso em vez de
+escondê-lo.
+
+```{r}
+#| label: bssm-mcmc-stage1
+model_bssm_mcmc_1 <- bsm_lg(y1_v,
+  sd_y = 1, sd_level = sqrt(1 / lambda),
+  xreg = cbind(c_t, d_t), beta = normal(c(0.2, 0.5), 0, 1),
+  a1 = 0, P1 = matrix(1e6)
+)
+mcmc_bssm_1 <- run_mcmc(model_bssm_mcmc_1, iter = 10000, burnin = 2000, seed = 1)
+theta_sum_bssm_1 <- summary(mcmc_bssm_1, return_se = TRUE)
+beta_bssm_mcmc <- theta_sum_bssm_1$Mean[theta_sum_bssm_1$variable == "c_t"]
+gamma_bssm_mcmc <- theta_sum_bssm_1$Mean[theta_sum_bssm_1$variable == "d_t"]
+
+cat("beta =", round(beta_bssm_mcmc, 4), " gamma =", round(gamma_bssm_mcmc, 4), "\n")
+```
+
+```{r}
+#| label: bssm-mcmc-stage2
+y2_v_bssm_mcmc <- stage2$pi_ssubj -
+  alpha -
+  beta_bssm_mcmc * stage2$pi_full_lag1 -
+  (1 - beta_bssm_mcmc) * stage2$E_t +
+  gamma_bssm_mcmc * stage2$u_t
+
+model_bssm_mcmc_2 <- bsm_lg(y2_v_bssm_mcmc,
+  sd_y = 1, sd_level = sqrt(1 / lambda),
+  xreg = ippcv_t, beta = normal(0, 0, 1),
+  a1 = 0, P1 = matrix(1e6)
+)
+mcmc_bssm_2 <- run_mcmc(model_bssm_mcmc_2, iter = 10000, burnin = 2000, seed = 1)
+theta_bssm_mcmc <- summary(mcmc_bssm_2, return_se = TRUE)$Mean[1]
+
+states_bssm_mcmc <- summary(mcmc_bssm_2, variable = "states")
+states_bssm_mcmc <- states_bssm_mcmc[states_bssm_mcmc$variable == "level", ][1:Tn2, ]
+
+# atenção: o SD que summary(..., variable="states") devolve está na mesma
+# escala não-normalizada de sd_y=1/sd_level=sqrt(1/lambda) que os outros
+# pacotes usam -- precisa do MESMO sigma2_hat de reescala que o bssm-MLE já
+# aplicou, senão a banda sai artificialmente ~2x mais estreita que a real
+model_check_bssm_mcmc <- bsm_lg(y2_v_bssm_mcmc,
+  sd_y = 1, sd_level = sqrt(1 / lambda),
+  D = theta_bssm_mcmc * ippcv_t, a1 = 0, P1 = matrix(1e6)
+)
+kf_bssm_mcmc <- kfilter(model_check_bssm_mcmc)
+innov_bssm_mcmc <- y2_v_bssm_mcmc - theta_bssm_mcmc * ippcv_t - as.numeric(kf_bssm_mcmc$at[1:Tn2])
+Ft_bssm_mcmc <- as.numeric(kf_bssm_mcmc$Pt[1, 1, 1:Tn2]) + 1
+sigma2_bssm_mcmc <- mean(innov_bssm_mcmc^2 / Ft_bssm_mcmc)
+
+nairu_bssm_mcmc <- data.frame(
+  date = stage2$date, pkg = "bssm-MCMC",
+  nairu = states_bssm_mcmc$Mean / gamma_bssm_mcmc,
+  se = states_bssm_mcmc$SD * sqrt(sigma2_bssm_mcmc) / gamma_bssm_mcmc
+)
+
+cat("theta =", round(theta_bssm_mcmc, 4), "\n")
+```
+
+Esse rescale não é opcional nem cosmético: nas duas primeiras tentativas de checar esse resultado
+numericamente (não só visualmente), a banda do `bssm-MCMC` saiu sistematicamente mais estreita que
+a do `bssm-MLE` — bug de esquecer essa reescala, não uma diferença real de incerteza entre os dois.
+Fica como lembrete de sempre validar a **largura** da banda de qualquer pacote novo contra os já
+estabelecidos, não confiar na inspeção visual do gráfico sozinha.
+
+## O que o MCMC mostra que o MLE não mostra
+
+Coeficientes e bandas de NAIRU (comparados abaixo) batem entre `bssm-MLE`, `bssm-MCMC` e os três
+pacotes frequentistas da Parte 1 até a 3ª–4ª casa decimal — a seção seguinte confirma isso. Se a
+comparação parasse por aí, o post ficaria sem nada de genuinamente diferente para mostrar: um
+MCMC que reproduz um MLE, ponto a ponto, não é evidência de nada além de "o modelo é simples o
+bastante para que os dois concordem" (mais sobre o porquê disso na seção final). O que o MCMC
+produz e o MLE não tem como produzir é a distribuição posterior inteira, não só seu resumo pontual
+— e essa distribuição é o que sobra do `run_mcmc()` acima, guardada nos *draws* de cada parâmetro.
+
+### A posterior de $\gamma$
+
+```{r}
+#| label: fig-posterior-gamma
+#| fig-cap: "Posterior de γ (1º estágio, bssm-MCMC) vs. a prior N(0,1) declarada."
+gamma_draws <- as.data.frame(mcmc_bssm_1$theta)$d_t
+
+prior_x <- seq(-3, 3, length.out = 400)
+prior_df <- data.frame(x = prior_x, density = dnorm(prior_x, 0, 1))
+
+ggplot() +
+  geom_histogram(
+    aes(x = gamma_draws, y = after_stat(density)),
+    bins = 60, fill = pal_blog("main")[1], alpha = 0.55, color = NA
+  ) +
+  geom_line(data = prior_df, aes(x, density), color = accent_blog(), linewidth = 0.8) +
+  geom_vline(xintercept = gamma_bssm_mcmc, linetype = "dashed", color = pal_blog("main")[1]) +
+  labs(
+    title = "Posterior de γ (1º estágio, bssm-MCMC)",
+    subtitle = "Densidade estimada via MCMC, vs. prior N(0,1) declarada",
+    x = expression(gamma),
+    caption = caption_blog("BCB")
+  ) +
+  theme_blog()
+```
+
+A prior declarada (linha laranja) é praticamente plana no intervalo relevante — centrada em 0,
+desvio-padrão 1, contra uma posterior (histograma) concentrada bem longe dali, entre
+aproximadamente 0,6 e 0,8. Com ~216 observações mensais informando o coeficiente, os dados
+dominam a prior quase difusa: a posterior "esquece" de onde partiu. `gamma_bssm_mcmc` (linha
+tracejada verde) — o número reportado na tabela de coeficientes mais abaixo — é só a média dessa
+distribuição inteira, não um objeto que existe por si. É essa distribuição, e não o ponto, que o
+MCMC de fato entrega; o MLE entrega só a curvatura local da log-verossimilhança em torno do
+ótimo (via aproximação assintótica), nunca a forma completa mostrada aqui.
+
+### O MCMC precisa convergir — o MLE não
+
+```{r}
+#| label: fig-mcmc-diagnostics
+#| fig-cap: "Traceplot da cadeia de γ (1º estágio) -- mistura em torno da posterior, sem tendência visível."
+trace_df <- data.frame(
+  iter = seq_along(gamma_draws),
+  gamma = gamma_draws
+)
+
+ggplot(trace_df, aes(iter, gamma)) +
+  geom_line(color = pal_blog("main")[1], linewidth = 0.25, alpha = 0.8) +
+  labs(
+    title = "Traceplot da cadeia de γ",
+    subtitle = "1º estágio, pós burn-in",
+    x = "Iteração",
+    caption = caption_blog("BCB")
+  ) +
+  theme_blog()
+```
+
+```{r}
+#| label: tbl-ess
+ess_gamma <- theta_sum_bssm_1$ESS[theta_sum_bssm_1$variable == "d_t"]
+kable(
+  data.frame(
+    Parâmetro = "gamma (1º estágio)",
+    `Iterações (pós burn-in)` = mcmc_bssm_1$iter - mcmc_bssm_1$burnin,
+    `ESS` = round(ess_gamma, 0),
+    check.names = FALSE
+  )
+)
+```
+
+O otimizador BFGS que os outros pacotes usam é determinístico: dado o mesmo ponto de partida, ele
+sempre converge para o mesmo ótimo (ou falha de forma reprodutível). O MCMC é diferente por
+construção — é uma cadeia amostrada, e "terminou" não é uma noção binária como "o gradiente zerou".
+O traceplot acima é o diagnóstico mais básico: a cadeia deveria parecer uma faixa horizontal
+razoavelmente estável, sem tendência nem períodos presos num valor só (sinal de má mistura). O
+**ESS** (*effective sample size*) resume a mesma ideia num número — quantas amostras
+*efetivamente independentes* as 8.000 iterações pós burn-in valem, dada a autocorrelação da
+cadeia; bem abaixo do total de iterações sinaliza que a cadeia está andando devagar e precisaria
+rodar por mais tempo para uma estimativa confiável da posterior. Nada disso tem equivalente no
+MLE — não porque o MLE seja "mais simples", mas porque ele resolve um problema de otimização, não
+de amostragem.
+
+## Resultados
+
+### Coeficientes
+
+```{r}
+#| label: tbl-coefs
+tbl_coefs <- data.frame(
+  Pacote = c("MARSS", "KFAS", "kalmanfilter", "bssm-MLE", "bssm-MCMC", "Paper original (BCB)"),
+  beta = c(
+    sprintf("%.4f", unname(beta_marss)),
+    sprintf("%.4f", unname(beta_kfas)),
+    sprintf("%.4f", unname(beta_kf)),
+    sprintf("%.4f", unname(beta_bssm_mle)),
+    sprintf("%.4f", unname(beta_bssm_mcmc)),
+    "0.30 (0.10)"
+  ),
+  gamma = c(
+    sprintf("%.4f", unname(gamma_marss)),
+    sprintf("%.4f", unname(gamma_kfas)),
+    sprintf("%.4f", unname(gamma_kf)),
+    sprintf("%.4f", unname(gamma_bssm_mle)),
+    sprintf("%.4f", unname(gamma_bssm_mcmc)),
+    "0.67 (0.26)"
+  ),
+  theta = c(
+    sprintf("%.4f", unname(theta_marss)),
+    sprintf("%.4f", unname(theta_kfas)),
+    sprintf("%.4f", unname(theta_kf)),
+    sprintf("%.4f", unname(theta_bssm_mle)),
+    sprintf("%.4f", unname(theta_bssm_mcmc)),
+    "1.32"
+  )
+)
+kable(
+  tbl_coefs,
+  col.names = c("Pacote", "β (1º estágio)", "γ (1º estágio)", "θ (2º estágio)"),
+  align = c("l", "r", "r", "r")
+)
+```
+
+`bssm-MLE` e `bssm-MCMC` batem entre si e com MARSS/KFAS até a 3ª–4ª casa decimal — apesar de
+$P_1=10^6$ (grande-mas-finito) não ser, formalmente, a mesma inicialização difusa exata que o
+KFAS implementa. Só o `kalmanfilter` continua destoando em $\gamma$ no 1º estágio, pela mesma razão
+já discutida na Parte 1 (a inicialização difusa exata "esquece" mais devagar quando $Q$ é pequeno,
+e é a única implementação aqui sem ela — o `bssm` também não tem difuso exato, mas o $P_1$ finito
+não se traduziu em viés mensurável neste modelo específico).
+
+### A trajetória da NAIRU
+
+```{r}
+#| label: fig-nairu-bssm
+#| fig-cap: "NAIRU estimada (com IC 95%) pelas cinco vozes, dez/2001–nov/2024."
+nairu_all <- bind_rows(
+  nairu_marss, nairu_kfas, nairu_kf, nairu_bssm_mle, nairu_bssm_mcmc
+) |>
+  mutate(lower = nairu - 1.96 * se, upper = nairu + 1.96 * se)
+
+ggplot(nairu_all, aes(date, nairu, color = pkg, fill = pkg)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.12, color = NA) +
+  geom_line(linewidth = 0.7) +
+  scale_color_blog(tier = "extended") +
+  scale_fill_blog(tier = "extended") +
+  scale_x_date_blog(nairu_all$date) +
+  labs(
+    title = "NAIRU estimada pelas cinco vozes",
+    subtitle = "% da força de trabalho, IC 95%, dez/2001–nov/2024",
+    x = NULL,
+    caption = caption_blog("BCB")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+As cinco faixas praticamente se sobrepõem — inclusive a largura das bandas de incerteza, não só o
+nível central. `bssm-MLE` e `bssm-MCMC` caem exatamente em cima de MARSS/KFAS; `kalmanfilter`
+continua ligeiramente abaixo, mesma razão da Parte 1 (o $\gamma$ mais alto que estima comprime a
+NAIRU implícita, já que $u_t^*=x_t/\gamma$).
+
+## Frequentista vs. bayesiano: por que concordam aqui (e quando não concordariam)
+
+**MLE**: trata $\beta,\gamma,\theta$ como números fixos desconhecidos. Estima um único ponto —
+o que maximiza a probabilidade dos dados observados — e obtém a incerteza desse ponto via a
+curvatura local da log-verossimilhança (quanto mais "afiado" o pico, menor o erro-padrão
+assintótico). O otimizador converge para um valor determinístico; rodá-lo de novo com o mesmo
+ponto de partida dá exatamente o mesmo resultado.
+
+**MCMC**: trata $\beta,\gamma,\theta$ como variáveis aleatórias com uma distribuição *a priori*,
+combina essa prior com a verossimilhança dos dados via Bayes, e devolve a distribuição *a
+posteriori* inteira — não um ponto só. O que reportei nas tabelas acima (média da posterior) é
+um resumo dessa distribuição, escolhido por conveniência de comparação, não o produto primário do
+método (a Figura de posterior de $\gamma$ acima é o produto primário). A incerteza é o espalhamento
+dessa distribuição, obtida por amostragem — daí a necessidade de diagnósticos de convergência que
+o MLE simplesmente não tem.
+
+Essa diferença filosófica também muda a interpretação de "95%": um intervalo de confiança
+frequentista de 95% é uma afirmação sobre o **procedimento** (se eu repetisse a coleta de dados
+infinitas vezes e recalculasse o intervalo a cada vez, 95% desses intervalos conteriam o
+verdadeiro $\gamma$) — não uma afirmação de probabilidade sobre o $\gamma$ específico calculado
+aqui. Um intervalo de credibilidade bayesiano de 95% é, ao contrário, uma afirmação direta sobre a
+posterior: dado os dados observados, há 95% de probabilidade (posterior) de que $\gamma$ esteja
+naquele intervalo. Por comparabilidade visual com os outros quatro pacotes, a banda do
+`bssm-MCMC` no gráfico acima usa a mesma fórmula normal $\pm1{,}96\cdot se$ dos demais — não um
+intervalo de credibilidade por quantis da posterior (que seria a leitura bayesiana mais correta,
+mas quebraria a comparação direta de largura entre as cinco faixas).
+
+**Por que os dois métodos concordam tão de perto aqui.** Não é coincidência nem um resultado geral
+— é uma consequência de três escolhas específicas deste exercício: (1) o modelo é
+**linear-gaussiano**, o caso em que o filtro de Kalman é exato e a verossimilhança tem forma
+fechada; (2) as priors declaradas são **pouco informativas** (desvio-padrão 1 em torno de um chute
+central, contra ~216 observações mensais) — a Figura da posterior de $\gamma$ acima mostra
+literalmente essa dominância dos dados sobre a prior; e (3) com dados suficientes, a posterior
+bayesiana converge assintoticamente para uma normal centrada no MLE, com variância igual ao
+inverso da informação de Fisher — o mesmo objeto que o erro-padrão frequentista já estimava. Sob
+essas três condições, "bayesiano" e "frequentista" não são hipóteses concorrentes sobre o mundo,
+são dois algoritmos que miram o mesmo alvo assintótico.
+
+A diferença apareceria de verdade em duas situações que este exercício **não** tem: priors
+genuinamente informativas (uma crença externa forte sobre $\gamma$, vinda de outro estudo ou
+literatura, que puxaria a posterior para longe do MLE mesmo com dados abundantes) — ou um modelo
+fora do caso linear-gaussiano, onde o filtro de Kalman exato deixa de existir e passa a ser
+necessário aproximar (Kalman estendido, unscented) ou simular (filtro de partículas, MCMC) — regime
+em que o `bssm` deixa de ser uma ponte pedagógica e passa a ser a ferramenta certa para o
+problema, não uma alternativa equivalente.
+
+Vale reforçar a mesma ressalva da Parte 1: a incerteza mostrada nas bandas acima não inclui a
+incerteza sobre os próprios parâmetros $\beta,\gamma,\theta$ (tratados como fixos, plugados do 1º
+estágio) — a incerteza real sobre a NAIRU é maior ainda, em qualquer um dos cinco pacotes.

@@ -4,7 +4,7 @@ page-layout: full
 include-before-body: ../assets/html/particles-embed.html
 include-after-body: ../assets/html/particles-scripts.html
 listing:
-  contents: .
+  contents: "[0-9]*.qmd"
   type: grid
   categories: true
   sort: "date desc"
@@ -13,7 +13,7 @@ toc: false
 ---
 
 ::: {.prose-glass}
-A growing collection of quantitative economics exercises — replications and extensions
+A growing collection of quantitative economics exercises. Replications and extensions
 of public empirical work from central banks, academic papers, and primary research,
 built on public data.
 :::

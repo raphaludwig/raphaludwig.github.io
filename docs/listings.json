@@ -2,15 +2,15 @@
   {
     "listing": "/blog/index.html",
     "items": [
-      "/blog/0001-kalman-filter-nairu-pt1.html",
-      "/blog/0000-template.html"
+      "/blog/0001-kalman-filter-pt2-bssm.html",
+      "/blog/0001-kalman-filter-pt1-nairu.html"
     ]
   },
   {
     "listing": "/index.html",
     "items": [
-      "/blog/0001-kalman-filter-nairu-pt1.html",
-      "/blog/0000-template.html"
+      "/blog/0001-kalman-filter-pt2-bssm.html",
+      "/blog/0001-kalman-filter-pt1-nairu.html"
     ]
   }
 ]

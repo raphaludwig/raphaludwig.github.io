@@ -1,6 +1,10 @@
 project:
   type: website
   output-dir: docs
+  render:
+    - "*.qmd"
+    - "quick_guide.md"
+    - "blog/*.qmd"
   resources:
     - .nojekyll
     - cv/Raphael_Ludwig_CV.pdf

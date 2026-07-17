@@ -10,7 +10,8 @@ listing:
   contents:
     - blog/*.qmd
     - "!blog/index.qmd"
-  type: default
+  type: grid
+  grid-columns: 1
   sort: "date desc"
   max-items: 5
   fields: [title, description, date, categories]
@@ -37,7 +38,7 @@ listing:
 
 ::: {.about-block}
 ### Previous positions
-Economist, Vista Capital (2020–2026)
+Economist, Vista Capital (2020–May 2026)
 :::
 
 ::: {.about-block}

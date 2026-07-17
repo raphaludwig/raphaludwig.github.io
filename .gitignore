@@ -2,3 +2,4 @@
 **/*.quarto_ipynb
 .DS_Store
 quick_guide.md
+blog/CLAUDE.md

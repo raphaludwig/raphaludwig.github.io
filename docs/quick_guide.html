@@ -78,7 +78,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-206e8f64187fc1a758a61fe82b958731.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-c2c7980620bcf94c2a8411d82b2049bb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -175,13 +175,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="adicionar-um-post-novo-no-blog-exemplo-completo" class="level2">
 <h2 class="anchored" data-anchor-id="adicionar-um-post-novo-no-blog-exemplo-completo">1. Adicionar um post novo no blog (exemplo completo)</h2>
-<section id="copie-o-template" class="level3">
-<h3 class="anchored" data-anchor-id="copie-o-template">1.1 Copie o template</h3>
-<p>Dentro da pasta <code>blog/</code>, existe <code>0000-template.qmd</code> — é o esqueleto de um post. Copie ele para um arquivo novo, com um número sequencial e um nome curto do tema (isso controla a ordem/organização dos arquivos):</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Copy-Item</span> blog\<span class="dv">0000</span><span class="op">-</span>template<span class="op">.</span><span class="fu">qmd</span> blog\<span class="dv">0001</span><span class="op">-</span>inflacao-brasil<span class="op">.</span><span class="fu">qmd</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Exemplos de nomes: <code>0001-inflacao-brasil.qmd</code>, <code>0002-taylor-rule.qmd</code>, etc.</p>
-<p>⚠️ <strong>Não edite o <code>0000-template.qmd</code> original</strong> — ele fica como modelo para o próximo post. Sempre copie para um arquivo novo.</p>
-<p>⚠️ <strong>Atenção</strong>: hoje o <code>0000-template.qmd</code> está sendo publicado como se fosse um post de verdade (aparece na listagem do blog). Isso é um bug pendente — combine comigo depois para excluir esse arquivo da listagem, ou simplesmente não deixe conteúdo de rascunho nele.</p>
+<section id="comece-um-arquivo-novo" class="level3">
+<h3 class="anchored" data-anchor-id="comece-um-arquivo-novo">1.1 Comece um arquivo novo</h3>
+<p>O post-template (<code>0000-template.qmd</code>) foi removido depois que os primeiros posts reais ficaram prontos — não existe mais um esqueleto genérico na pasta <code>blog/</code>. Para um post novo, copie um post existente como ponto de partida (ex: <code>0001-kalman-filter-pt1-nairu.qmd</code>) e ajuste, ou comece do zero com um número sequencial e um nome curto do tema (isso controla a ordem/organização dos arquivos):</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode powershell code-with-copy"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">Copy-Item</span> blog\<span class="dv">0001</span><span class="op">-</span>kalman-filter-pt1-nairu<span class="op">.</span><span class="fu">qmd</span> blog\<span class="dv">0002</span><span class="op">-</span>inflacao-brasil<span class="op">.</span><span class="fu">qmd</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Exemplos de nomes: <code>0002-inflacao-brasil.qmd</code>, <code>0003-taylor-rule.qmd</code>, etc.</p>
+<p>⚠️ Se copiar um post existente, apague o conteúdo antigo (motivação, dados, código, gráfico, conclusão) antes de escrever o novo — só o front matter e a estrutura de seções valem a pena reaproveitar.</p>
+<p>💡 Quer um post pronto mas ainda não publicado? Marque <code>draft: true</code> no front matter — a página renderiza normalmente (acessível por URL direta), mas some da listagem do blog, da home, da busca e do sitemap até você tirar o <code>draft</code>.</p>
 </section>
 <section id="edite-o-cabeçalho-front-matter" class="level3">
 <h3 class="anchored" data-anchor-id="edite-o-cabeçalho-front-matter">1.2 Edite o cabeçalho (front matter)</h3>

@@ -2,22 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://raphaludwig.github.io/quick_guide.html</loc>
-    <lastmod>2026-07-07T23:29:07.636Z</lastmod>
+    <lastmod>2026-07-16T18:12:16.172Z</lastmod>
   </url>
   <url>
     <loc>https://raphaludwig.github.io/blog/index.html</loc>
-    <lastmod>2026-07-07T22:35:31.069Z</lastmod>
+    <lastmod>2026-07-17T02:06:09.096Z</lastmod>
   </url>
   <url>
-    <loc>https://raphaludwig.github.io/blog/0000-template.html</loc>
-    <lastmod>2026-07-07T16:26:00.836Z</lastmod>
-  </url>
-  <url>
-    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-nairu-pt1.html</loc>
-    <lastmod>2026-07-10T15:08:37.995Z</lastmod>
+    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-pt1-nairu.html</loc>
+    <lastmod>2026-07-17T05:46:29.618Z</lastmod>
   </url>
   <url>
     <loc>https://raphaludwig.github.io/index.html</loc>
-    <lastmod>2026-07-08T01:40:40.438Z</lastmod>
+    <lastmod>2026-07-17T02:06:11.433Z</lastmod>
   </url>
 </urlset>

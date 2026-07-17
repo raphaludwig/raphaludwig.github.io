@@ -76,18 +76,8 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 .quarto-listing .card-title, .quarto-listing .card-text { color: var(--pal-text) !important; }
 .listing-categories .listing-category { border-color: var(--pal-border) !important; color: var(--pal-text-mute) !important; }
 
-/* Home "Latest exercises" listing (type: default) renders items as .quarto-post,
-   not .card, so they don't get the frosted rule above — give them a near-opaque
-   card here so the particles behind the home page don't show through. */
-#listing-home-listing .quarto-post {
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid var(--pal-border);
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
-  margin-bottom: 1rem;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
+/* Data no rodapé do card, em tom mudo + itálico (destaca do título/descrição). */
+.quarto-listing .listing-date { color: var(--pal-text-mute); font-style: italic; }
 
 /* Frosted prose block for blog page text (e.g. the intro paragraph) — same look
    as .glass-card but with padding, since prose isn't wrapped in a Bootstrap card. */
