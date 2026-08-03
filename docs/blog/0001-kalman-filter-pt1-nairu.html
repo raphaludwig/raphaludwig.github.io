@@ -80,7 +80,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-c2c7980620bcf94c2a8411d82b2049bb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-c29592453d57fd6f6a52b7cdf8bd6180.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -272,7 +272,9 @@ window.Quarto = {
 <li><p><strong>Primeiro</strong>, explicar o que é um filtro de Kalman e <em>por que</em> a matemática por trás dele permite estimar uma variável que ninguém observa. A ideia aqui é uma derivação simples junto de um exemplo teórico acessível para ilustrá-la. Esse mesmo exemplo, diga-se de passagem, me ajudou bastante lá atrás a entender esse método.</p></li>
 <li><p><strong>Segundo</strong>, replicar o exercício do BCB do zero, com dados públicos, usando três pacotes de R diferentes (<a href="https://cran.r-project.org/web/packages/MARSS/index.html"><code>MARSS</code></a>, <a href="https://cran.r-project.org/web/packages/KFAS/index.html"><code>KFAS</code></a> e <a href="https://cran.r-project.org/web/packages/kalmanfilter/index.html"><code>kalmanfilter</code></a>), comparando sintaxe e resultados entre eles.</p></li>
 </ul>
-<p>Isso é a Parte 1. Na Parte 2, vou re-estimar o mesmo exercício para uma amostra mais recente com um pacote Bayesiano (<code>bssm</code>, mais uma sintaxe de presente para os leitores), em duas versões — máxima verossimilhança e MCMC — para contrastar as abordagens frequentista e bayesiana dado exatamente o mesmo modelo.</p>
+<blockquote class="blockquote">
+<p><strong>Update</strong>: Isso é a Parte 1. Depois da publicação deste post, o autor do post original publicou uma atualização oficial do exercício (<a href="https://www.bcb.gov.br/noticiablogbc/46/noticia">post nº46</a>) usando dados mais recentes e uma reestimação em estágio único, com a razão sinal-ruído λ livre em vez de calibrada. Na Parte 2, replico essa versão atualizada com um pacote Bayesiano (<code>bssm</code>, mais uma sintaxe de presente para os leitores), em duas versões, máxima verossimilhança e MCMC, para contrastar as abordagens frequentista e bayesiana.</p>
+</blockquote>
 </section>
 <section id="o-que-é-um-filtro-de-kalman-e-por-que-ele-funciona" class="level2">
 <h2 class="anchored" data-anchor-id="o-que-é-um-filtro-de-kalman-e-por-que-ele-funciona">O que é um filtro de Kalman, e por que ele funciona</h2>
@@ -338,7 +340,7 @@ x_{t-1}\mid y_{1:t-1} \sim N(\hat x_{t-1\mid t-1},\, P_{t-1\mid t-1})
 \]</span></p>
 <p>Essa também é a estimativa <strong>atualizada</strong> do passo anterior, já incorporando <span class="math inline">\(y_{t-1}\)</span>.</p>
 <p>A suposição de normalidade é o passo indutivo de um argumento por indução. O <strong>passo indutivo</strong> é mostrar que, partindo de uma normal em <span class="math inline">\(t-1\)</span>, você chega numa normal em <span class="math inline">\(t\)</span>.</p>
-<p>Como não existe um “passo anterior” de verdade para <span class="math inline">\(t=1\)</span>, é preciso simplesmente <strong>escolher</strong> uma distribuição inicial <span class="math inline">\(x_0 \sim N(\hat x_0, P_0)\)</span> — um chute de modelagem, não uma estimativa, tipicamente com <span class="math inline">\(P_0\)</span> difusa para refletir que você não sabe quase nada antes de ver dados. Como cada passo do ciclo preserva a propriedade, o chute inicial em <span class="math inline">\(t=0\)</span> é o único lugar da cadeia inteira onde a normalidade é <em>imposta</em> em vez de derivada. O resto segue por construção.</p>
+<p>Como não existe um “passo anterior” de verdade para <span class="math inline">\(t=1\)</span>, é preciso simplesmente <strong>escolher</strong> uma distribuição inicial <span class="math inline">\(x_0 \sim N(\hat x_0, P_0)\)</span>. Um chute de modelagem, não uma estimativa, tipicamente com <span class="math inline">\(P_0\)</span> difusa para refletir que você não sabe quase nada antes de ver dados. Como cada passo do ciclo preserva a propriedade, o chute inicial em <span class="math inline">\(t=0\)</span> é o único lugar da cadeia inteira onde a normalidade é <em>imposta</em> em vez de derivada. O resto segue por construção.</p>
 <p>É isso que as próximas subseções derivam, primeiro propagando essa normal pela equação de estado (combinação linear de normais independentes continua normal), depois atualizando com <span class="math inline">\(y_t\)</span> via Bayes.</p>
 <p>Portanto, antes de ver <span class="math inline">\(y_t\)</span>, propague essa crença um passo à frente pela equação de estado. Tomando esperança e variância dos dois lados de <span class="math inline">\(x_t = B_t x_{t-1}+w_t\)</span> (usando que <span class="math inline">\(w_t\)</span> é independente de <span class="math inline">\(x_{t-1}\)</span> e de tudo observado até <span class="math inline">\(t-1\)</span>):</p>
 <p>A esperança de <span class="math inline">\(x_t\)</span> dado <span class="math inline">\(y_{1:t-1}\)</span> é: <span class="math display">\[
@@ -413,7 +415,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <p><span class="math display">\[
 \pi_t^{ss} = \underbrace{\alpha + \beta\cdot\pi_{t-1}^{12m} + (1-\beta)\cdot E_t(\pi^{LP}) + \theta\cdot \text{IPPCV}_t - \gamma\cdot u_t}_{\text{conhecido, coeficiente fixo}} + \underbrace{\gamma\cdot u_t^*}_{Z_t\cdot x_t} + \underbrace{\varepsilon_t}_{v_t}
 \]</span></p>
-<p>com a NAIRU seguindo um passeio aleatório: <span class="math inline">\(u_t^* = u_{t-1}^* + \vartheta_t\)</span>. Isso já é a equação de observação e de estado de um filtro de Kalman, mas repare que <span class="math inline">\(\gamma\)</span> aparece <strong>duas vezes</strong>. Uma vez como coeficiente do regressor observado <span class="math inline">\(u_t\)</span> (sinal negativo), outra como <span class="math inline">\(Z_t\)</span> multiplicando o estado <span class="math inline">\(u_t^*\)</span> (sinal positivo). Isso não é acidente — vem de o verdadeiro regressor ser o <em>hiato</em> <span class="math inline">\((u_t-u_t^*)\)</span>, não os dois termos separados — mas cria um problema prático. Teríamos que impor essa restrição (mesmo valor de <span class="math inline">\(\gamma\)</span> nos dois lugares) em cada pacote de R.</p>
+<p>com a NAIRU seguindo um passeio aleatório: <span class="math inline">\(u_t^* = u_{t-1}^* + \vartheta_t\)</span>. Isso já é a equação de observação e de estado de um filtro de Kalman, mas repare que <span class="math inline">\(\gamma\)</span> aparece <strong>duas vezes</strong>. Uma vez como coeficiente do regressor observado <span class="math inline">\(u_t\)</span> (sinal negativo), outra como <span class="math inline">\(Z_t\)</span> multiplicando o estado <span class="math inline">\(u_t^*\)</span> (sinal positivo). Isso não é acidente. Vem de o verdadeiro regressor ser o <em>hiato</em> <span class="math inline">\((u_t-u_t^*)\)</span>, não os dois termos separados, mas cria um problema prático. Teríamos que impor essa restrição (mesmo valor de <span class="math inline">\(\gamma\)</span> nos dois lugares) em cada pacote de R.</p>
 <p>Uma saída mais simples: ao invés de tratar <span class="math inline">\(u_t^*\)</span> como estado, definimos o estado como a <strong>NAIRU já escalada</strong> por <span class="math inline">\(\gamma\)</span>:</p>
 <p><span class="math display">\[x_t \equiv \gamma \cdot u_t^*\]</span></p>
 <p>Com essa mudança de variável, <span class="math inline">\(Z_t=1\)</span> (fixo, sem restrição nenhuma) e <span class="math inline">\(\gamma\)</span> aparece uma única vez, como coeficiente do regressor <span class="math inline">\(u_t\)</span>. No fim, recuperamos a NAIRU de volta dividindo o estado estimado por <span class="math inline">\(\hat\gamma\)</span>: <span class="math inline">\(u_t^* = x_t / \hat\gamma\)</span>.</p>
@@ -794,7 +796,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 </section>
 <section id="kalmanfilter" class="level3">
 <h3 class="anchored" data-anchor-id="kalmanfilter">kalmanfilter</h3>
-<p><a href="https://cran.r-project.org/package=kalmanfilter"><code>kalmanfilter</code></a> é o mais “cru” dos três. Uma implementação Rcpp (<em>C++ no R</em>) direta das sete equações derivadas no exemplo estilizado acima, sem inicialização difusa exata, sem interface de fórmula. Você monta as matrizes (<span class="math inline">\(A, H, D, F, Q, R\)</span>, na notação própria do pacote) e escreve seu próprio laço de otimização por fora com <code>optim</code> ou <code>maxLik</code>. Isso obviamente dá mais controle. Inclusive, dá para impor a restrição de <span class="math inline">\(\gamma\)</span> compartilhado <em>diretamente</em>, sem precisar do truque do estado reescalado — embora, como veremos mais adiante, essa escolha não seja numericamente inócua. As duas formas impõem a mesma restrição algébrica, mas levam a verossimilhanças diferentes.</p>
+<p><a href="https://cran.r-project.org/package=kalmanfilter"><code>kalmanfilter</code></a> é o mais “cru” dos três. Uma implementação Rcpp (<em>C++ no R</em>) direta das sete equações derivadas no exemplo estilizado acima, sem inicialização difusa exata, sem interface de fórmula. Você monta as matrizes (<span class="math inline">\(A, H, D, F, Q, R\)</span>, na notação própria do pacote) e escreve seu próprio laço de otimização por fora com <code>optim</code> ou <code>maxLik</code>. Isso obviamente dá mais controle. Inclusive, dá para impor a restrição de <span class="math inline">\(\gamma\)</span> compartilhado <em>diretamente</em>, sem precisar do truque do estado reescalado, embora, como veremos mais adiante, essa escolha não seja numericamente inócua. As duas formas impõem a mesma restrição algébrica, mas levam a verossimilhanças diferentes.</p>
 <section id="º-estágio-4" class="level4">
 <h4 class="anchored" data-anchor-id="º-estágio-4">1º estágio</h4>
 <div class="cell">
@@ -983,7 +985,7 @@ Table&nbsp;1
 <td style="text-align: right;">0.2193</td>
 <td style="text-align: right;">0.6933</td>
 <td style="text-align: right;">1.5253</td>
-<td style="text-align: right;">0.22</td>
+<td style="text-align: right;">0.23</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">KFAS</td>
@@ -997,7 +999,7 @@ Table&nbsp;1
 <td style="text-align: right;">0.2365</td>
 <td style="text-align: right;">0.8468</td>
 <td style="text-align: right;">1.5876</td>
-<td style="text-align: right;">0.06</td>
+<td style="text-align: right;">0.03</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Paper original (BCB)</td>

@@ -79,16 +79,17 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
 /* Data no rodapé do card, em tom mudo + itálico (destaca do título/descrição). */
 .quarto-listing .listing-date { color: var(--pal-text-mute); font-style: italic; }
 
-/* Frosted prose block for blog page text (e.g. the intro paragraph) — same look
-   as .glass-card but with padding, since prose isn't wrapped in a Bootstrap card. */
-.prose-glass {
-  background: var(--pal-surface-glass);
-  border: 1px solid var(--pal-border);
-  border-radius: 14px;
-  padding: 1.1rem 1.3rem;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+/* Intro prose on the blog listing page. Deliberately *not* a card: plain text on the
+   page background, muted and width-capped so it reads as a lead under the H1 instead
+   of competing with it. Same unboxed treatment as .about-block on the home page. */
+.page-intro {
+  max-width: 640px;
+  margin-bottom: 2rem;
+  color: var(--pal-text-mute);
+  font-size: 0.95rem;
+  line-height: 1.6;
 }
+.page-intro p:last-child { margin-bottom: 0; }
 
 /* This is a light-only site (no dark mode), so the native Quarto day/night
    toggle should never appear. Kept as a defensive rule rather than relying on

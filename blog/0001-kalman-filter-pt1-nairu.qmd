@@ -21,7 +21,7 @@ Como alguém que já sofreu (*bastante*) para conseguir replicar exercícios de 
 
 - **Segundo**, replicar o exercício do BCB do zero, com dados públicos, usando três pacotes de R diferentes ([`MARSS`](https://cran.r-project.org/web/packages/MARSS/index.html), [`KFAS`](https://cran.r-project.org/web/packages/KFAS/index.html) e [`kalmanfilter`](https://cran.r-project.org/web/packages/kalmanfilter/index.html)), comparando sintaxe e resultados entre eles.
 
-Isso é a Parte 1. Na [Parte 2](0001-kalman-filter-pt2-bssm.qmd), vou re-estimar o mesmo exercício para uma amostra mais recente com um pacote Bayesiano (`bssm`, mais uma sintaxe de presente para os leitores), em duas versões — máxima verossimilhança e MCMC — para contrastar as abordagens frequentista e bayesiana dado exatamente o mesmo modelo.
+> **Update**: Isso é a Parte 1. Depois da publicação deste post, o autor do post original publicou uma atualização oficial do exercício ([post nº46](https://www.bcb.gov.br/noticiablogbc/46/noticia)) usando dados mais recentes e uma reestimação em estágio único, com a razão sinal-ruído λ livre em vez de calibrada. Na [Parte 2](0001-kalman-filter-pt2-bssm.qmd), replico essa versão atualizada com um pacote Bayesiano (`bssm`, mais uma sintaxe de presente para os leitores), em duas versões, máxima verossimilhança e MCMC, para contrastar as abordagens frequentista e bayesiana.
 
 ## O que é um filtro de Kalman, e por que ele funciona
 
@@ -108,7 +108,7 @@ Essa também é a estimativa **atualizada** do passo anterior, já incorporando 
 
 A suposição de normalidade é o passo indutivo de um argumento por indução. O **passo indutivo** é mostrar que, partindo de uma normal em $t-1$, você chega numa normal em $t$.
 
-Como não existe um "passo anterior" de verdade para $t=1$, é preciso simplesmente **escolher** uma distribuição inicial $x_0 \sim N(\hat x_0, P_0)$ — um chute de modelagem, não uma estimativa, tipicamente com $P_0$ difusa para refletir que você não sabe quase nada antes de ver dados. Como cada passo do ciclo preserva a propriedade, o chute inicial em $t=0$ é o único lugar da cadeia inteira onde a normalidade é *imposta* em vez de derivada. O resto segue por construção.
+Como não existe um "passo anterior" de verdade para $t=1$, é preciso simplesmente **escolher** uma distribuição inicial $x_0 \sim N(\hat x_0, P_0)$. Um chute de modelagem, não uma estimativa, tipicamente com $P_0$ difusa para refletir que você não sabe quase nada antes de ver dados. Como cada passo do ciclo preserva a propriedade, o chute inicial em $t=0$ é o único lugar da cadeia inteira onde a normalidade é *imposta* em vez de derivada. O resto segue por construção.
 
 É isso que as próximas subseções derivam, primeiro propagando essa normal pela equação de estado (combinação linear de normais independentes continua normal), depois atualizando com $y_t$ via Bayes.
 
@@ -207,7 +207,7 @@ $$
 \pi_t^{ss} = \underbrace{\alpha + \beta\cdot\pi_{t-1}^{12m} + (1-\beta)\cdot E_t(\pi^{LP}) + \theta\cdot \text{IPPCV}_t - \gamma\cdot u_t}_{\text{conhecido, coeficiente fixo}} + \underbrace{\gamma\cdot u_t^*}_{Z_t\cdot x_t} + \underbrace{\varepsilon_t}_{v_t}
 $$
 
-com a NAIRU seguindo um passeio aleatório: $u_t^* = u_{t-1}^* + \vartheta_t$. Isso já é a equação de observação e de estado de um filtro de Kalman, mas repare que $\gamma$ aparece **duas vezes**. Uma vez como coeficiente do regressor observado $u_t$ (sinal negativo), outra como $Z_t$ multiplicando o estado $u_t^*$ (sinal positivo). Isso não é acidente — vem de o verdadeiro regressor ser o *hiato* $(u_t-u_t^*)$, não os dois termos separados — mas cria um problema prático. Teríamos que impor essa restrição (mesmo valor de $\gamma$ nos dois lugares) em cada pacote de R.
+com a NAIRU seguindo um passeio aleatório: $u_t^* = u_{t-1}^* + \vartheta_t$. Isso já é a equação de observação e de estado de um filtro de Kalman, mas repare que $\gamma$ aparece **duas vezes**. Uma vez como coeficiente do regressor observado $u_t$ (sinal negativo), outra como $Z_t$ multiplicando o estado $u_t^*$ (sinal positivo). Isso não é acidente. Vem de o verdadeiro regressor ser o *hiato* $(u_t-u_t^*)$, não os dois termos separados, mas cria um problema prático. Teríamos que impor essa restrição (mesmo valor de $\gamma$ nos dois lugares) em cada pacote de R.
 
 Uma saída mais simples: ao invés de tratar $u_t^*$ como estado, definimos o estado como a **NAIRU já escalada** por $\gamma$:
 
@@ -541,7 +541,7 @@ cat("theta =", round(theta_kfas, 4), "\n")
 
 ### kalmanfilter
 
-[`kalmanfilter`](https://cran.r-project.org/package=kalmanfilter) é o mais "cru" dos três. Uma implementação Rcpp (*C++ no R*) direta das sete equações derivadas no exemplo estilizado acima, sem inicialização difusa exata, sem interface de fórmula. Você monta as matrizes ($A, H, D, F, Q, R$, na notação própria do pacote) e escreve seu próprio laço de otimização por fora com `optim` ou `maxLik`. Isso obviamente dá mais controle. Inclusive, dá para impor a restrição de $\gamma$ compartilhado *diretamente*, sem precisar do truque do estado reescalado — embora, como veremos mais adiante, essa escolha não seja numericamente inócua. As duas formas impõem a mesma restrição algébrica, mas levam a verossimilhanças diferentes.
+[`kalmanfilter`](https://cran.r-project.org/package=kalmanfilter) é o mais "cru" dos três. Uma implementação Rcpp (*C++ no R*) direta das sete equações derivadas no exemplo estilizado acima, sem inicialização difusa exata, sem interface de fórmula. Você monta as matrizes ($A, H, D, F, Q, R$, na notação própria do pacote) e escreve seu próprio laço de otimização por fora com `optim` ou `maxLik`. Isso obviamente dá mais controle. Inclusive, dá para impor a restrição de $\gamma$ compartilhado *diretamente*, sem precisar do truque do estado reescalado, embora, como veremos mais adiante, essa escolha não seja numericamente inócua. As duas formas impõem a mesma restrição algébrica, mas levam a verossimilhanças diferentes.
 
 #### 1º estágio
 
