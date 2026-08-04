@@ -655,6 +655,7 @@ No **2º estágio**, com $\gamma$ já fixo, esse problema desaparece. Os três p
 
 ```{r}
 #| label: tbl-coefs
+#| echo: false
 time_marss <- time_marss_1 + time_marss_2
 time_kfas <- time_kfas_1 + time_kfas_2
 time_kf <- time_kf_1 + time_kf_2
@@ -688,7 +689,13 @@ tbl_coefs <- tibble(
 )
 kable(
   tbl_coefs,
-  col.names = c("Pacote", "β (1º estágio)", "γ (1º estágio)", "θ (2º estágio)", "Tempo (s)"),
+  col.names = c(
+    "Pacote",
+    "β (1º estágio)",
+    "γ (1º estágio)",
+    "θ (2º estágio)",
+    "Tempo (s)"
+  ),
   align = c("l", "r", "r", "r", "r")
 )
 ```
@@ -731,6 +738,7 @@ Usei aqui os resultados do pacote `MARSS` para replicar a tabela exposta no fina
 
 ```{r}
 #| label: tbl-comparison
+#| echo: false
 
 # ipca_full/ipca_ssubj entram cruas (sem o log) aqui: "Inflação passada" e
 # "Expectativa LP" usam a série antes da transformação 100*log1p(x) exigida

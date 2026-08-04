@@ -273,7 +273,7 @@ window.Quarto = {
 <li><p><strong>Segundo</strong>, replicar o exercício do BCB do zero, com dados públicos, usando três pacotes de R diferentes (<a href="https://cran.r-project.org/web/packages/MARSS/index.html"><code>MARSS</code></a>, <a href="https://cran.r-project.org/web/packages/KFAS/index.html"><code>KFAS</code></a> e <a href="https://cran.r-project.org/web/packages/kalmanfilter/index.html"><code>kalmanfilter</code></a>), comparando sintaxe e resultados entre eles.</p></li>
 </ul>
 <blockquote class="blockquote">
-<p><strong>Update</strong>: Isso é a Parte 1. Depois da publicação deste post, o autor do post original publicou uma atualização oficial do exercício (<a href="https://www.bcb.gov.br/noticiablogbc/46/noticia">post nº46</a>) usando dados mais recentes e uma reestimação em estágio único, com a razão sinal-ruído λ livre em vez de calibrada. Na Parte 2, replico essa versão atualizada com um pacote Bayesiano (<code>bssm</code>, mais uma sintaxe de presente para os leitores), em duas versões, máxima verossimilhança e MCMC, para contrastar as abordagens frequentista e bayesiana.</p>
+<p><strong>Update</strong>: Isso é a Parte 1. Depois da publicação deste post, o autor do post original publicou uma atualização oficial do exercício (<a href="https://www.bcb.gov.br/noticiablogbc/46/noticia">post nº46</a>) usando dados mais recentes e uma reestimação em estágio único, com a razão sinal-ruído λ livre em vez de calibrada. Na <a href="../blog/0001-kalman-filter-pt2-bssm.html">Parte 2</a>, replico essa versão atualizada com um pacote Bayesiano (<code>bssm</code>, mais uma sintaxe de presente para os leitores), em duas versões, máxima verossimilhança e MCMC, para contrastar as abordagens frequentista e bayesiana.</p>
 </blockquote>
 </section>
 <section id="o-que-é-um-filtro-de-kalman-e-por-que-ele-funciona" class="level2">
@@ -916,45 +916,6 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <section id="coeficientes" class="level3">
 <h3 class="anchored" data-anchor-id="coeficientes">Coeficientes</h3>
 <div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>time_marss <span class="ot">&lt;-</span> time_marss_1 <span class="sc">+</span> time_marss_2</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>time_kfas <span class="ot">&lt;-</span> time_kfas_1 <span class="sc">+</span> time_kfas_2</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>time_kf <span class="ot">&lt;-</span> time_kf_1 <span class="sc">+</span> time_kf_2</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>tbl_coefs <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">Pacote =</span> <span class="fu">c</span>(<span class="st">"MARSS"</span>, <span class="st">"KFAS"</span>, <span class="st">"kalmanfilter"</span>, <span class="st">"Paper original (BCB)"</span>),</span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">beta =</span> <span class="fu">c</span>(</span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(beta_marss)),</span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(beta_kfas)),</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(beta_kf)),</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"0.30 (0.10)"</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">gamma =</span> <span class="fu">c</span>(</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(gamma_marss)),</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(gamma_kfas)),</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(gamma_kf)),</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"0.67 (0.26)"</span></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">theta =</span> <span class="fu">c</span>(</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(theta_marss)),</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(theta_kfas)),</span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.4f"</span>, <span class="fu">unname</span>(theta_kf)),</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"1.32"</span></span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">tempo =</span> <span class="fu">c</span>(</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, time_marss),</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, time_kfas),</span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, time_kf),</span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"—"</span></span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(</span>
-<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a>  tbl_coefs,</span>
-<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Pacote"</span>, <span class="st">"β (1º estágio)"</span>, <span class="st">"γ (1º estágio)"</span>, <span class="st">"θ (2º estágio)"</span>, <span class="st">"Tempo (s)"</span>),</span>
-<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
-<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div id="tbl-coefs" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-coefs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -985,7 +946,7 @@ Table&nbsp;1
 <td style="text-align: right;">0.2193</td>
 <td style="text-align: right;">0.6933</td>
 <td style="text-align: right;">1.5253</td>
-<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">0.22</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">KFAS</td>
@@ -999,7 +960,7 @@ Table&nbsp;1
 <td style="text-align: right;">0.2365</td>
 <td style="text-align: right;">0.8468</td>
 <td style="text-align: right;">1.5876</td>
-<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">0.04</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Paper original (BCB)</td>
@@ -1022,22 +983,22 @@ Table&nbsp;1
 <div class="cell">
 <details class="code-fold">
 <summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>nairu_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(nairu_marss, nairu_kfas, nairu_kf) <span class="sc">%&gt;%</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lower =</span> nairu <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se, <span class="at">upper =</span> nairu <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nairu_all, <span class="fu">aes</span>(date, nairu, <span class="at">color =</span> pkg, <span class="at">fill =</span> pkg)) <span class="sc">+</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">alpha =</span> <span class="fl">0.12</span>, <span class="at">color =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_blog</span>(<span class="at">tier =</span> <span class="st">"extended"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_blog</span>(<span class="at">tier =</span> <span class="st">"extended"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date_blog</span>(nairu_all<span class="sc">$</span>date) <span class="sc">+</span></span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"NAIRU estimada pelos três pacotes"</span>,</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"% da força de trabalho, IC 95%, dez/2001–nov/2024"</span>,</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">caption_blog</span>(<span class="st">"BCB"</span>)</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_blog</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nairu_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(nairu_marss, nairu_kfas, nairu_kf) <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lower =</span> nairu <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se, <span class="at">upper =</span> nairu <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(nairu_all, <span class="fu">aes</span>(date, nairu, <span class="at">color =</span> pkg, <span class="at">fill =</span> pkg)) <span class="sc">+</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_ribbon</span>(<span class="fu">aes</span>(<span class="at">ymin =</span> lower, <span class="at">ymax =</span> upper), <span class="at">alpha =</span> <span class="fl">0.12</span>, <span class="at">color =</span> <span class="cn">NA</span>) <span class="sc">+</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_blog</span>(<span class="at">tier =</span> <span class="st">"extended"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_blog</span>(<span class="at">tier =</span> <span class="st">"extended"</span>, <span class="at">n =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_date_blog</span>(nairu_all<span class="sc">$</span>date) <span class="sc">+</span></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"NAIRU estimada pelos três pacotes"</span>,</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"% da força de trabalho, IC 95%, dez/2001–nov/2024"</span>,</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">caption_blog</span>(<span class="st">"BCB"</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_blog</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div id="fig-nairu" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -1062,48 +1023,6 @@ Figure&nbsp;1: NAIRU estimada (com IC 95%) pelos três pacotes, dez/2001–nov/2
 <h3 class="anchored" data-anchor-id="comparando-2014-com-o-fim-da-amostra">Comparando 2014 com o fim da amostra</h3>
 <p>Usei aqui os resultados do pacote <code>MARSS</code> para replicar a tabela exposta no final do post. Dito isso, os outros seriam qualitativamente bastante próximos:</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Show code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># ipca_full/ipca_ssubj entram cruas (sem o log) aqui: "Inflação passada" e</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># "Expectativa LP" usam a série antes da transformação 100*log1p(x) exigida</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># só para a estimação do modelo. O observado de serviços vira acumulado 12m:</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># como ipca_ssubj só está salvo já anualizado (mensal composto por 12),</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co"># inverto essa anualização pra recuperar o mensal e componho os 12 meses</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># até target_date — mesma base do π^{ss,12m} da Tabela 2 do BCB.</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>db_ord <span class="ot">&lt;-</span> db <span class="sc">%&gt;%</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(date) <span class="sc">%&gt;%</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ipca_full_lag1_pct =</span> <span class="fu">lag</span>(ipca_full, <span class="dv">1</span>) <span class="sc">*</span> <span class="dv">100</span>)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>ssubj_accum_12m <span class="ot">&lt;-</span> <span class="cf">function</span>(target_date) {</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  target_date <span class="ot">&lt;-</span> <span class="fu">as_date</span>(target_date)</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  window <span class="ot">&lt;-</span> db_ord <span class="sc">%&gt;%</span></span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(date <span class="sc">&gt;</span> target_date <span class="sc">%m-%</span> <span class="fu">months</span>(<span class="dv">12</span>), date <span class="sc">&lt;=</span> target_date)</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  monthly <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">+</span> window<span class="sc">$</span>ipca_ssubj)<span class="sc">^</span>(<span class="dv">1</span> <span class="sc">/</span> <span class="dv">12</span>) <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  <span class="dv">100</span> <span class="sc">*</span> (<span class="fu">prod</span>(<span class="dv">1</span> <span class="sc">+</span> monthly) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>compare_row <span class="ot">&lt;-</span> <span class="cf">function</span>(target_date) {</span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>  target_date <span class="ot">&lt;-</span> <span class="fu">as_date</span>(target_date)</span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>  row <span class="ot">&lt;-</span> stage2 <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">==</span> target_date)</span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>  row_raw <span class="ot">&lt;-</span> db_ord <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">==</span> target_date)</span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>  nairu_row <span class="ot">&lt;-</span> nairu_marss <span class="sc">%&gt;%</span> <span class="fu">filter</span>(date <span class="sc">==</span> target_date)</span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>  pred <span class="ot">&lt;-</span> alpha <span class="sc">+</span></span>
-<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>    beta_marss <span class="sc">*</span> <span class="fu">pull</span>(row, pi_full_lag1) <span class="sc">+</span></span>
-<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>    (<span class="dv">1</span> <span class="sc">-</span> beta_marss) <span class="sc">*</span> <span class="fu">pull</span>(row, E_t) <span class="sc">-</span></span>
-<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    gamma_marss <span class="sc">*</span> (<span class="fu">pull</span>(row, u_t) <span class="sc">-</span> <span class="fu">pull</span>(nairu_row, nairu)) <span class="sc">+</span></span>
-<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>    theta_marss <span class="sc">*</span> <span class="fu">pull</span>(row, ippcv)</span>
-<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
-<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">Data =</span> <span class="fu">format</span>(target_date, <span class="st">"%b/%Y"</span>),</span>
-<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Inflação passada (12m)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">pull</span>(row_raw, ipca_full_lag1_pct), <span class="dv">1</span>),</span>
-<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Expectativa LP</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">pull</span>(row_raw, focus), <span class="dv">1</span>),</span>
-<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Hiato (u - NAIRU)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">pull</span>(row, u_t) <span class="sc">-</span> <span class="fu">pull</span>(nairu_row, nairu), <span class="dv">1</span>),</span>
-<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">π ssubj. previsto</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="dv">100</span> <span class="sc">*</span> (<span class="fu">exp</span>(pred <span class="sc">/</span> <span class="dv">100</span>) <span class="sc">-</span> <span class="dv">1</span>), <span class="dv">1</span>),</span>
-<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">π ssubj. observado (12m)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">round</span>(<span class="fu">ssubj_accum_12m</span>(target_date), <span class="dv">1</span>)</span>
-<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">bind_rows</span>(<span class="fu">compare_row</span>(<span class="st">"2014-03-01"</span>), <span class="fu">compare_row</span>(<span class="st">"2024-11-01"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
 <div id="tbl-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">

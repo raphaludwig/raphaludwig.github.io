@@ -13,11 +13,15 @@ green-slate family), `extended` (3+ series, full 5-tone ramp).
 _Avoid_: "palette" alone (ambiguous between a tier and the whole green-slate family).
 
 **Accent**:
-The single highlight hue reserved for elements *outside* the green-slate family —
+A highlight hue reserved for elements *outside* the green-slate family —
 bars, saldo/balance series, a prior-vs-posterior reference line, anything meant to read as
-"not one of the main series." Not a tier. Has two tones, chosen via `accent_blog(tone = ...)`:
-`cool` (plum/wine, `#7a3b4a`, default) and `warm` (terracotta, `#b5654a`, deliberate
-alternative — e.g. when cool is already in use elsewhere in the same chart).
+"not one of the main series." Not a tier. Chosen via `accent_blog(tone = ...)`, one of six
+tones: `cool` (plum/wine, `#7a3b4a`, default), `warm` (terracotta, `#b5654a`), `gold`
+(mustard, `#9c7a3c`), `petrol` (petrol blue, `#3f6b7a`), `earth` (ochre/brown, `#7a5233`),
+`flower` (light violet, `#9b7cb8`). Pick a second tone deliberately when a chart needs two
+accents at once — e.g. `cool` for an observed series and `gold` for its underlying
+fundamento/decomposition — favoring tones far apart in hue so they don't collide (`cool` and
+`warm` are close in hue and read as similar unless only one is in use).
 _Avoid_: "contrast" (that name is taken by the tier above; accent is a separate concept).
 
 **Green-slate family**:

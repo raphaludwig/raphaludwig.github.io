@@ -28,15 +28,19 @@ knitr::opts_chunk$set(dev = "ragg_png", fig.width = 9)
 
 pal_blog_colors <- c(
   slate_darkest = "#2f3e46",
-  slate_dark    = "#3f5f56",
-  slate_mid     = "#52796f",
-  sage_light    = "#84a98c",
-  sage_pale     = "#cad2c5"
+  slate_dark = "#3f5f56",
+  slate_mid = "#52796f",
+  sage_light = "#84a98c",
+  sage_pale = "#cad2c5"
 )
 
 pal_blog_accent <- c(
   cool = "#7a3b4a", # ameixa/vinho -- default
-  warm = "#b5654a"  # terracota -- alternativa
+  warm = "#b5654a", # terracota
+  gold = "#9c7a3c", # dourado/mostarda
+  petrol = "#3f6b7a", # azul petroleo
+  earth = "#7a5233", # ocre/marrom terroso
+  flower = "#9b7cb8" # violeta claro
 )
 
 #' Paleta verde-slate do blog
@@ -49,8 +53,9 @@ pal_blog_accent <- c(
 #'   (em vez de truncar do início).
 pal_blog <- function(tier = c("main", "contrast", "extended"), n = NULL) {
   tier <- match.arg(tier)
-  base <- switch(tier,
-    main     = unname(pal_blog_colors[c("slate_mid", "sage_light")]),
+  base <- switch(
+    tier,
+    main = unname(pal_blog_colors[c("slate_mid", "sage_light")]),
     contrast = unname(pal_blog_colors[c("slate_darkest", "sage_light")]),
     extended = unname(pal_blog_colors)
   )
@@ -68,17 +73,29 @@ pal_blog <- function(tier = c("main", "contrast", "extended"), n = NULL) {
 
 #' Cor de destaque fora do verde-slate, para barras/saldo/elementos secundários
 #'
-#' @param tone "cool" (ameixa, default) ou "warm" (terracota, alternativa).
-accent_blog <- function(tone = c("cool", "warm")) {
+#' @param tone "cool" (ameixa, default), "warm" (terracota), "gold"
+#'   (dourado/mostarda), "petrol" (azul petroleo), "earth" (ocre/marrom) ou
+#'   "flower" (violeta claro).
+accent_blog <- function(
+  tone = c("cool", "warm", "gold", "petrol", "earth", "flower")
+) {
   tone <- match.arg(tone)
   unname(pal_blog_accent[tone])
 }
 
-scale_color_blog <- function(tier = c("main", "contrast", "extended"), n = NULL, ...) {
+scale_color_blog <- function(
+  tier = c("main", "contrast", "extended"),
+  n = NULL,
+  ...
+) {
   scale_color_manual(values = pal_blog(match.arg(tier), n), ...)
 }
 
-scale_fill_blog <- function(tier = c("main", "contrast", "extended"), n = NULL, ...) {
+scale_fill_blog <- function(
+  tier = c("main", "contrast", "extended"),
+  n = NULL,
+  ...
+) {
   scale_fill_manual(values = pal_blog(match.arg(tier), n), ...)
 }
 
@@ -92,9 +109,15 @@ scale_fill_blog <- function(tier = c("main", "contrast", "extended"), n = NULL, 
 theme_blog <- function(base_size = 12) {
   theme_minimal(base_size = base_size) +
     theme(
-      text = element_text(family = "Segoe UI Semibold", colour = pal_blog_colors[["slate_darkest"]]),
+      text = element_text(
+        family = "Segoe UI Semibold",
+        colour = pal_blog_colors[["slate_darkest"]]
+      ),
       plot.title = element_text(face = "bold", vjust = 1.5),
-      plot.subtitle = element_text(colour = pal_blog_colors[["slate_mid"]], vjust = 3.75),
+      plot.subtitle = element_text(
+        colour = pal_blog_colors[["slate_mid"]],
+        vjust = 3.75
+      ),
       # sem colour aqui de propósito -- herda slate_darkest de `text`, igual
       # ao título (plot.title também não sobrescreve colour).
       plot.caption = element_text(face = "italic", size = rel(0.75), hjust = 1),
@@ -108,7 +131,7 @@ theme_blog <- function(base_size = 12) {
       legend.position = c(1, 1),
       legend.justification = "right",
       legend.direction = "horizontal",
-      legend.box = "horizontal"
+      legend.box = "vertical"
     )
 }
 
@@ -116,7 +139,11 @@ theme_blog <- function(base_size = 12) {
 scale_x_date_blog <- function(date_col, n_breaks = 13, ...) {
   scale_x_date(
     labels = date_format("%b %y"),
-    breaks = seq.Date(from = min(date_col), to = max(date_col), length.out = n_breaks),
+    breaks = seq.Date(
+      from = min(date_col),
+      to = max(date_col),
+      length.out = n_breaks
+    ),
     expand = expansion(mult = c(0.01, 0.01)),
     ...
   )
@@ -124,11 +151,15 @@ scale_x_date_blog <- function(date_col, n_breaks = 13, ...) {
 
 #' Caption padrão: fontes oficiais primeiro, "RL" sempre por último
 caption_blog <- function(sources) {
-  all <- c(sources, "RL")
+  all <- c(sources, "https://raphaludwig.github.io/")
   if (length(all) == 1) {
     joined <- all
   } else {
-    joined <- paste0(paste(all[-length(all)], collapse = ", "), " e ", all[length(all)])
+    joined <- paste0(
+      paste(all[-length(all)], collapse = ", "),
+      " e ",
+      all[length(all)]
+    )
   }
   paste0("Fonte: ", joined)
 }
