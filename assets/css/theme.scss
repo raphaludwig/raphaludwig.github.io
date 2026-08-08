@@ -191,3 +191,11 @@ h1, h2, h3, h4, h5, h6 { color: var(--pal-text); }
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(82, 121, 111, 0.28);
 }
+
+/* ── Bilingual site: per-language listings ──
+   The two blog listings (one per language) must both exist in the HTML — see the
+   comment in blog/index.qmd — so the wrong one is hidden here rather than removed
+   at render time. `lang` is set by the active Quarto profile, so no per-profile
+   CSS is needed. */
+html[lang="pt"] .lang-en-only,
+html[lang="en"] .lang-pt-only { display: none; }

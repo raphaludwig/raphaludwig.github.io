@@ -45,7 +45,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c29592453d57fd6f6a52b7cdf8bd6180.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-54c8e6fa4f5a32c10a0fc2649f353c31.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -76,7 +76,7 @@ ul.task-list li input[type="checkbox"] {
 <script>
 
   window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-home-listing .list');
+    const listingTargetEl = window.document.querySelector('#listing-home-listing-en .list');
     if (!listingTargetEl) {
       // No listing discovered, do not attach.
       return; 
@@ -89,7 +89,35 @@ ul.task-list li input[type="checkbox"] {
     };
 
     window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-home-listing'] = new List('listing-home-listing', options);
+    window['quarto-listings']['listing-home-listing-en'] = new List('listing-home-listing-en', options);
+
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  });
+
+  window.addEventListener('hashchange',() => {
+    if (window['quarto-listing-loaded']) {
+      window['quarto-listing-loaded']();
+    }
+  })
+  
+
+  window.document.addEventListener("DOMContentLoaded", function (_event) {
+    const listingTargetEl = window.document.querySelector('#listing-home-listing-pt .list');
+    if (!listingTargetEl) {
+      // No listing discovered, do not attach.
+      return; 
+    }
+
+    const options = {
+      valueNames: ['listing-title','listing-description','listing-date','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
+      
+      searchColumns: ["listing-title","listing-author","listing-date","listing-image","listing-description"],
+    };
+
+    window['quarto-listings'] = window['quarto-listings'] || {};
+    window['quarto-listings']['listing-home-listing-pt'] = new List('listing-home-listing-pt', options);
 
     if (window['quarto-listing-loaded']) {
       window['quarto-listing-loaded']();
@@ -168,6 +196,10 @@ window.Quarto = {
 </i> 
 <span class="menu-text"></span></a>
   </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="./pt/index.html" rel="alternate"> 
+<span class="menu-text">PT</span></a>
+  </li>  
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
@@ -195,7 +227,7 @@ window.Quarto = {
 <div class="contact-links">
 <p><a href="https://www.linkedin.com/in/raphael-ludwig-167347414">LinkedIn</a></p>
 <p><a href="mailto:raphaludwig@gmail.com">Email</a></p>
-<p><a href="cv/Raphael_Ludwig_CV.pdf" target="_blank">CV</a></p>
+<p><a href="cv/Raphael_Ludwig_CV_EN.pdf" target="_blank">CV</a></p>
 </div>
 <section id="previous-positions" class="level3 about-block">
 <h3 data-anchor-id="previous-positions">Previous positions</h3>
@@ -215,10 +247,14 @@ BSc Economics, PUC-Rio (2013–2017)</p>
 </div>
 <section id="latest-exercises" class="level2 home-right">
 <h2 data-anchor-id="latest-exercises">Latest exercises</h2>
-<div id="listing-home-listing" class="quarto-listing quarto-listing-container-grid">
+<!-- Hidden with CSS (.lang-*-only, in theme.scss) rather than when-profile: a
+     listing whose target div is removed by the profile filter is not dropped,
+     Quarto appends it to the end of the page instead. See blog/index.qmd. -->
+<div class="lang-en-only">
+<div id="listing-home-listing-en" class="quarto-listing quarto-listing-container-grid">
 <div class="list grid quarto-listing-cols-1">
-<div class="g-col-1" data-index="0" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNzJTJDYmF5ZXNpYW4=" data-listing-date-sort="1785726000000" data-listing-file-modified-sort="1785864120960" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="36" data-listing-word-count-sort="7043">
-<a href="./blog/0001-kalman-filter-pt2-bssm.html" class="quarto-grid-link">
+<div class="g-col-1" data-index="0" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNzJTJDYmF5ZXNpYW4=" data-listing-date-sort="1785726000000" data-listing-file-modified-sort="1786145815257" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="36" data-listing-word-count-sort="7043">
+<a href="./blog/0001-kalman-filter-pt2-bssm.pt.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -248,8 +284,8 @@ Aug 3, 2026
 </div>
 </div></a>
 </div>
-<div class="g-col-1" data-index="1" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNz" data-listing-date-sort="1784257200000" data-listing-file-modified-sort="1785801454308" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="33" data-listing-word-count-sort="6584">
-<a href="./blog/0001-kalman-filter-pt1-nairu.html" class="quarto-grid-link">
+<div class="g-col-1" data-index="1" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNz" data-listing-date-sort="1784257200000" data-listing-file-modified-sort="1786146978811" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="33" data-listing-word-count-sort="6584">
+<a href="./blog/0001-kalman-filter-pt1-nairu.pt.html" class="quarto-grid-link">
 <div class="quarto-grid-item card h-100 card-left">
 <div class="card-body post-contents">
 <h5 class="no-anchor card-title listing-title">
@@ -280,6 +316,74 @@ Jul 17, 2026
 </div>
 <div class="listing-no-matching d-none">No matching items</div>
 </div>
+</div>
+<div class="lang-pt-only">
+<div id="listing-home-listing-pt" class="quarto-listing quarto-listing-container-grid">
+<div class="list grid quarto-listing-cols-1">
+<div class="g-col-1" data-index="0" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNzJTJDYmF5ZXNpYW4=" data-listing-date-sort="1785726000000" data-listing-file-modified-sort="1786145815257" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="36" data-listing-word-count-sort="7043">
+<a href="./blog/0001-kalman-filter-pt2-bssm.pt.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Filtro de Kalman Pt 2: NAIRU Bayesiana, com <code>bssm</code>
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('a2FsbWFuJTIwZmlsdGVy'); return false;">kalman filter</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bmFpcnU='); return false;">nairu</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cGhpbGxpcHMlMjBjdXJ2ZQ=='); return false;">phillips curve</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZWNvbm9tZXRyaWNz'); return false;">econometrics</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('YmF5ZXNpYW4='); return false;">bayesian</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>Continuação da Parte 1 com algumas alterações. Estimação em estágio único e razão sinal-ruído λ livre em vez de calibrada, entre outras mudanças, assim como foi feito na…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Aug 3, 2026
+</div>
+</div>
+</div>
+</div></a>
+</div>
+<div class="g-col-1" data-index="1" data-categories="a2FsbWFuJTIwZmlsdGVyJTJDbmFpcnUlMkNwaGlsbGlwcyUyMGN1cnZlJTJDZWNvbm9tZXRyaWNz" data-listing-date-sort="1784257200000" data-listing-file-modified-sort="1786146978811" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="33" data-listing-word-count-sort="6584">
+<a href="./blog/0001-kalman-filter-pt1-nairu.pt.html" class="quarto-grid-link">
+<div class="quarto-grid-item card h-100 card-left">
+<div class="card-body post-contents">
+<h5 class="no-anchor card-title listing-title">
+Filtro de Kalman Pt 1: Estimando NAIRU para o Brasil através de uma Curva de Phillips
+</h5>
+<div class="listing-categories">
+
+<div class="listing-category" onclick="window.quartoListingCategory('a2FsbWFuJTIwZmlsdGVy'); return false;">kalman filter</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('bmFpcnU='); return false;">nairu</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('cGhpbGxpcHMlMjBjdXJ2ZQ=='); return false;">phillips curve</div>
+
+<div class="listing-category" onclick="window.quartoListingCategory('ZWNvbm9tZXRyaWNz'); return false;">econometrics</div>
+
+</div>
+<div class="card-text listing-description delink">
+<p>O que é um filtro de Kalman, a intuição por trás dele, uma derivação matemática simples e como usá-lo para estimar uma NAIRU variante no tempo. Replicando um exercício do…</p>
+</div>
+<div class="card-attribution card-text-small end">
+<div class="listing-date">
+Jul 17, 2026
+</div>
+</div>
+</div>
+</div></a>
+</div>
+</div>
+<div class="listing-no-matching d-none">No matching items</div>
+</div>
+</div>
 <p><a href="./blog/index.html" class="view-more">View more →</a></p>
 </section>
 </div>
@@ -288,6 +392,75 @@ Jul 17, 2026
 
 
 
+<script>
+// Language switch. The navbar link (rel="alternate", declared in _quarto-en.yml /
+// _quarto-pt.yml) ships with a static href pointing at the other language's home.
+// This upgrades it to the counterpart of the *current* page, and emits the
+// matching hreflang <link>s.
+//
+// Degradation is deliberate: if the fetch fails (opening docs/ over file://, for
+// instance) the static home href stays and the button still works.
+(function () {
+  var link = document.querySelector('.navbar a.nav-link[rel="alternate"]');
+  if (!link) return;
+
+  var isPT = document.documentElement.lang === "pt";
+
+  // Derive both site roots from the href Quarto already resolved for this page's
+  // depth — more reliable than assuming the site is served from the domain root.
+  var declared = new URL(link.getAttribute("href"), location.href).pathname;
+  var enRoot = isPT
+    ? declared.replace(/index\.html$/, "")
+    : declared.replace(/pt\/index\.html$/, "");
+  var ptRoot = enRoot + "pt/";
+
+  var here = isPT ? ptRoot : enRoot;
+  var there = isPT ? enRoot : ptRoot;
+  if (location.pathname.indexOf(here) !== 0) return;
+  var rel = location.pathname.slice(here.length) || "index.html";
+
+  // Match on the slug with the .pt suffix made optional, rather than on the raw
+  // path: a post's EN file drops the .pt (0001-x.pt.qmd -> 0001-x.qmd), so once
+  // it is translated the two trees stop mirroring each other path-for-path.
+  //
+  // Not matched on the numeric prefix — it is a *series* number here, shared by
+  // every part of a multi-post series (0001-...-pt1-, 0001-...-pt2-).
+  var stem = rel.replace(/\.html$/, "").replace(/\.pt$/, "");
+  var isPost = rel.indexOf("blog/") === 0 && rel !== "blog/index.html";
+
+  fetch(there + "search.json")
+    .then(function (r) { return r.json(); })
+    .then(function (entries) {
+      var pages = {};
+      entries.forEach(function (e) { pages[e.href.split("#")[0]] = true; });
+
+      // Both profiles render every post, so each tree holds both language files.
+      // Prefer the one actually written in the target language; the other is the
+      // untranslated placeholder and only wins when the preferred one is absent.
+      var order = isPT
+        ? [stem + ".html", stem + ".pt.html"]   // going to EN
+        : [stem + ".pt.html", stem + ".html"];  // going to PT
+      var target = order.filter(function (c) {
+        return pages[c];
+      })[0] || (isPost ? "blog/index.html" : "index.html");
+
+      link.setAttribute("href", there + target);
+
+      var alt = document.createElement("link");
+      alt.rel = "alternate";
+      alt.hreflang = isPT ? "en" : "pt";
+      alt.href = new URL(there + target, location.href).href;
+      document.head.appendChild(alt);
+
+      var self = document.createElement("link");
+      self.rel = "alternate";
+      self.hreflang = isPT ? "pt" : "en";
+      self.href = location.href.split("#")[0];
+      document.head.appendChild(self);
+    })
+    .catch(function () { /* keep the static home fallback */ });
+})();
+</script>
 <script src="./assets/js/tsparticles.bundle.min.js"></script>
 <script src="./assets/js/particles-config.js"></script>
 <script id="quarto-html-after-body" type="application/javascript">

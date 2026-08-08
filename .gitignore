@@ -1,4 +1,8 @@
 /.quarto/
+/_site-en/
+/_site-pt/
+blog/*_cache/
+blog/*_files/
 **/*.quarto_ipynb
 .DS_Store
 quick_guide.md

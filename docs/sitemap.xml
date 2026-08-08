@@ -1,23 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://raphaludwig.github.io/quick_guide.html</loc>
-    <lastmod>2026-07-16T18:12:16.172Z</lastmod>
+    <loc>https://raphaludwig.github.io/index.html</loc>
+    <lastmod>2026-08-08T00:43:21.007Z</lastmod>
+  </url>
+  <url>
+    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-pt2-bssm.pt.html</loc>
+    <lastmod>2026-08-07T23:36:55.257Z</lastmod>
+  </url>
+  <url>
+    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-pt1-nairu.pt.html</loc>
+    <lastmod>2026-08-07T23:56:18.811Z</lastmod>
   </url>
   <url>
     <loc>https://raphaludwig.github.io/blog/index.html</loc>
-    <lastmod>2026-07-30T21:08:36.162Z</lastmod>
-  </url>
-  <url>
-    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-pt1-nairu.html</loc>
-    <lastmod>2026-08-03T23:57:34.308Z</lastmod>
-  </url>
-  <url>
-    <loc>https://raphaludwig.github.io/blog/0001-kalman-filter-pt2-bssm.html</loc>
-    <lastmod>2026-08-04T17:22:00.960Z</lastmod>
-  </url>
-  <url>
-    <loc>https://raphaludwig.github.io/index.html</loc>
-    <lastmod>2026-07-17T02:06:11.433Z</lastmod>
+    <lastmod>2026-08-07T23:55:25.226Z</lastmod>
   </url>
 </urlset>

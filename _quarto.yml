@@ -1,37 +1,30 @@
+# Base config — shared by both language profiles.
+#
+# IMPORTANT: Quarto profile merging CONCATENATES arrays, it does not replace them.
+# So anything that is a *list* and differs between languages (navbar.left/right,
+# page-footer.left/center) must live only in _quarto-en.yml / _quarto-pt.yml.
+# Lists that are identical in both languages stay here, declared once.
+#
+# Neither profile is the default: build.ps1 always renders with an explicit
+# --profile en / --profile pt.
+
 project:
   type: website
-  output-dir: docs
+  # Only .qmd — keeps CONTEXT.md, adr/ and blog/docs/ out of the published site.
+  # Each profile appends a "!" entry excluding the other language's blog index
+  # (profile arrays concatenate onto this one rather than replacing it).
   render:
     - "*.qmd"
-    - "quick_guide.md"
     - "blog/*.qmd"
   resources:
     - .nojekyll
     - cv/Raphael_Ludwig_CV.pdf
+    - cv/Raphael_Ludwig_CV_EN.pdf
 
 website:
   title: "Raphael Ludwig"
-  site-url: "https://raphaludwig.github.io"
-  description: "Quantitative economist — macro research, forecasting & applied econometrics."
   favicon: assets/img/monogram.svg
-  navbar:
-    title: false
-    left:
-      - href: index.qmd
-        text: Home
-      - href: blog/index.qmd
-        text: Blog
-    right:
-      - icon: linkedin
-        href: "https://www.linkedin.com/in/raphael-ludwig-167347414"
-        aria-label: LinkedIn
-        target: _blank
-      - icon: envelope
-        href: "mailto:raphaludwig@gmail.com"
-        aria-label: Email
   page-footer:
-    left: "© 2026 Raphael Ludwig"
-    center: "Built with [Quarto](https://quarto.org)"
     right:
       - icon: envelope
         href: mailto:raphaludwig@gmail.com
@@ -46,6 +39,7 @@ format:
     grid:
       body-width: 900px
     link-external-newwindow: true
+    include-after-body: assets/html/lang-switch.html
 
 execute:
   freeze: auto
