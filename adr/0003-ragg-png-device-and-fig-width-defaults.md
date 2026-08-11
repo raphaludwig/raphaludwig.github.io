@@ -10,7 +10,7 @@ The fix — `knitr::opts_chunk$set(dev = "ragg_png", fig.width = 9)` — is a do
 knitr option, not a ggplot theme setting, and could instead have lived in the project
 `_quarto.yml` under `execute`/`knitr` defaults, decoupled from the R code entirely. We put
 it in `theme_blog.R` anyway: every post already `source()`s this file as its one required
-step for blog chart styling (see `0001-shared-theme-file.md`), so bundling the device fix
+step for blog chart styling (see `0002-shared-theme-file.md`), so bundling the device fix
 and the wider default `fig.width` (7in → 9in, closer to the 900px `grid.body-width`) here
 means a post gets correct rendering automatically from that same `source()` line, with no
 second place to remember to configure. The trade-off: `theme_blog.R` is no longer "just

@@ -23,7 +23,7 @@ if (requireNamespace("systemfonts", quietly = TRUE)) {
 # registro do systemfonts (ragg, svglite) -- o dispositivo padrão do knitr
 # (grDevices::png) não a encontra e gera warnings "font family not found".
 # fig.width maior que o padrão (7) pra aproveitar melhor os 900px do container
-# do post (grid.body-width no _quarto.yml). Ver blog/docs/adr/0002.
+# do post (grid.body-width no _quarto.yml). Ver adr/0003.
 knitr::opts_chunk$set(dev = "ragg_png", fig.width = 9)
 
 pal_blog_colors <- c(
@@ -105,7 +105,7 @@ scale_fill_blog <- function(
 #' título; só linhas de grade horizontais; eixo Y sem título (a unidade vai
 #' no subtítulo, não no eixo); título em negrito; eixo X rotacionado 90°
 #' (garante que o último label, sempre a última data, não vaze pra fora do
-#' plot -- ver blog/docs/adr/0003).
+#' plot -- ver adr/0004).
 theme_blog <- function(base_size = 12) {
   theme_minimal(base_size = base_size) +
     theme(

@@ -7,7 +7,7 @@ axis text (theme_minimal's default, inherited by `theme_blog()` until now), that
 label's text runs past the tick itself and can bleed past the panel's right edge, since
 `scale_x_date_blog()`'s expansion is deliberately tight (`mult = 0.01`) and nothing
 reserved extra margin for it. This showed up concretely in the NAIRU chart
-(`0001-kalman-filter-pt1-nairu.qmd`): the "Nov 24" label clipped against the plot boundary.
+(`blog/0001-kalman-filter-pt1-nairu.pt.qmd`): the "Nov 24" label clipped against the plot boundary.
 
 The alternative was to keep labels horizontal and instead widen the right expansion
 and/or plot margin to leave room for the last label's width. That fix is fragile: the
