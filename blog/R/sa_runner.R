@@ -7,12 +7,33 @@
 # Nenhuma função aqui devolve a série crua disfarçada de série ajustada: quando
 # o ajuste não acontece, `status` diz por quê.
 
+# O motor é o JDemetra+ 3.x, via família `rjd3` — não o `RJDemetra`, que está
+# preso ao JDemetra+ 2.x e cujo runtime chega ao fim da vida em dezembro de 2026.
+# Exige Java 21+ (aqui: OpenJDK 25). O `seastests` continua no degrau 3 de
+# propósito: ele é voto independente do motor que faz o ajuste.
 suppressMessages({
   library(dplyr)
   library(purrr)
   library(stringr)
-  library(RJDemetra)
+  library(rjd3toolkit)
+  library(rjd3x13)
+  library(rjd3tramoseats)
   library(seastests)
+})
+
+# Falha com echo, e cedo. Sob uma JVM velha os pacotes carregam sem reclamar e
+# só quebram na primeira chamada, com um `UnsupportedClassVersionError` cru que
+# não diz o que fazer. Acontece de verdade: basta um shell aberto antes de o
+# JAVA_HOME ter sido apontado para o JDK novo.
+local({
+  v <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.version")
+  maior <- as.integer(str_extract(v, "^\\d+"))
+  if (!is.na(maior) && maior < 21) {
+    stop(str_glue(
+      "os pacotes rjd3 exigem Java 21+, mas a JVM desta sessão é a {v}. \\
+       Aponte JAVA_HOME para o JDK 21+ e reinicie o processo do R."
+    ))
+  }
 })
 
 # ---------------------------------------------------------------------------
@@ -87,18 +108,32 @@ as_ts_mensal <- function(db, codigo) {
 }
 
 #' Fatores de calendário do IBC-BR (6 regressores mensais desde 1990)
-carregar_fatores <- function(path) {
+#'
+#' Devolve o pacote inteiro que o JDemetra+ 3.x precisa: as séries, o
+#' `modelling_context` que as registra e os nomes qualificados (`grupo.nome`)
+#' pelos quais a spec se refere a elas. No 2.x bastava passar uma matriz; no 3.x
+#' as variáveis do usuário vivem num contexto separado da spec.
+carregar_fatores <- function(path, grupo = "ibcbr") {
   bruto <- readr::read_tsv(
     path,
     col_names = c("year", "month", str_c("fator", 1:6)),
     col_types = "iidddddd"
   )
-  fatores <-
-    str_c("fator", 1:6) %>%
+  nomes <- str_c("fator", 1:6)
+  series <-
+    nomes %>%
     map(~ ts(as.numeric(bruto[[.x]]), start = c(1990, 1), frequency = 12)) %>%
-    reduce(cbind)
-  colnames(fatores) <- str_c("fator", 1:6)
-  fatores
+    set_names(nomes)
+
+  list(
+    grupo = grupo,
+    nomes = nomes,
+    series = series,
+    uservars = str_c(grupo, ".", nomes),
+    context = rjd3toolkit::modelling_context(
+      variables = set_names(list(series), grupo)
+    )
+  )
 }
 
 # ---------------------------------------------------------------------------
@@ -130,26 +165,113 @@ testes_sazonalidade <- function(x) {
 # 3. Ajuste e diagnóstico
 # ---------------------------------------------------------------------------
 
-ajustar_x13 <- function(x, fatores) {
-  RJDemetra::x13(
-    x,
-    RJDemetra::x13_spec(
-      usrdef.varEnabled = TRUE,
-      usrdef.var = fatores,
-      transform.function = "Auto"
-    )
+# Itens do dicionário do JDemetra+ que não vêm no objeto de resultado por
+# padrão e precisam ser pedidos na chamada.
+ITENS_DIC <- c(
+  "diagnostics.seas-si-combined", # teste combinado sobre as razões SI
+  "diagnostics.seas-sa-combined3" # o mesmo, restrito aos últimos 3 anos
+)
+
+#' Specs pinadas — nunca o default
+#'
+#' Os defaults divergem entre as gerações: `RJDemetra::x13_spec()` entregava
+#' RSA5c, `rjd3x13::x13_spec()` entrega rsa4. Depender do default trocaria o
+#' tratamento de calendário em silêncio, então as duas specs são explícitas.
+#'
+#' `calendario = TRUE` põe os seis fatores do IBC-BR **no lugar** do bloco de
+#' dias úteis do JDemetra+, em vez de empilhar um sobre o outro. É o que
+#' `set_tradingdays(option = "UserDefined")` faz — `add_usrdefvar()` não serve
+#' aqui, porque a própria documentação exclui o componente de calendário do que
+#' ela sabe alocar.
+spec_x13 <- function(fatores, calendario = TRUE) {
+  spec <- rjd3x13::x13_spec("rsa5c")
+  aplicar_fatores(spec, fatores, calendario)
+}
+
+spec_seats <- function(fatores, calendario = TRUE) {
+  spec <- rjd3tramoseats::tramoseats_spec("rsafull")
+  aplicar_fatores(spec, fatores, calendario)
+}
+
+aplicar_fatores <- function(spec, fatores, calendario) {
+  if (calendario) {
+    return(rjd3toolkit::set_tradingdays(
+      spec,
+      option = "UserDefined",
+      uservariable = fatores$uservars,
+      test = "None"
+    ))
+  }
+  # Ramo de comparação: replica o 2.x, onde os fatores entravam como regressores
+  # indefinidos e conviviam com os dias úteis próprios do JDemetra+.
+  reduce(
+    fatores$nomes,
+    function(s, v) {
+      rjd3toolkit::add_usrdefvar(
+        s,
+        group = fatores$grupo,
+        name = v,
+        regeffect = "Undefined"
+      )
+    },
+    .init = spec
   )
 }
 
-ajustar_seats <- function(x, fatores) {
-  RJDemetra::tramoseats(
+ajustar_x13 <- function(x, fatores, calendario = TRUE) {
+  rjd3x13::x13(
     x,
-    RJDemetra::tramoseats_spec(
-      usrdef.varEnabled = TRUE,
-      usrdef.var = fatores,
-      transform.function = "Auto"
-    )
+    spec_x13(fatores, calendario),
+    context = fatores$context,
+    userdefined = ITENS_DIC
   )
+}
+
+ajustar_seats <- function(x, fatores, calendario = TRUE) {
+  rjd3tramoseats::tramoseats(
+    x,
+    spec_seats(fatores, calendario),
+    context = fatores$context,
+    userdefined = ITENS_DIC
+  )
+}
+
+#' Série dessazonalizada, seja qual for o motor
+#'
+#' As duas saídas não têm a mesma forma. O X-13 devolve séries diretas com a
+#' nomenclatura das tabelas do X-11 (`d11final` = série ajustada, `d12final` =
+#' tendência, `d16` = fatores sazonais, `d13final` = irregular, `e1` = original).
+#' O TRAMO-SEATS devolve nomes semânticos (`sa`, `t`, `s`, `i`, `series`), mas
+#' cada um embrulhado numa lista `$data` (amostra) + `$fcasts` (previsão) — só o
+#' `$data` interessa aqui.
+dados_de <- function(x) as.numeric(if (is.list(x)) x$data else x)
+
+serie_sa_ts <- function(fit) {
+  final <- fit$result$final
+  x <- if (!is.null(final$d11final)) final$d11final else final$sa
+  if (is.list(x)) x$data else x
+}
+
+serie_sa <- function(fit) as.numeric(serie_sa_ts(fit))
+
+#' Componentes da decomposição, para o gráfico das quatro peças
+componentes <- function(fit) {
+  final <- fit$result$final
+  if (!is.null(final$d11final)) {
+    list(
+      y = dados_de(final$e1),
+      t = dados_de(final$d12final),
+      s = dados_de(final$d16),
+      i = dados_de(final$d13final)
+    )
+  } else {
+    list(
+      y = dados_de(final$series),
+      t = dados_de(final$t),
+      s = dados_de(final$s),
+      i = dados_de(final$i)
+    )
+  }
 }
 
 #' Diagnósticos pós-ajuste, do próprio motor que fez o ajuste
@@ -157,17 +279,45 @@ ajustar_seats <- function(x, fatores) {
 #' `qs_sa` e `f_sa` medem sazonalidade residual na série ajustada; `l3` faz o
 #' mesmo restrito aos últimos 3 anos, que é onde a sazonalidade residual
 #' costuma aparecer primeiro. p-valor baixo = sobrou sazonalidade = ruim.
+#' NOTA DE TRADUÇÃO 2.x -> 3.x: o `l3`
+#'
+#' O 2.x publicava uma linha "Residual seasonality (last 3 years)" com p-valor
+#' pronto. O dicionário do 3.x não tem esse p-valor — só `seas-sa-combined3`,
+#' que devolve veredito (`Present`/`None`), não número. Para o scorecard
+#' continuar comparando p-valores entre os dois métodos, o `l3` passa a ser o
+#' QS restrito aos últimos 3 anos da série ajustada.
+#'
+#' **Sobre a primeira diferença**: o QS do `rjd3toolkit` é aplicado à série como
+#' ela chega, e uma série ajustada em nível ainda tem tendência — a
+#' autocorrelação da tendência domina e o p-valor vai a zero em toda série,
+#' sazonal ou não. Diferenciar antes é o que o próprio motor faz internamente,
+#' e é o que torna `seasonality_qs()` comparável ao `seas.qstest.sa` do
+#' diagnóstico interno. O veredito `combined3` vai junto no status, como
+#' conferência independente.
 diagnosticos <- function(fit) {
-  g <- function(linha) {
-    tryCatch(
-      as.numeric(fit$diagnostics$residuals_test[linha, "P.value"]),
-      error = function(e) NA_real_
-    )
+  p <- function(no) {
+    tryCatch(as.numeric(no$pvalue), error = function(e) NA_real_)
   }
+  d <- fit$result$diagnostics
+  sa <- tryCatch(serie_sa_ts(fit), error = function(e) NULL)
+
   tibble(
-    qs_sa = g("qs test on sa"),
-    f_sa = g("f-test on sa (seasonal dummies)"),
-    l3 = g("Residual seasonality (last 3 years)")
+    qs_sa = p(d$seas.qstest.sa),
+    f_sa = p(d$seas.ftest.sa),
+    l3 = if (is.null(sa)) {
+      NA_real_
+    } else {
+      tryCatch(
+        as.numeric(
+          rjd3toolkit::seasonality_qs(diff(sa), period = 12, nyears = -3)$pvalue
+        ),
+        error = function(e) NA_real_
+      )
+    },
+    combined3 = tryCatch(
+      as.character(fit$user_defined[["diagnostics.seas-sa-combined3"]]),
+      error = function(e) NA_character_
+    )
   )
 }
 
@@ -177,16 +327,20 @@ diagnosticos <- function(fit) {
 #' sazonalidade identificável.
 qualidade_x11 <- function(fit) {
   g <- function(m) {
-    tryCatch(as.numeric(fit$decomposition$mstats[m, 1]), error = function(e) {
-      NA_real_
-    })
+    tryCatch(as.numeric(fit$result$mstats[[m]]), error = function(e) NA_real_)
   }
-  tibble(Q = g("Q"), M7 = g("M(7)"))
+  tibble(Q = g("q"), M7 = g("m7"))
 }
 
+#' Veredito do teste combinado (Ladiray & Quenneville)
+#'
+#' É o mesmo teste que o 2.x expunha como `combined_test`: a variante calculada
+#' sobre as razões SI, `seas-si-combined`. O dicionário do 3.x oferece outras
+#' variantes (`-sa-`, `-lin-`, `-res-`) que respondem perguntas diferentes e
+#' **não** são substitutas.
 veredito_combinado <- function(fit) {
   tryCatch(
-    as.character(fit$diagnostics$combined_test$combined_seasonality_test),
+    as.character(fit$user_defined[["diagnostics.seas-si-combined"]]),
     error = function(e) NA_character_
   )
 }
@@ -249,7 +403,7 @@ razao_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
 #' foi decidido, por quê) e a série em `sa`. Quando `status != "ajustada"`, a
 #' coluna `value_sa` repete a série crua — mas isso está declarado, não
 #' escondido.
-ajustar_serie <- function(db, codigo, fatores, min_obs = 48) {
+ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) {
   d <-
     db %>%
     filter(codigo == .env$codigo, !is.na(value)) %>%
@@ -267,25 +421,20 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48) {
   }
 
   x <- as_ts_mensal(db, codigo)
-  fx13 <- tryCatch(ajustar_x13(x, fatores), error = function(e) NULL)
-  fseat <- tryCatch(ajustar_seats(x, fatores), error = function(e) NULL)
+  fx13 <- tryCatch(ajustar_x13(x, fatores, calendario), error = function(e) NULL)
+  fseat <- tryCatch(ajustar_seats(x, fatores, calendario), error = function(e) NULL)
 
   if (is.null(fx13) && is.null(fseat)) {
     return(vazio("falha_ajuste"))
   }
 
+  sem_diag <- tibble(
+    qs_sa = NA_real_, f_sa = NA_real_, l3 = NA_real_, combined3 = NA_character_
+  )
   testes <- testes_sazonalidade(x)
   combined <- veredito_combinado(fx13)
-  dx13 <- if (is.null(fx13)) {
-    tibble(qs_sa = NA_real_, f_sa = NA_real_, l3 = NA_real_)
-  } else {
-    diagnosticos(fx13)
-  }
-  dseats <- if (is.null(fseat)) {
-    tibble(qs_sa = NA_real_, f_sa = NA_real_, l3 = NA_real_)
-  } else {
-    diagnosticos(fseat)
-  }
+  dx13 <- if (is.null(fx13)) sem_diag else diagnosticos(fx13)
+  dseats <- if (is.null(fseat)) sem_diag else diagnosticos(fseat)
   qx11 <- if (is.null(fx13)) {
     tibble(Q = NA_real_, M7 = NA_real_)
   } else {
@@ -295,10 +444,10 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48) {
   metodo <- escolher_metodo(combined, dx13, dseats, qx11)
   razao <- razao_metodo(combined, dx13, dseats, qx11)
 
-  serie_sa <- switch(
+  valores_sa <- switch(
     metodo,
-    x11 = as.numeric(fx13$final$series[, "sa"]),
-    seats = as.numeric(fseat$final$series[, "sa"]),
+    x11 = serie_sa(fx13),
+    seats = serie_sa(fseat),
     d$value
   )
 
@@ -324,16 +473,18 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48) {
       qs_sa_seats = dseats$qs_sa,
       l3_x11 = dx13$l3,
       l3_seats = dseats$l3,
+      combined3_x11 = dx13$combined3,
+      combined3_seats = dseats$combined3,
       metodo = metodo,
       razao = razao,
       status = status
     ),
-    sa = tibble(codigo = codigo, date = d$date, value_sa = serie_sa)
+    sa = tibble(codigo = codigo, date = d$date, value_sa = valores_sa)
   )
 }
 
 #' Aplica `ajustar_serie()` a um vetor de códigos
-rodar_lote <- function(db, codigos, fatores, verbose = TRUE) {
+rodar_lote <- function(db, codigos, fatores, verbose = TRUE, calendario = TRUE) {
   res <-
     unique(codigos) %>%
     map(function(cd) {
@@ -341,7 +492,7 @@ rodar_lote <- function(db, codigos, fatores, verbose = TRUE) {
         message("  ", cd)
       }
       tryCatch(
-        ajustar_serie(db, cd, fatores),
+        ajustar_serie(db, cd, fatores, calendario = calendario),
         error = function(e) {
           list(
             status = tibble(

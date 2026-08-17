@@ -1,0 +1,74 @@
+codigo,sem,com,modalidade,tipo,destino
+20636,Present,Present,Desconto de duplicatas e recebíveis,livre,pj
+20637,Present,Present,Desconto de cheques,livre,pj
+20638,Present,Present,Antecipação de faturas de cartão,livre,pj
+20639,Present,Present,Capital de giro - Prazo menor 365 dias,livre,pj
+20640,Present,Present,Capital de giro - Prazo maior 365 dias,livre,pj
+20641,Present,Present,Capital de giro - Teto rotativo,livre,pj
+20642,Present,Present,Capital de giro - Total,livre,pj
+20643,Present,Present,Conta garantida,livre,pj
+20644,Present,Present,Cheque especial,livre,pj
+20645,Present,Present,Aquisição de veículos,livre,pj
+20646,None,Present,Aquisição de outros bens,livre,pj
+20648,Present,Present,Arrendamento mercantil - Veículos,livre,pj
+20649,ProbablyNone,ProbablyNone,Arrendamento mercantil - Outros bens,livre,pj
+20650,ProbablyNone,ProbablyNone,Arrendamento mercantil - Total,livre,pj
+20651,Present,Present,Vendor,livre,pj
+20652,Present,Present,Compror,livre,pj
+20655,Present,Present,Cartão de crédito - À vista,livre,pj
+20656,Present,Present,Cartão de crédito - Total,livre,pj
+20657,Present,Present,ACC,livre,pj
+20658,None,None,Financiamento importações,livre,pj
+20659,ProbablyNone,ProbablyNone,Financiamento exportações,livre,pj
+20660,ProbablyNone,ProbablyNone,Repasse externo,livre,pj
+20661,Present,Present,Outros,livre,pj
+20635,Present,Present,Total,livre,pj
+20665,ProbablyNone,Present,Cheque especial,livre,pf
+20666,ProbablyNone,Present,Crédito pessoal - Não consignado,livre,pf
+20669,Present,Present,Crédito pessoal - Consignado - Servidores públicos,livre,pf
+20668,Present,Present,Crédito pessoal - Consignado - Trabalhadores setor privado,livre,pf
+20670,Present,Present,Crédito pessoal - Consignado - Beneficiários do INSS,livre,pf
+20671,Present,Present,Crédito pessoal - Consignado - Total,livre,pf
+20672,ProbablyNone,None,Crédito pessoal - Total,livre,pf
+20673,Present,Present,Aquisição de veículos,livre,pf
+20674,Present,Present,Aquisição de outros bens,livre,pf
+20679,Present,Present,Cartão de crédito - Rotativo,livre,pf
+20680,Present,Present,Cartão de crédito - Parcelado,livre,pf
+20681,Present,Present,Cartão de crédito - À vista,livre,pf
+20682,Present,Present,Cartão de crédito - Total,livre,pf
+20676,None,None,Arrendamento mercantil - Veículos,livre,pf
+20677,None,None,Arrendamento mercantil - Outros bens,livre,pf
+20678,None,None,Arrendamento mercantil - Total,livre,pf
+20683,Present,Present,Desconto de cheques,livre,pf
+20667,Present,Present,Composição de dívidas,livre,pf
+20684,Present,Present,Outros,livre,pf
+20663,ProbablyNone,Present,Total não rotativo,livre,pf
+20664,Present,Present,Total rotativo,livre,pf
+20662,Present,Present,Total,livre,pf
+20687,ProbablyNone,Present,Crédito rural - Taxas de mercado,direcionado,pj
+20688,Present,Present,Crédito rural - Taxas reguladas,direcionado,pj
+20689,Present,Present,Crédito rural - Total,direcionado,pj
+20690,None,None,Financiamentos imobiliários - Taxas de mercado,direcionado,pj
+20691,Present,Present,Financiamentos imobiliários - Taxas reguladas,direcionado,pj
+20692,Present,Present,Financiamentos imobiliários - Total,direcionado,pj
+20693,ProbablyNone,ProbablyNone,Crédito com recursos do BNDES - Capital de giro,direcionado,pj
+20694,Present,Present,Crédito com recursos do BNDES - Financiamento a investimentos,direcionado,pj
+20695,ProbablyNone,ProbablyNone,Crédito com recursos do BNDES - Financiamento agroindustrial,direcionado,pj
+20696,Present,Present,Crédito com recursos do BNDES - Total,direcionado,pj
+20697,Present,Present,Outros,direcionado,pj
+20686,Present,Present,Total,direcionado,pj
+20699,Present,Present,Crédito rural - Taxas de mercado,direcionado,pf
+20700,Present,Present,Crédito rural - Taxas reguladas,direcionado,pf
+20701,Present,Present,Crédito rural - Total,direcionado,pf
+20702,Present,Present,Financiamentos imobiliários - Taxas de mercado,direcionado,pf
+20703,Present,Present,Financiamentos imobiliários - Taxas reguladas,direcionado,pf
+20704,Present,Present,Financiamentos imobiliários - Total,direcionado,pf
+20708,None,None,Crédito com recursos do BNDES - Total,direcionado,pf
+20712,Present,Present,Microcrédito,direcionado,pf
+20713,ProbablyNone,Present,Outros,direcionado,pf
+20698,Present,Present,Total,direcionado,pf
+20634,Present,Present,Concessões - Livre (R$ bilhões),livre,total
+20685,Present,Present,Concessões - Direcionado (R$ bilhões),direcionado,total
+20631,Present,Present,Concessões - Total (R$ bilhões),total,total
+20632,Present,Present,Concessões - PJ (R$ bilhões),total,pj
+20633,Present,Present,Concessões - PF (R$ bilhões),total,pf
