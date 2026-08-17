@@ -1,0 +1,999 @@
+---
+title: "Ajuste sazonal em cascata: testes, X-11 vs SEATS e o crédito brasileiro"
+description: "Uma escada de testes para decidir se uma série é sazonal, um scorecard para escolher entre X-11 e TRAMO-SEATS, e o que acontece quando você aplica isso nas 73 séries de concessão de crédito do BCB e tenta remontar os agregados."
+date: 2026-08-10
+categories: [seasonal adjustment, econometrics, credit, x13, tramo-seats]
+draft: false
+---
+
+Dessazonalizar uma série temporal parece ser, a primeira vista, um problema macroeconométrico "resolvido". Você instala o pacote `seasonal` ou `RJDemetra` no R (ou equivalentes em python, eviews, etc), chama uma função `seas()`-like, adiciona se necessário argumentos de pesos mensais customizados ou de tratamento de outliers específicos, sai uma série mais suave que guarda uma correlação interessante com a série original, e a vida segue. Na prática, contudo, sempre há três decisões escondidas nesse processo:
+
+1. **A série tem sazonalidade?** Rodar um filtro sazonal numa série sem sazonalidade não é neutro. Ele pode encontrar padrão onde não há e injetar ruído.
+2. **Se existe sazonalidade, qual método utilizar para tratá-la?** O `RJDemetra` oferece dois pipelines completos de ajuste sazonal com filosofias diferentes: X-13ARIMA-SEATS (RegARIMA + X-11) e TRAMO-SEATS (TRAMO + SEATS). Escolher qual seguir é uma decisão com consequências diferentes.
+3. **Se a série faz parte de uma hierarquia, você dessazonaliza o agregado ou as partes?** Ajuste sazonal não é linear. A soma das partes dessazonalizadas não é a dessazonalização da soma.
+
+> Nesse post vou fazer uso do pacote `RJDemetra` versão 0.2.8 no R, que é uma interface para o [JDemetra+](https://github.com/jdemetra/jdemetra-app) — o software de ajuste sazonal oficialmente recomendado aos membros do Sistema Estatístico Europeu. Vale uma nota de nomenclatura: o JDemetra+ não chama os binários originais em Fortran do Census Bureau e do Banco de Espanha; ele é uma **reescrita em Java** dos dois algoritmos, então os resultados são comparáveis aos dos programas originais, mas não idênticos.
+>
+> Duas ressalvas de versão. Primeira: o pacote embute o JDemetra+ **2.x** (na 0.2.8, o `demetra-tstoolkit-2.2.5.jar`), e a linha 2.x está em *maintenance mode*, com fim de vida anunciado para dezembro de 2026 junto com o fim do suporte ao Java 8. Segunda: a linha **3.x**, em desenvolvimento ativo, não chegou ao `RJDemetra` — ela vive numa família nova de pacotes (`rjd3toolkit` como base, mais `rjd3x13`, `rjd3tramoseats`, `rjd3x11plus`, `rjd3highfreq`, `rjd3stl`, `rjd3sts`, entre outros), que exige Java 21. Migrar é trocar de pacote, não subir de versão.
+>
+> O que se ganha no 3.x são métodos que o 2.x não tem: STL+, X-11 estendido para dados de alta frequência (infra-mensais), modelos estruturais básicos em espaço de estados, pré-ajuste por *extended airline model* para periodicidades fracionárias e políticas de revisão customizáveis. Nada disso muda o exercício deste post, que compara X-11 e SEATS — os dois já estão inteiros no 2.x. O leitor que tiver interesse pode entrar em contato comigo para trocar ideia sobre esses novos métodos. Sendo bem sincero, confesso ainda não os ter explorado.
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(knitr)
+library(lubridate)
+
+source("R/theme_blog.R")
+source("R/sa_runner.R")
+
+dir_dados <- "data/seasonal-adjustment"
+
+hierarquia <-
+  read_csv(file.path(dir_dados, "hierarquia_concessoes.csv"), show_col_types = FALSE) %>%
+  mutate(codigo = as.character(codigo))
+```
+
+> Note a existência do script sa_runner.R nesse código. Nele várias rotinas e funções customizadas desse post são geradas. O arquivo está disponível no repositório do blog, mas qualquer coisa podem entrar em contato que posso mandar de outras formas.
+
+Este post destrincha as três questões acima utilizando um caso concreto: as **`r nrow(hierarquia)` séries de concessão de crédito nominal** publicadas pelo Banco Central do Brasil ("BCB"), de março de 2011 até junho de 2026. Escolhi a série de concessões por alguns motivos.
+
+Primeiro, pela própria importância dessas séries. Ter um indicador de crédito sazonalmente ajustado confiável é extremamente relevante para mapear o impulso de crédito e seu efeito sobre atividade no Brasil.
+
+Além disso, o próprio BCB publica nos metadados do [BCB SGS](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries) o procedimento de ajuste sazonal empregado nas séries (texto abaixo). Contudo, diferentemente das séries do IBGE, o órgão não especifica os testes usados nem os componentes de efeito calendário e feriados utilizados (caso esses fatores forem divulgados em algum lugar, já peço perdão aqui pelo meu equívoco!) abrindo margem para resultados diferentes do oficial e uma possível discussão metodológica (algo que esse post se propõe a fazer).
+
+> - O método empregado no processo de ajuste sazonal é o X-13 Arima Seats.
+> - Antes de realizar os ajustes sazonais, são realizados testes de detecção de sazonalidade. Quando a sazonalidade não é significante, a série não é ajustada.
+> - Leva-se em conta a estrutura móvel do calendário, chamada efeito calendário. O número de dias úteis de cada mês pode mudar de ano para ano. Além disso, alguns feriados, como o Carnaval, são móveis, podendo cair em dias e meses diferentes de acordo com o ano.
+> - As séries de crédito nominais são dessazonalizadas diretamente (não é adotado o método de dessazonalização das séries componentes para se chegar à série agregada sazonalmente ajustada).
+
+Por último, o BCB publica versão oficial dessazonalizada de alguns agregados, o que dá um gabarito raro para comparar. Porém também deixa claro no último item que dessazonaliza as séries diretamente, abrindo uma oportunidade boa para comparar como seriam os resultados utilizando um método bottom-up.
+
+O roteiro daqui para frente é o seguinte: monto uma escada de quatro testes de sazonalidade e um scorecard de escolha de qual método de dessazonalização utilizar, e aplico os dois em três séries didáticas para mostrar os resultados diferentes que podem aparecer em cada caso. Depois, rodo essa rotina inteira nas 73 séries e tento remontar os agregados de duas formas diferentes - a bottom-up e a top-down - comparando com as métricas oficiais do BCB onde possível.
+
+## Os dados
+
+As concessões são disponibilizadas pelo BCB de diferentes formas. Uma delas é através da planilha divulgada nas [Estatísticas monetáris e de crédito](https://www.bcb.gov.br/estatisticas/estatisticasmonetariascredito), enquanto a outra utilizada nesse post é pelo já citado [BCB SGS](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries). Ambas contêm uma série por modalidade. A hierarquia vai de `Concessões - Total` até folhas como `Desconto de duplicatas e recebíveis` ou `Crédito pessoal - Consignado - Beneficiários do INSS`, contando com dois grandes pares de subdivisões: PF vs PJ e livre vs direcionado.
+
+```{r}
+#| label: dados
+#| warning: false
+
+codigos_oficiais <-
+  hierarquia %>%
+  filter(!is.na(dessaz_oficial)) %>%
+  pull(dessaz_oficial) %>%
+  as.character()
+
+db <- carregar_series(
+  c(hierarquia$codigo, codigos_oficiais),
+  cache_path = file.path(dir_dados, "sgs_concessoes.csv")
+)
+
+fatores <- carregar_fatores(file.path(dir_dados, "dessaz_ibc_br.txt"))
+```
+
+Note que no código acima carrego um .txt com os fatores sazonais do IBC-Br. Mais a frente vai ficar clara sua funcionalidade, mas basicamente usei como proxy para os fatores de calendário citados pela metodologia do BCB (carnaval, feriados, etc) que não temos acesso (que eu saiba!!!).
+
+```{r}
+#| label: resumo-dados
+#| echo: false
+
+db %>%
+  reframe(
+    séries = n_distinct(codigo),
+    início = format(min(date), "%b/%Y"),
+    fim = format(max(date), "%b/%Y"),
+    meses = n_distinct(date)
+  ) %>%
+  kable(col.names = c("séries", "início", "fim", "meses"), align = c("r", "r", "r", "r"))
+```
+
+O post, como fica claro nos snips de código acima **não busca dados ao vivo**. `carregar_series()` lê um snapshot em CSV commitado no repositório, baixado do SGS com o pacote [`GetBCBData`](https://cran.r-project.org/package=GetBCBData) (sempre ele!) na data de escrita desse post. Como é um dado que passa por revisões é importante frisar que o post inteiro é condicional à amostra. Isso foi feito, pois a escolha entre X-11 e SEATS série a série e os gaps de reconciliação mudariam a cada revisão publicada, e o texto passaria a comentar números que não estão mais na página caso fossem atualizados junto com a atualização das séries. Para o objetivo desse exercício vale a pena truncar nesse vintage específico.
+
+### As três séries do exemplo
+
+```{r}
+#| label: exemplos
+#| echo: false
+
+exemplos <- tribble(
+  ~codigo,  ~papel,
+  "20666",  "sazonalidade forte e limpa",
+  "20669",  "sazonal, mas os métodos discordam",
+  "20658",  "provavelmente não é sazonal"
+)
+
+exemplos <-
+  exemplos %>%
+  left_join(hierarquia %>% select(codigo, modalidade, tipo, destino), join_by(codigo))
+
+exemplos %>%
+  select(codigo, modalidade, tipo, destino, papel) %>%
+  kable(col.names = c("SGS", "modalidade", "recursos", "tomador", "papel no post"), align = c("l", "l", "l", "l", "l"))
+```
+
+```{r}
+#| label: fig-series-exemplo
+#| fig-cap: "As três séries do exemplo, em nível. Nenhuma delas está dessazonalizada aqui."
+#| echo: false
+#| fig-height: 4.5
+
+db_ex <-
+  db %>%
+  filter(codigo %in% exemplos$codigo) %>%
+  left_join(exemplos %>% select(codigo, modalidade), join_by(codigo)) %>%
+  mutate(rotulo = factor(
+    str_glue("{modalidade} ({codigo})"),
+    levels = str_glue("{exemplos$modalidade} ({exemplos$codigo})")
+  ))
+
+ggplot(filter(db_ex, year(date) >= 2015), aes(x = date, y = value / 10^3)) +
+  geom_line(colour = pal_blog("main")[1], linewidth = 0.6) +
+  facet_wrap(~rotulo, scales = "free_y", ncol = 3, labeller = label_wrap_gen(width = 25)) +
+  scale_x_date_blog(db_ex$date) +
+  scale_y_continuous() +
+  labs(
+    title = "Concessões de crédito: as três séries do exemplo",
+    subtitle = "R$ bilhões, valores correntes, sem ajuste sazonal",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+Trabalho o post inteiro em **valores nominais**. Primeiro, e mais importante, porque as séries oficiais dessazonalizadas que uso de comparação na última seção são nominais., Segundo, porque deflacionar **antes** do ajuste sazonal pode contaminar a série com a sazonalidade do próprio deflator. Terceiro, porque deflacionar **depois** do ajuste sazonal pode injetar sazonalidade de volta numa série que pode nem tê-la.
+
+## Degrau 1: olhar para o dado
+
+O primeiro "teste" de sazonalidade é simplesmente observar a série. Muitas vezes já saímos aplicando pacotes e fazendo contas complexas em situações que apenas olhar um simples gráfico já responderia se é necessário de fato fazer tudo isso. O **subseries plot** é um tipo de gráfico interessante nesse caso. Ele quebra a série por mês do ano: cada painel é um mês, a linha dentro dele percorre os anos em sequência, e a barra horizontal é a média daquele mês. Se há sazonalidade, as barras ficam em alturas visivelmente diferentes.
+
+Aqui, contudo, tenho que tomar alguns cuidados. Não é tão trivial quanto apenas rodar a função `ggsubseriesplot()`. Nesse caso, enfrento um problema por causa de uma característica própria das séries de concessão escolhidas. Como são séries nominais, elas possuem uma tendência de crescimento ao longo do tempo que pode dominar o gráfico e esconder a sazonalidade. Para expurgar essa tendência, uso uma **média móvel centrada 2x12**, que é um filtro clássico para isolar tendência-ciclo numa série mensal.
+
+A ideia é a seguinte. Qualquer janela de 12 meses consecutivos contém cada mês do calendário exatamente uma vez. Assim, a série da média móvel de 12 meses acaba sendo "cega" pra sazonalidade: a janela tem exatamente o tamanho do período sazonal e mata a sazonalidade por construção. Além disso, acaba suavizando a série a ponto de atenuar o componente irregular e captar algo que pode ser interpretado como a tendência e as flutuações de médio e longo prazo em torno dela (o ciclo). Dessa forma, a razão expressa em desvio percentual entre o valor do mês corrente e o valor da média móvel centrada (*ratio-to-moving-average*) pode ser interpretada como o desvio em relação à tendência-ciclo, sobrando o que seria o efeito sazonal mais o componente irregular.
+
+Olhar para a média dessa métrica nos ajuda a entender se a série possui aspectos sazonais ou não. Ela empilha o que se repete e cancela o que não se repete: o sazonal é o mesmo todo ano, então, com 15 anos de amostra, 15 fevereiros de −7% dão média −7%; o irregular é aleatório, então os 15 choques se cancelam entre si (não perfeitamente, obviamente, mas pelo menos são atenuados). Desse modo, a média é uma leitura mais limpa do que qualquer ano individual.
+
+> Fazer a razão em vez da subtração tem um motivo. Caso eu subtraísse, o desvio dos meses de fevereiro sairia em R$ milhões e um fevereiro de 2012 não seria comparável a um de 2025. Por exemplo, assuma que o valor para fev/2012 seja 1000 e fev/2025 seja 2500. Uma razão de −7% em relação à média móvel centrada de cada um dos meses indica que o valor dessa média é ~1075 em fev/2012 e ~2688 em fev/2025. Perceba que a razão é a mesma nos dois casos, mas a subtração daria −75 em 2012 contra −188 em 2025: o mesmo efeito sazonal, dois números completamente diferentes. O efeito sazonal cresceria junto com a série.
+
+Contudo, ainda tem mais um problema. Como 12 é um número par, a média não tem um mês como ponto centra. Ela cai no meio do caminho entre dois meses. No exemplo da janela jan → dez, entre junho e julho. Ou seja, ela está sempre meio mês adiante do mês ao qual eu gostaria de atribuí-la. A saída é calcular uma segunda janela, deslocada um mês para trás, e tirar a média das duas (numerando jan/2020 = 1 e dez/2019 = 0):
+
+| janela              | centro                   |
+|---------------------|--------------------------|
+| dez/2019 → nov/2020 | entre mai e jun (5,5)    |
+| jan/2020 → dez/2020 | entre jun e jul (6,5)    |
+| **média das duas**  | **junho, cravado (6,0)** |
+
+> Daqui vem o nome "média móvel centrada 2x12": ela é centrada num mês cheio, e para isso é calculada sobre **2** janelas de **12** meses, uma delas deslocada um mês para trás.
+
+Abrindo essa média das médias móveis, é fácil perceber que, ao coletar os termos, os 11 meses do miolo (jan a nov de 2020 no exemplo acima) aparecem nas duas janelas e, assim, têm "peso cheio". Já dezembro/2019 está só na primeira e dezembro/2020 só na segunda, então entram com meio peso cada (o que evita levar em conta a sazonalidade de dezembro duas vezes). Isso é exatamente o `c(0.5, rep(1, 11), 0.5) / 12` que aparece no código abaixo. Perceba também que seis observações são perdidas em cada ponta. Isso para um gráfico exploratório é aceitável, mas para uma análise formal pode ser problemático. Voltarei a esse tópico mais adiante neste post.
+
+Finalmente, posso plotar o gráfico mostrando os desvios em relação à tendência ano a ano para cada mês e, depois, a média desses desvios:
+
+```{r}
+#| label: fig-subseries
+#| fig-cap: "Subseries plot: cada painel é um mês do ano, a linha percorre os anos e a barra é a média do mês. Séries em desvio percentual da tendência (média móvel centrada 2x12), para isolar a sazonalidade do crescimento."
+#| echo: false
+#| fig-height: 5
+
+# Média móvel centrada 2x12: o filtro clássico para isolar tendência-ciclo numa
+# série mensal. Sem destendenciar, o crescimento da série domina o gráfico e a
+# sazonalidade some.
+ma_2x12 <- function(x) {
+  as.numeric(stats::filter(x, c(0.5, rep(1, 11), 0.5) / 12, sides = 2))
+}
+
+db_sub <-
+  db_ex %>%
+  arrange(codigo, date) %>%
+  mutate(desvio = 100 * (value / ma_2x12(value) - 1), .by = codigo) %>%
+  filter(!is.na(desvio)) %>%
+  mutate(
+    mes = factor(month(date), levels = 1:12, labels = c("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")),
+    ano = year(date)
+  )
+
+medias_mes <- db_sub %>% reframe(media = mean(desvio), .by = c(rotulo, mes))
+
+ggplot(db_sub, aes(x = ano, y = desvio)) +
+  geom_line(colour = pal_blog("main")[2], linewidth = 0.4) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  geom_segment(
+    data = medias_mes,
+    aes(x = -Inf, xend = Inf, y = media, yend = media),
+    colour = accent_blog("cool"), linewidth = 0.7, inherit.aes = FALSE
+  ) +
+  facet_grid(rotulo ~ mes, scales = "free_y", labeller = labeller(rotulo = label_wrap_gen(22))) +
+  labs(
+    title = "Subseries plot: a média de cada mês é diferente das outras?",
+    subtitle = "Desvio % da tendência (média móvel 2x12); linha vinho = média do mês",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog(base_size = 9) +
+  theme(
+    axis.text.x = element_blank(),
+    panel.spacing.x = grid::unit(1, "pt"),
+    strip.text.y = element_text(angle = 0, hjust = 0)
+  )
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: amplitudes
+#| echo: false
+
+amplitudes <-
+  medias_mes %>%
+  reframe(amplitude = max(media) - min(media), .by = rotulo)
+
+amp <- function(cd) {
+  scales::number(
+    amplitudes$amplitude[str_detect(as.character(amplitudes$rotulo), cd)],
+    accuracy = 0.1, suffix = " p.p."
+  )
+}
+```
+
+Os dois primeiros painéis parecem ter um padrão sazonal, enquanto o terceiro não. No **crédito pessoal não consignado** as barras vinho desenham um perfil consistente, com fevereiro claramente abaixo da tendência e março e maio acima, com amplitude de `r amp("20666")` entre o menor e o maior mês. No **consignado a servidores públicos** a amplitude é ainda maior, `r amp("20669")`: janeiro, fevereiro, novembro e dezembro abaixo, maio a outubro acima. Repare que a segunda série tem o padrão sazonal *mais* amplo das duas.
+
+No **financiamento a importações** a amplitude nominal até parece grande (`r amp("20658")`), mas olhe a escala do eixo: a variação dentro de cada mês, ao longo dos anos, chega ao dobro disso. As barras não se ordenam de forma estável e o ruído domina o calendário. É a assinatura visual de uma série **sem** sazonalidade utilizável.
+
+<!-- --- fig-acf: para cortar esta figura, deletar da linha "## Degrau 2" até o
+     fim da seção (chunks `fig-acf` e `acf-numeros` inclusive). A leitura dela é
+     referenciada no degrau 3, então o corte pede ajuste lá também. --- -->
+
+## Degrau 2: a autocorrelação nos lags sazonais
+
+O subseries plot é sugestivo, mas subjetivo. O passo natural é procurar o mesmo padrão num número: se a série é mensal e sazonal, a correlação nos lags 12, 24 e 36 deveria se destacar dos lags vizinhos. Esse é o raciocínio-padrão, e vale a pena olhar o resultado antes de acreditar nele.
+
+```{r}
+#| label: fig-acf
+#| fig-cap: "Autocorrelação da primeira diferença. As barras vinho são os lags sazonais (12, 24, 36); as linhas tracejadas são a banda de significância a 5%."
+#| echo: false
+#| fig-height: 3.6
+
+acf_tbl <- function(cd, rotulo) {
+  x <- db %>%
+    filter(codigo == cd) %>%
+    arrange(date) %>%
+    pull(value)
+  a <- acf(diff(x), lag.max = 36, plot = FALSE)
+  tibble(
+    codigo = cd,
+    rotulo = rotulo,
+    lag    = as.integer(a$lag[-1]),
+    acf    = as.numeric(a$acf[-1]),
+    banda  = 1.96 / sqrt(length(x))
+  )
+}
+
+db_acf <-
+  exemplos %>%
+  mutate(rotulo = str_glue("{modalidade} ({codigo})")) %>%
+  pmap(function(codigo, rotulo, ...) acf_tbl(codigo, rotulo)) %>%
+  list_rbind() %>%
+  mutate(
+    sazonal = lag %% 12 == 0,
+    rotulo = factor(
+      rotulo,
+      levels = str_glue("{exemplos$modalidade} ({exemplos$codigo})")
+    )
+  )
+
+ggplot(db_acf, aes(x = lag, y = acf)) +
+  geom_col(aes(fill = sazonal), width = 0.7) +
+  geom_hline(aes(yintercept = banda), linetype = "dashed", colour = "gray60", linewidth = 0.3) +
+  geom_hline(aes(yintercept = -banda), linetype = "dashed", colour = "gray60", linewidth = 0.3) +
+  scale_fill_manual(values = c(`FALSE` = pal_blog("main")[2], `TRUE` = accent_blog("cool")), guide = "none") +
+  facet_wrap(~rotulo, ncol = 3, labeller = label_wrap_gen(26)) +
+  labs(
+    title = "Autocorrelação nos lags sazonais",
+    subtitle = "ACF da primeira diferença, lags 1 a 36",
+    x = "lag (meses)",
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog(base_size = 10)
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: acf-numeros
+#| echo: false
+
+r_acf <- function(cd, l) {
+  scales::number(db_acf$acf[db_acf$codigo == cd & db_acf$lag == l], accuracy = 0.01)
+}
+banda_acf <- scales::number(db_acf$banda[1], accuracy = 0.01)
+n_fora <- function(cd) {
+  d <- db_acf %>% filter(codigo == cd, !sazonal)
+  sum(abs(d$acf) > d$banda)
+}
+```
+
+E o resultado é decepcionante — o que, aqui, é informativo. A banda de 5% está em ±`r banda_acf`. No **consignado a servidores públicos**, a série que o subseries plot mostrou como a de padrão sazonal *mais* amplo, os três lags sazonais ficam **dentro** da banda (`r r_acf("20669", 12)`, `r r_acf("20669", 24)` e `r r_acf("20669", 36)`) enquanto `r n_fora("20669")` lags não-sazonais furam. No **crédito pessoal não consignado** o lag 12 fura (`r r_acf("20666", 12)`), mas o lag 1 é `r r_acf("20666", 1)` — quase o dobro, em módulo — e outros `r n_fora("20666")` lags não-sazonais ficam fora da banda. Ou seja: nem mesmo na série de sazonalidade "forte e limpa" os lags 12, 24 e 36 *se destacam* dos vizinhos. Só a terceira série se comporta como o manual manda, e no sentido negativo: nada nos lags sazonais.
+
+Vale entender por que, porque cada motivo reaparece mais à frente no post.
+
+O primeiro é mecânico. A primeira diferença de uma série mensal injeta uma estrutura de baixa ordem que domina o correlograma inteiro — é dela que vem o lag 1 fortemente negativo nas três séries, sazonais ou não. O sinal sazonal continua ali, mas dividindo espaço com um artefato da própria transformação, e num gráfico com escala comum é o artefato que ganha o olho.
+
+O segundo é substantivo. Repare no decaimento do crédito pessoal não consignado: `r r_acf("20666", 12)` → `r r_acf("20666", 24)` → `r r_acf("20666", 36)`. Sazonalidade **determinística** — dezembro sempre 20% acima da tendência — se sustentaria nos três lags, porque a mesma defasagem se repete indefinidamente. O decaimento é a assinatura de sazonalidade que **evolui**, e é exatamente o que a decomposição vai mostrar mais adiante. O ACF não está falhando em detectar; está informando um tipo de sazonalidade que o degrau 4 existe para nomear.
+
+O terceiro é o mais importante. Autocorrelação nos lags sazonais é precisamente o que o teste QS mede — ele é uma Ljung-Box restrita aos lags 12 e 24. Um ACF que não vê nada no consignado a servidores públicos e um QS que não rejeita naquela mesma série não são duas evidências independentes de ausência de sazonalidade: **são a mesma evidência, com o mesmo ponto cego.** Guarde essa série; ela volta na próxima seção, e é ali que a escada começa a se pagar.
+
+## Degrau 3: os testes clássicos
+
+Agora os testes propriamente ditos. Uso três, e eles atacam o problema por ângulos diferentes:
+
+- **QS**: uma Ljung-Box restrita aos lags sazonais, testando autocorrelação positiva em 12 e 24. É o teste que a maioria das rotinas de produção usa como porteiro.
+- **Friedman**: não-paramétrico, trata os anos como blocos e os meses como tratamentos. Pergunta se a ordenação dos meses dentro de cada ano é consistente ao longo do tempo.
+- **Kruskal-Wallis**: também não-paramétrico, compara as distribuições dos 12 meses sem supor normalidade.
+
+Os três testam **sazonalidade estável** — um padrão que se repete. Nenhum deles detecta sazonalidade que muda de forma ao longo do tempo, e é por isso que existe o degrau 4.
+
+```{r}
+#| label: testes-degrau3
+#| code-fold: show
+
+testes_sazonalidade <- function(x) {
+  p <- function(f) tryCatch(as.numeric(f(x)$Pval), error = function(e) NA_real_)
+  tibble(
+    qs_p      = p(seastests::qs), # Ljung-Box nos lags sazonais
+    fried_p   = p(seastests::fried), # Friedman
+    kw_p      = p(seastests::kw), # Kruskal-Wallis
+    wo        = tryCatch(seastests::isSeasonal(x, test = "wo"), error = function(e) NA),
+    seasdum_p = p(seastests::seasdum), # F sobre dummies mensais: sazonalidade determinística
+    ocsb_stat = tryCatch(as.numeric(seastests::ocsb(x)$stat), error = function(e) NA_real_)
+  )
+}
+```
+
+```{r}
+#| label: tbl-testes
+#| echo: false
+
+series_ts <- exemplos$codigo %>%
+  set_names() %>%
+  map(~ as_ts_mensal(db, .x))
+
+tab_testes <-
+  series_ts %>%
+  imap(~ testes_sazonalidade(.x) %>% mutate(codigo = .y)) %>%
+  list_rbind() %>%
+  left_join(exemplos %>% select(codigo, modalidade), join_by(codigo)) %>%
+  select(codigo, modalidade, qs_p, fried_p, kw_p, seasdum_p, wo, ocsb_stat)
+
+tab_testes %>%
+  mutate(across(c(qs_p, fried_p, kw_p, seasdum_p), ~ scales::number(.x, accuracy = 0.0001))) %>%
+  kable(
+    col.names = c("SGS", "modalidade", "QS", "Friedman", "Kruskal-Wallis", "dummies sazonais", "WO", "OCSB"),
+    align = c("l", "l", "r", "r", "r", "r", "c", "r")
+  )
+```
+
+Repare no que acontece na segunda linha — o consignado a servidores públicos, a mesma série que o ACF não viu. O **QS dá `r round(tab_testes$qs_p[tab_testes$codigo == "20669"], 3)`** — não rejeita a 5%, por muito pouco. Não é coincidência: QS e ACF olham para o mesmo objeto, autocorrelação nos lags sazonais, e erram junto. Se a sua rotina de produção usa QS como porteiro único, e a maioria usa, essa série passa direto sem ajuste. Mas Friedman e Kruskal-Wallis rejeitam com p-valores duas ordens de grandeza menores, o teste de dummies sazonais rejeita, e o veredito combinado de Webel-Ollech diz que é sazonal. **É uma série sazonal que o teste mais popular deixa passar.**
+
+E a terceira linha mostra o caso oposto e mais desconfortável: QS não rejeita nada (`r round(tab_testes$qs_p[tab_testes$codigo == "20658"], 2)`), mas Friedman (`r round(tab_testes$fried_p[tab_testes$codigo == "20658"], 3)`) e Kruskal-Wallis (`r round(tab_testes$kw_p[tab_testes$codigo == "20658"], 3)`) rejeitam a 5%. **Os testes discordam de verdade.** Não há maioria confortável aqui, e é precisamente por isso que o degrau 4 existe.
+
+## Degrau 4: que *tipo* de sazonalidade?
+
+Os três testes anteriores respondem "há sazonalidade?". O degrau 4 responde uma pergunta diferente: **a sazonalidade é determinística ou estocástica?** A distinção é prática, não filosófica:
+
+- Sazonalidade **determinística** é um padrão fixo — dezembro é sempre 20% acima da tendência. Se for isso, um conjunto de dummies mensais numa regressão resolve, e você nem precisa de filtro sazonal.
+- Sazonalidade **estocástica** é um padrão que evolui — o pico de dezembro migra, encolhe, muda de forma. Aí você precisa de um filtro que acompanhe essa evolução, que é exatamente o que X-11 e SEATS fazem.
+
+Uso dois testes para isso: `seasdum` (teste F sobre dummies mensais — detecta a parte determinística) e `ocsb` (teste de raiz unitária sazonal — uma raiz unitária sazonal implica sazonalidade estocástica). E, como árbitro, o teste **WO de Webel-Ollech**, que combina QS com Kruskal-Wallis e só declara sazonalidade quando os dois concordam.
+
+Somando os quatro degraus, o veredito para as três séries é:
+
+- **Crédito pessoal não consignado**: sazonal, todos os testes concordam, componente determinística forte. Caso fácil.
+- **Consignado servidores públicos**: sazonal, mas o QS quase não vê. Caso onde a escada ganha do teste único.
+- **Financiamento a importações**: os testes discordam entre si e o WO diz que não. Caso onde a resposta certa é provavelmente **não dessazonalizar**.
+
+Falta o quinto voto, que vem do próprio motor de ajuste sazonal — e é o melhor de todos.
+
+## Os métodos: X-11 vs SEATS
+
+Antes de continuar, uma correção de vocabulário que confunde muita gente (inclusive eu, por um bom tempo). No `RJDemetra` existem duas funções, `x13()` e `tramoseats()`, e a diferença entre elas **não** é "X-11 versus X-13". Ambas fazem duas coisas em sequência:
+
+1. **Pré-ajuste**: um modelo RegARIMA (no X-13) ou TRAMO (no TRAMO-SEATS) que limpa a série de outliers, efeitos de calendário e feriados, e estende a série com previsões para os filtros terem o que mastigar nas pontas — é essa extensão que resolve o problema de ponta que mencionei no degrau 1, quando a média móvel 2x12 perdeu seis observações de cada lado. Essa parte é quase idêntica nos dois.
+2. **Decomposição**: aqui elas divergem de verdade. O **X-11** usa uma sequência de médias móveis empíricas, refinada iterativamente ao longo de décadas no Census Bureau — filtros que funcionam bem porque funcionam bem, não porque saem de um modelo. O **SEATS** deriva os filtros analiticamente do modelo ARIMA estimado no pré-ajuste: dado o ARIMA, existe uma decomposição ótima em componentes não observados, e o SEATS a calcula.
+
+Um detalhe que vale registrar, porque é fonte de confusão: o **X-13ARIMA-SEATS** do Census Bureau tem, ele próprio, os dois módulos de decomposição — X-11 e SEATS. O JDemetra+ não organiza assim. Ele reparte os dois módulos entre as duas funções: `x13_spec()` só expõe argumentos `x11.*`, e quem tem os `seats.*` é `tramoseats_spec()`. Então, no `RJDemetra`, "rodar X-13" significa na prática **RegARIMA + X-11**, e o único caminho até o SEATS é pelo `tramoseats()`. É por isso que daqui para frente eu chamo os dois métodos de **X-11** e **SEATS**, e não de X-13 e TRAMO-SEATS: o que está sendo comparado é a decomposição, não o pipeline inteiro.
+
+A consequência prática é direta: **o SEATS é tão bom quanto o ARIMA que o alimenta.** Quando o ARIMA é adequado, ele produz um ajuste mais suave e com fundamento estatístico. Quando o ARIMA é ruim ou patológico, o SEATS herda o problema. O X-11 é mais burro e mais robusto.
+
+### Os fatores de calendário
+
+Antes de comparar os métodos, um ingrediente que muda o resultado mais do que a escolha entre eles: **efeitos de calendário**. Fevereiro tem 28 dias, dezembro tem 31, Carnaval anda pelo calendário, e o número de dias úteis num mês varia de 18 a 23. Nada disso é sazonalidade — é aritmética de calendário — mas contamina a estimativa sazonal se você não modelar.
+
+Uso os seis fatores de calendário do IBC-BR como regressores externos, que capturam dias úteis e feriados móveis brasileiros:
+
+```{r}
+#| label: spec-x13
+#| code-fold: show
+
+ajustar_x13 <- function(x, fatores) {
+  RJDemetra::x13(
+    x,
+    RJDemetra::x13_spec(
+      usrdef.varEnabled  = TRUE,
+      usrdef.var         = fatores, # 6 fatores de calendário do IBC-BR
+      transform.function = "Auto" # log vs. nível decidido pelo AIC
+    )
+  )
+}
+```
+
+```{r}
+#| label: fig-calendario
+#| fig-cap: "Efeito de incluir os fatores de calendário: diferença entre a série ajustada com e sem os regressores, em % da série ajustada."
+#| echo: false
+#| fig-height: 3.4
+
+x_cal <- series_ts[["20666"]]
+sa_com <- as.numeric(ajustar_x13(x_cal, fatores)$final$series[, "sa"])
+sa_sem <- as.numeric(RJDemetra::x13(x_cal, RJDemetra::x13_spec(transform.function = "Auto"))$final$series[, "sa"])
+datas_cal <- db %>%
+  filter(codigo == "20666") %>%
+  arrange(date) %>%
+  pull(date)
+
+tibble(date = datas_cal, dif = 100 * (sa_com / sa_sem - 1)) %>%
+  ggplot(aes(x = date, y = dif)) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  geom_line(colour = accent_blog("petrol"), linewidth = 0.6) +
+  scale_x_date_blog(datas_cal) +
+  labs(
+    title = "Os fatores de calendário não são um detalhe",
+    subtitle = "Crédito pessoal não consignado: diferença % entre ajustar com e sem os fatores do IBC-BR",
+    x = NULL,
+    caption = caption_blog(c("BCB/SGS", "IBGE"))
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: efeito-calendario-lote
+#| cache: true
+#| echo: false
+#| message: false
+
+# Veredito do teste combinado sem nenhum regressor de calendário (RSA3) contra
+# o veredito com os seis fatores do IBC-BR.
+veredito_calendario <-
+  hierarquia$codigo %>%
+  map(function(cd) {
+    x <- as_ts_mensal(db, cd)
+    vd <- function(f) tryCatch(as.character(f$diagnostics$combined_test$combined_seasonality_test), error = function(e) NA_character_)
+    tibble(
+      codigo    = cd,
+      sem_cal   = vd(tryCatch(RJDemetra::x13(x, RJDemetra::x13_spec(spec = "RSA3", transform.function = "Auto")), error = function(e) NULL)),
+      com_ibcbr = vd(tryCatch(ajustar_x13(x, fatores), error = function(e) NULL))
+    )
+  }) %>%
+  list_rbind()
+
+n_muda_calendario <- sum(
+  veredito_calendario$sem_cal == "Present" & veredito_calendario$com_ibcbr != "Present",
+  na.rm = TRUE
+)
+```
+
+A diferença entre ajustar com e sem os fatores chega a `r scales::number(max(abs(100 * (sa_com / sa_sem - 1))), accuracy = 0.1, suffix = " p.p.")` num mês isolado, e o desvio-padrão dessa diferença é `r scales::number(sd(100 * (sa_com / sa_sem - 1)), accuracy = 0.01, suffix = " p.p.")` — ordem de grandeza que muda leitura mensal. E há um efeito mais forte, que só aparece olhando o conjunto. Comparando o veredito do teste combinado **sem nenhum regressor de calendário** contra o veredito **com os seis fatores**, `r n_muda_calendario` das `r nrow(hierarquia)` séries mudam de `Present` para não-sazonal — o consignado para beneficiários do INSS. O que parecia padrão sazonal ali era efeito de dias úteis mal atribuído.
+
+### A decomposição
+
+```{r}
+#| label: fig-decomposicao
+#| fig-cap: "Decomposição do X-11 (via RegARIMA) para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular."
+#| echo: false
+#| fig-height: 5.5
+
+fit_dec <- ajustar_x13(series_ts[["20666"]], fatores)
+comp <- fit_dec$final$series
+
+tibble(
+  date = datas_cal,
+  `original` = as.numeric(comp[, "y"]),
+  `tendência-ciclo` = as.numeric(comp[, "t"]),
+  `sazonal` = as.numeric(comp[, "s"]),
+  `irregular` = as.numeric(comp[, "i"])
+) %>%
+  pivot_longer(-date, names_to = "componente", values_to = "valor") %>%
+  mutate(componente = factor(componente, levels = c("original", "tendência-ciclo", "sazonal", "irregular"))) %>%
+  ggplot(aes(x = date, y = valor)) +
+  geom_line(colour = pal_blog("main")[1], linewidth = 0.55) +
+  facet_wrap(~componente, scales = "free_y", ncol = 1) +
+  scale_x_date_blog(datas_cal) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "As quatro peças",
+    subtitle = "Crédito pessoal não consignado, decomposição multiplicativa do X-11",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+O componente sazonal aqui é multiplicativo (o `transform.function = "Auto"` escolheu log), e o que ele mostra é sazonalidade **estocástica**: a amplitude do padrão muda ao longo dos anos. Um conjunto de dummies mensais não daria conta disso — é o degrau 4 se pagando.
+
+## O scorecard: como escolher entre os dois
+
+Aqui é onde eu preciso ser honesto sobre o estado da arte: **não existe teste formal aceito que arbitre entre X-11 e SEATS.** Não é que eu não tenha achado — é que não existe. As M-statistics do X-11 diagnosticam a qualidade da decomposição do X-11, e não têm análogo no SEATS; os diagnósticos do SEATS pressupõem o modelo. Não há estatística de teste com distribuição conhecida sob a hipótese nula "os dois métodos são equivalentes".
+
+O que existe é **diagnóstico comparativo**, e a hierarquia de critérios abaixo é uma escolha defensável, não um teorema:
+
+```{r}
+#| label: scorecard
+#| code-fold: show
+
+escolher_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
+  falha <- function(p) !is.na(p) && p < limiar
+
+  case_when(
+    # 1. Não há sazonalidade identificável -> não ajusta nada
+    combined %in% c("None", "ProbablyNone") ~ "nenhum",
+    # 2. Os dois deixam sazonalidade residual -> nenhum serve
+    falha(dx13$qs_sa) & falha(dseats$qs_sa) ~ "nenhum",
+    # 3. Só um deixa sazonalidade residual -> o outro ganha
+    falha(dseats$qs_sa) & !falha(dx13$qs_sa) ~ "x11",
+    falha(dx13$qs_sa) & !falha(dseats$qs_sa) ~ "seats",
+    # 4. Mesmo critério, restrito aos últimos 3 anos
+    falha(dseats$l3) & !falha(dx13$l3) ~ "x11",
+    falha(dx13$l3) & !falha(dseats$l3) ~ "seats",
+    # 5. Decomposição X-11 fraca (Q > 1) -> vai de SEATS
+    !is.na(qx11$Q) & qx11$Q > 1 ~ "seats",
+    # 6. Empate -> X-11, por ser o mais robusto a ARIMA ruim
+    .default = "x11"
+  )
+}
+```
+
+A lógica da ordem: **sazonalidade residual é o pecado capital de um ajuste sazonal.** Se sobrou padrão sazonal na série que você diz ter dessazonalizado, nada mais importa — nem suavidade, nem elegância do modelo. Por isso os critérios 2-4 vêm antes de qualquer medida de qualidade. Só depois entra o `Q` do X-11, e o desempate final vai para o X-11 pelo argumento da robustez.
+
+O critério 1 vem do **teste combinado do X-13**, que é o quinto voto que prometi: ele junta um F de sazonalidade estável, um F de sazonalidade evolutiva e um Kruskal-Wallis num veredito de três níveis — `Present`, `ProbablyNone`, `None`. É o mesmo teste que o JDemetra+ usa internamente para decidir se vale a pena ajustar.
+
+```{r}
+#| label: fig-x11-seats
+#| fig-cap: "X-11 e SEATS lado a lado. Em cima, uma série onde empatam; embaixo, uma onde o SEATS deixa sazonalidade residual."
+#| echo: false
+#| fig-height: 5
+
+comparar <- function(cd) {
+  x <- series_ts[[cd]]
+  d <- db %>%
+    filter(codigo == cd) %>%
+    arrange(date)
+  bind_rows(
+    tibble(date = d$date, valor = as.numeric(ajustar_x13(x, fatores)$final$series[, "sa"]), metodo = "X-11"),
+    tibble(date = d$date, valor = as.numeric(ajustar_seats(x, fatores)$final$series[, "sa"]), metodo = "SEATS")
+  ) %>%
+    mutate(codigo = cd)
+}
+
+db_cmp_metodo <-
+  c("20666", "20669") %>%
+  map(comparar) %>%
+  list_rbind() %>%
+  left_join(exemplos %>% select(codigo, modalidade), join_by(codigo)) %>%
+  mutate(rotulo = factor(
+    str_glue("{modalidade} ({codigo})"),
+    levels = str_glue("{exemplos$modalidade} ({exemplos$codigo})")
+  ))
+
+ggplot(db_cmp_metodo, aes(x = date, y = valor, colour = metodo)) +
+  geom_line(linewidth = 0.55) +
+  facet_wrap(~rotulo, scales = "free_y", ncol = 1) +
+  scale_color_blog("contrast") +
+  scale_x_date_blog(db_cmp_metodo$date) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Quando os dois métodos discordam, dá para ver",
+    subtitle = "Séries dessazonalizadas, R$ milhões",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+No painel de cima as duas linhas se sobrepõem: X-11 e SEATS entregam praticamente a mesma série, e a escolha entre eles é indiferente. No de baixo, não. Até 2021 elas andam juntas; a partir de 2022 se descolam de forma visível, com o SEATS oscilando em torno de um padrão que o X-11 removeu.
+
+O olho já suspeita, mas é o **diagnóstico** que decide:
+
+```{r}
+#| label: tbl-scorecard
+#| echo: false
+
+diag_exemplos <-
+  exemplos$codigo %>%
+  map(function(cd) {
+    x <- series_ts[[cd]]
+    a <- ajustar_x13(x, fatores)
+    b <- ajustar_seats(x, fatores)
+    dx <- diagnosticos(a)
+    ds <- diagnosticos(b)
+    qx <- qualidade_x11(a)
+    cb <- veredito_combinado(a)
+    tibble(
+      codigo = cd, combined = cb, Q = qx$Q,
+      qs_x11 = dx$qs_sa, qs_seats = ds$qs_sa,
+      l3_x11 = dx$l3, l3_seats = ds$l3,
+      metodo = escolher_metodo(cb, dx, ds, qx),
+      razao = razao_metodo(cb, dx, ds, qx)
+    )
+  }) %>%
+  list_rbind() %>%
+  left_join(exemplos %>% select(codigo, modalidade), join_by(codigo))
+
+diag_exemplos %>%
+  select(codigo, modalidade, combined, Q, qs_x11, qs_seats, l3_x11, l3_seats, metodo, razao) %>%
+  mutate(across(c(Q, qs_x11, qs_seats, l3_x11, l3_seats), ~ scales::number(.x, accuracy = 0.001))) %>%
+  kable(
+    col.names = c("SGS", "modalidade", "combinado", "Q", "QS X-11", "QS SEATS", "3a X-11", "3a SEATS", "escolha", "razão"),
+    align = c("l", "l", "l", "r", "r", "r", "r", "r", "l", "l")
+  )
+```
+
+As colunas `QS` medem sazonalidade residual **na série já ajustada** — p-valor baixo significa que sobrou padrão sazonal, o que é ruim. As colunas `3a` fazem o mesmo restrito aos últimos três anos, que é onde a sazonalidade residual costuma aparecer primeiro, porque as pontas são a parte mais frágil de qualquer filtro.
+
+Na segunda série, o SEATS deixa sazonalidade residual detectável (p = `r round(diag_exemplos$qs_seats[diag_exemplos$codigo == "20669"], 4)`) enquanto o X-11 passa limpo. Duas linhas quase idênticas no gráfico, e uma delas está errada.
+
+## Aplicando em lote
+
+A rotina inteira vira uma função, `ajustar_serie()`, que devolve **duas coisas**: a série ajustada e uma linha de status dizendo o que foi testado, o que foi decidido e por quê. Essa segunda parte não é firula.
+
+O modo de falhar típico de rotinas de ajuste sazonal em produção é este: a função tem um `tryCatch` que, em caso de erro, devolve a série original. Sem sinalizar. O resultado é uma coluna `value_sa` onde algumas séries estão ajustadas, outras não, e não há como distinguir. Quando essas séries viram um agregado bottom-up, o agregado herda a mistura em silêncio.
+
+```{r}
+#| label: lote
+#| cache: true
+#| message: false
+
+resultado <- rodar_lote(db, hierarquia$codigo, fatores, verbose = FALSE)
+
+status <-
+  resultado$status %>%
+  left_join(hierarquia %>% select(codigo, modalidade, tipo, destino, agg), join_by(codigo))
+```
+
+```{r}
+#| label: tbl-status
+#| echo: false
+
+status %>%
+  reframe(séries = n(), .by = c(status, metodo)) %>%
+  arrange(desc(séries)) %>%
+  kable(col.names = c("status", "método escolhido", "séries"), align = c("l", "l", "r"))
+```
+
+```{r}
+#| label: fig-vereditos
+#| fig-cap: "Veredito do teste combinado do X-13 nas 73 séries de concessão, por tipo de recurso."
+#| echo: false
+#| fig-height: 3.2
+
+status %>%
+  filter(!is.na(combined)) %>%
+  mutate(combined = factor(combined, levels = c("Present", "ProbablyNone", "None"))) %>%
+  reframe(n = n(), .by = c(combined, tipo)) %>%
+  ggplot(aes(x = combined, y = n, fill = tipo)) +
+  geom_col(position = "dodge", width = 0.7) +
+  scale_fill_blog("extended", n = 3) +
+  labs(
+    title = "Nem toda série de crédito é sazonal",
+    subtitle = "Veredito do teste combinado do X-13, número de séries",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog() +
+  # Exceção ao ADR 0004: a rotação existe para evitar clipping do último rótulo
+  # de data; num eixo categórico de três níveis ela só atrapalha a leitura.
+  theme(axis.text.x = element_text(angle = 0))
+```
+
+::: {.zoomable-figure}
+:::
+
+O resultado agregado do lote é a conclusão mais forte do post, e ela contraria a intuição com que comecei:
+
+```{r}
+#| label: numeros-lote
+#| echo: false
+
+sazonais <- status %>% filter(combined == "Present")
+n_qs_x11 <- sum(sazonais$qs_sa_x11 < 0.05, na.rm = TRUE)
+n_qs_seats <- sum(sazonais$qs_sa_seats < 0.05, na.rm = TRUE)
+n_por_q <- sum(str_detect(status$razao, "^Q ="), na.rm = TRUE)
+n_seats <- sum(status$metodo == "seats", na.rm = TRUE)
+```
+
+> Das `r nrow(sazonais)` séries com sazonalidade identificável, o **X-11 não deixa sazonalidade residual em nenhuma** (`r n_qs_x11` falhas no QS da série ajustada) e o **SEATS deixa em `r n_qs_seats`**. Pelo critério que de fato importa — sobrou padrão sazonal no que você chama de série dessazonalizada? — o X-11 passa em tudo.
+
+Isso precisa de um cuidado na leitura, porque o scorecard escolheu SEATS em `r n_seats` séries. Mas veja de onde vêm essas escolhas: `r n_por_q` das `r n_seats` vieram da **última** regra antes do desempate, `Q > 1` — decomposição X-11 fraca — e não de sazonalidade residual. Só `r n_seats - n_por_q` veio de um critério de sazonalidade residual, e é o `Crédito rural - Total (PF)`, onde o X-11 falha no recorte dos últimos três anos.
+
+Ou seja: **os dois métodos removem sazonalidade igualmente bem quase sempre; o que os separa, quando algo separa, é a qualidade da decomposição, não a eficácia.** É por isso que o scorecard não é um otimizador — é um detector de exceção. Se você rodasse X-11 em tudo, sem testar nada, entregaria ajuste sem sazonalidade residual em todas as `r nrow(sazonais)`. O que você perderia não é precisão média: são as `r sum(status$status == "sem_sazonalidade", na.rm = TRUE)` séries que **não deveriam ter sido ajustadas** e as poucas onde a decomposição é frágil e merece um olhar humano.
+
+## Oficial, bottom-up e top-down
+
+Chegamos à pergunta prática. Para um agregado como `Concessões - Total`, há três formas de obter uma série dessazonalizada:
+
+- **Oficial**: a série que o próprio BCB publica já ajustada.
+- **Top-down**: pegar o agregado publicado (não ajustado) e rodar a rotina nele.
+- **Bottom-up**: dessazonalizar cada folha e somar.
+
+Ajuste sazonal não é uma operação linear, então as três dão resultados diferentes por construção. A pergunta é quanto, e onde.
+
+```{r}
+#| label: comparacao
+#| cache: true
+#| message: false
+
+# Os agregados que têm versão oficial dessazonalizada. `use == TRUE` marca as
+# quatro séries DESAGREGADAS com oficial — elas são o gabarito da próxima
+# subseção, não alvo desta comparação de agregação.
+alvos <-
+  hierarquia %>%
+  filter(!is.na(dessaz_oficial), is.na(use)) %>%
+  select(codigo, modalidade, tipo, destino, dessaz_oficial) %>%
+  mutate(dessaz_oficial = as.character(dessaz_oficial))
+
+# top-down: a rotina aplicada ao agregado publicado
+td <-
+  resultado$sa %>%
+  filter(codigo %in% alvos$codigo) %>%
+  rename(top_down = value_sa)
+
+# bottom-up: soma das folhas dessazonalizadas
+bu <-
+  alvos$codigo %>%
+  map(~ bottom_up(.x, hierarquia, resultado$sa)) %>%
+  list_rbind() %>%
+  rename(bottom_up = value_sa)
+
+# oficial
+of <-
+  db %>%
+  filter(codigo %in% alvos$dessaz_oficial) %>%
+  select(dessaz_oficial = codigo, date, oficial = value) %>%
+  left_join(alvos %>% select(codigo, dessaz_oficial), join_by(dessaz_oficial))
+
+cmp <-
+  td %>%
+  full_join(bu, join_by(codigo, date)) %>%
+  full_join(of %>% select(codigo, date, oficial), join_by(codigo, date)) %>%
+  left_join(alvos %>% select(codigo, modalidade, tipo, destino), join_by(codigo))
+```
+
+```{r}
+#| label: fig-nivel-3versoes
+#| fig-cap: "Concessões totais: as três versões dessazonalizadas em nível. Praticamente indistinguíveis."
+#| echo: false
+#| fig-height: 3.6
+
+cmp_total <-
+  cmp %>%
+  filter(codigo == "20631") %>%
+  pivot_longer(c(top_down, bottom_up, oficial), names_to = "versao", values_to = "valor") %>%
+  filter(!is.na(valor)) %>%
+  mutate(versao = case_match(
+    versao,
+    "top_down" ~ "top-down",
+    "bottom_up" ~ "bottom-up",
+    "oficial" ~ "oficial BCB"
+  ))
+
+ggplot(cmp_total, aes(x = date, y = valor, colour = versao)) +
+  geom_line(linewidth = 0.55) +
+  scale_color_blog("extended", n = 3) +
+  scale_x_date_blog(cmp_total$date) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Concessões totais dessazonalizadas: três caminhos",
+    subtitle = "R$ milhões correntes",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+Em nível é impossível ver diferença, e esse é justamente o problema com comparações de nível: elas escondem tudo o que interessa. A leitura de conjuntura não é feita no nível, é feita na **variação mensal**.
+
+```{r}
+#| label: fig-mom-3versoes
+#| fig-cap: "A mesma comparação, em variação mensal. Aqui as três versões deixam de ser indistinguíveis."
+#| echo: false
+#| fig-height: 3.6
+
+mom_total <-
+  cmp_total %>%
+  arrange(versao, date) %>%
+  mutate(mom = 100 * (valor / dplyr::lag(valor) - 1), .by = versao) %>%
+  filter(!is.na(mom), date >= max(date) - 365 * 5)
+
+ggplot(mom_total, aes(x = date, y = mom, colour = versao)) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  geom_line(linewidth = 0.55) +
+  scale_color_blog("extended", n = 3) +
+  scale_x_date_blog(mom_total$date) +
+  labs(
+    title = "É na variação mensal que as três discordam",
+    subtitle = "Concessões totais dessazonalizadas, variação % mensal, últimos 5 anos",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: fig-dispersao-mom
+#| fig-cap: "Discordância na variação mensal entre as três versões, por agregado: desvio-padrão da diferença de MoM contra a série oficial do BCB."
+#| echo: false
+#| fig-height: 3.8
+
+disc <-
+  cmp %>%
+  arrange(codigo, date) %>%
+  mutate(
+    mom_td = 100 * (top_down / dplyr::lag(top_down) - 1),
+    mom_bu = 100 * (bottom_up / dplyr::lag(bottom_up) - 1),
+    mom_of = 100 * (oficial / dplyr::lag(oficial) - 1),
+    .by = codigo
+  ) %>%
+  reframe(
+    `top-down vs oficial` = sd(mom_td - mom_of, na.rm = TRUE),
+    `bottom-up vs oficial` = sd(mom_bu - mom_of, na.rm = TRUE),
+    `bottom-up vs top-down` = sd(mom_bu - mom_td, na.rm = TRUE),
+    .by = c(codigo, modalidade, tipo, destino)
+  ) %>%
+  pivot_longer(starts_with(c("top-down", "bottom-up")), names_to = "par", values_to = "sd_dif") %>%
+  filter(!is.na(sd_dif)) %>%
+  mutate(rotulo = str_glue("{modalidade} ({tipo}/{destino})"))
+
+ggplot(disc, aes(x = reorder(rotulo, sd_dif), y = sd_dif, fill = par)) +
+  geom_col(position = "dodge", width = 0.7) +
+  coord_flip() +
+  scale_fill_blog("extended", n = 3) +
+  labs(
+    title = "Quanto as três versões discordam mês a mês",
+    subtitle = "Desvio-padrão da diferença de variação mensal, p.p.",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 0))
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: gap-direcionado-pj
+#| echo: false
+
+# Único agregado desta comparação cujos filhos publicados não somam o pai na
+# série crua. Calculado aqui, e não numa rotina de reconciliação geral, porque é
+# o único caso que sobrevive na grade de agregação.
+gap_dirpj <-
+  db %>%
+  filter(codigo %in% str_split_1(hierarquia$agg[hierarquia$codigo == "20686"], ",")) %>%
+  reframe(soma = sum(value, na.rm = FALSE), .by = date) %>%
+  inner_join(db %>% filter(codigo == "20686") %>% select(date, publicado = value), join_by(date)) %>%
+  reframe(g = 100 * mean((soma - publicado) / publicado, na.rm = TRUE)) %>%
+  pull(g)
+```
+
+Uma ressalva sobre uma das barras: em `Concessões - Direcionado PJ` a soma dos filhos publicados difere do agregado publicado em `r scales::number(gap_dirpj, accuracy = 0.01, suffix = "%")` já na série **crua** — provavelmente falta uma modalidade que o BCB agrega ali e não publica separadamente —, então o bottom-up dessa série carrega um erro de nível que não tem nada a ver com ajuste sazonal.
+
+### As quatro séries com gabarito
+
+Há um último teste, e é o mais exigente. Com uma ressalva importante, agora que o vocabulário está no lugar: os metadados do BCB dizem que "o método empregado é o X-13 Arima Seats", e isso **não diz qual decomposição foi usada** — X-11 ou SEATS. Também não diz se o software é o do Census ou o JDemetra+, que dão resultados próximos mas não idênticos. A comparação abaixo, portanto, não é entre duas implementações do mesmo procedimento; é entre a nossa rotina e um procedimento parcialmente especificado. É o que há.
+
+O BCB publica versão oficial dessazonalizada de quatro séries **desagregadas** — capital de giro total, total não rotativo PF, aquisição de veículos PF e cartão à vista PF. Nessas quatro, dá para comparar a nossa rotina diretamente com a do Banco Central, no mesmo objeto.
+
+```{r}
+#| label: fig-gabarito
+#| fig-cap: "As quatro séries desagregadas com versão oficial dessazonalizada: nossa rotina contra a do BCB."
+#| echo: false
+#| fig-height: 5
+
+gabarito_codigos <- hierarquia %>% filter(use == TRUE, !is.na(dessaz_oficial))
+
+gab <-
+  gabarito_codigos %>%
+  pmap(function(codigo, dessaz_oficial, modalidade, ...) {
+    nossa <- resultado$sa %>%
+      filter(codigo == .env$codigo) %>%
+      select(date, nossa = value_sa)
+    ofic <- db %>%
+      filter(codigo == as.character(dessaz_oficial)) %>%
+      select(date, oficial = value)
+    nossa %>%
+      inner_join(ofic, join_by(date)) %>%
+      mutate(modalidade = modalidade, codigo = .env$codigo)
+  }) %>%
+  list_rbind() %>%
+  pivot_longer(c(nossa, oficial), names_to = "versao", values_to = "valor") %>%
+  mutate(versao = case_match(versao, "nossa" ~ "nossa rotina", "oficial" ~ "oficial BCB"))
+
+ggplot(gab, aes(x = date, y = valor, colour = versao)) +
+  geom_line(linewidth = 0.55) +
+  facet_wrap(~modalidade, scales = "free_y", ncol = 2, labeller = label_wrap_gen(32)) +
+  scale_color_blog("contrast") +
+  scale_x_date_blog(gab$date) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Nossa rotina contra o gabarito",
+    subtitle = "Séries desagregadas com versão oficial dessazonalizada, R$ milhões",
+    x = NULL,
+    caption = caption_blog("BCB/SGS")
+  ) +
+  theme_blog(base_size = 10)
+```
+
+::: {.zoomable-figure}
+:::
+
+```{r}
+#| label: tbl-gabarito
+#| echo: false
+
+gab %>%
+  pivot_wider(names_from = versao, values_from = valor) %>%
+  arrange(codigo, date) %>%
+  mutate(
+    mom_nossa = 100 * (`nossa rotina` / dplyr::lag(`nossa rotina`) - 1),
+    mom_ofic = 100 * (`oficial BCB` / dplyr::lag(`oficial BCB`) - 1),
+    .by = codigo
+  ) %>%
+  reframe(
+    correlação = cor(`nossa rotina`, `oficial BCB`, use = "complete.obs"),
+    `corr. MoM` = cor(mom_nossa, mom_ofic, use = "complete.obs"),
+    `dp da dif. MoM` = sd(mom_nossa - mom_ofic, na.rm = TRUE),
+    .by = c(codigo, modalidade)
+  ) %>%
+  mutate(across(where(is.numeric), ~ scales::number(.x, accuracy = 0.001))) %>%
+  kable(
+    col.names = c("SGS", "modalidade", "corr. nível", "corr. MoM", "dp da dif. MoM (p.p.)"),
+    align = c("l", "l", "r", "r", "r")
+  )
+```
+
+Essa tabela é o argumento que sustenta o post inteiro. Se a nossa rotina reproduz o ajuste oficial nessas quatro séries — onde dá para conferir — então há motivo para confiar nela nas outras `r nrow(hierarquia) - nrow(gabarito_codigos)`, onde não há gabarito nenhum.
+
+## O que eu levo daqui
+
+**Teste antes de ajustar, e com mais de um teste.** O QS sozinho, que é o porteiro padrão da maioria das rotinas, deixou passar uma série claramente sazonal e não flagrou o desacordo na série provavelmente não-sazonal. Uma escada de quatro degraus custa milissegundos e muda o veredito em casos reais.
+
+**A escolha entre X-11 e SEATS importa menos do que se supõe — e é por isso que vale testar.** Nas `r nrow(sazonais)` séries sazonais, o X-11 não deixou sazonalidade residual em nenhuma e o SEATS deixou em `r n_qs_seats`. O scorecard não existe para otimizar o caso médio; existe para achar as poucas séries onde um dos dois falha, e as `r sum(status$status == "sem_sazonalidade", na.rm = TRUE)` que não deveriam ser ajustadas.
+
+**Modele calendário.** Os fatores de calendário mudaram o ajuste mais do que a escolha entre métodos, e numa série chegaram a derrubar o veredito de sazonalidade — o padrão era dias úteis, não calendário sazonal.
+
+**E deixe a rotina falar.** A decisão de projeto mais importante do runner não foi estatística: foi devolver uma linha de status por série, dizendo o que foi testado, o que foi decidido e por quê. Uma rotina que devolve silenciosamente a série crua quando o ajuste falha é pior do que uma que quebra, porque produz um número que parece uma série dessazonalizada e não é.
+
+O código completo está em [`blog/R/sa_runner.R`](https://github.com/raphaludwig/raphaludwig.github.io/blob/main/blog/R/sa_runner.R). Todos os dados são públicos e vêm da API do SGS — com o snapshot local como rede de segurança para os dias em que o BCB está fora do ar, que não são poucos.

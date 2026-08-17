@@ -1,0 +1,74 @@
+codigo,modalidade,tipo,destino,agg,dessaz_oficial,use,note
+20636,Desconto de duplicatas e recebíveis,livre,pj,F,NA,NA,NA
+20637,Desconto de cheques,livre,pj,F,NA,NA,NA
+20638,Antecipação de faturas de cartão,livre,pj,F,NA,NA,NA
+20639,Capital de giro - Prazo menor 365 dias,livre,pj,F,NA,NA,NA
+20640,Capital de giro - Prazo maior 365 dias,livre,pj,F,NA,NA,NA
+20641,Capital de giro - Teto rotativo,livre,pj,F,NA,NA,NA
+20642,Capital de giro - Total,livre,pj,"20639,20640,20641",28169,TRUE,NA
+20643,Conta garantida,livre,pj,F,NA,NA,NA
+20644,Cheque especial,livre,pj,F,NA,NA,NA
+20645,Aquisição de veículos,livre,pj,F,NA,NA,NA
+20646,Aquisição de outros bens,livre,pj,F,NA,NA,NA
+20648,Arrendamento mercantil - Veículos,livre,pj,F,NA,NA,NA
+20649,Arrendamento mercantil - Outros bens,livre,pj,F,NA,NA,NA
+20650,Arrendamento mercantil - Total,livre,pj,"20648,20649",NA,NA,NA
+20651,Vendor,livre,pj,F,NA,NA,NA
+20652,Compror,livre,pj,F,NA,NA,NA
+20655,Cartão de crédito - À vista,livre,pj,F,NA,NA,NA
+20656,Cartão de crédito - Total,livre,pj,F,NA,NA,NA
+20657,ACC,livre,pj,F,NA,NA,NA
+20658,Financiamento importações,livre,pj,F,NA,NA,NA
+20659,Financiamento exportações,livre,pj,F,NA,NA,NA
+20660,Repasse externo,livre,pj,F,NA,NA,NA
+20661,Outros,livre,pj,F,NA,NA,NA
+20635,Total,livre,pj,"20657,20658,20659,20660,20661,20650,20651,20652,20655,20642,20643,20644,20645,20646,20636,20637,20638",24443,NA,"cartão não entra todo, fica sem parcelo e rotativo que não tem ticker"
+20665,Cheque especial,livre,pf,F,NA,NA,NA
+20666,Crédito pessoal - Não consignado,livre,pf,F,NA,NA,NA
+20669,Crédito pessoal - Consignado - Servidores públicos,livre,pf,F,NA,NA,NA
+20668,Crédito pessoal - Consignado - Trabalhadores setor privado,livre,pf,F,NA,NA,NA
+20670,Crédito pessoal - Consignado - Beneficiários do INSS,livre,pf,F,NA,NA,NA
+20671,Crédito pessoal - Consignado - Total,livre,pf,"20669,20668,20670",NA,NA,NA
+20672,Crédito pessoal - Total,livre,pf,"20671,20666",NA,NA,NA
+20673,Aquisição de veículos,livre,pf,F,28170,TRUE,NA
+20674,Aquisição de outros bens,livre,pf,F,NA,NA,NA
+20679,Cartão de crédito - Rotativo,livre,pf,F,NA,NA,NA
+20680,Cartão de crédito - Parcelado,livre,pf,F,NA,NA,NA
+20681,Cartão de crédito - À vista,livre,pf,F,28171,TRUE,NA
+20682,Cartão de crédito - Total,livre,pf,"20679,20680,20681",NA,NA,NA
+20676,Arrendamento mercantil - Veículos,livre,pf,F,NA,NA,NA
+20677,Arrendamento mercantil - Outros bens,livre,pf,F,NA,NA,NA
+20678,Arrendamento mercantil - Total,livre,pf,"20676,20677",NA,NA,NA
+20683,Desconto de cheques,livre,pf,F,NA,NA,NA
+20667,Composição de dívidas,livre,pf,F,NA,NA,NA
+20684,Outros,livre,pf,F,NA,NA,NA
+20663,Total não rotativo,livre,pf,"20673,20674,20671,20666,20678,20683,20684",28168,TRUE,"fala que contém cartão rotativo, mas soma n contempla. No saldo contemplou, então mantive"
+20664,Total rotativo,livre,pf,"20665,20681",NA,NA,"não fala nada, mas n contempla cartão parcelado e a;guns outros, n consegui chegar na soma"
+20662,Total,livre,pf,"20663,20664",24444,NA,"fala que não contempla cartão parcelado e rotativo, mas mantive. Por isso antes tirou do rotativo e não rotativo"
+20687,Crédito rural - Taxas de mercado,direcionado,pj,F,NA,NA,NA
+20688,Crédito rural - Taxas reguladas,direcionado,pj,F,NA,NA,NA
+20689,Crédito rural - Total,direcionado,pj,"20687,20688",NA,NA,NA
+20690,Financiamentos imobiliários - Taxas de mercado,direcionado,pj,F,NA,NA,NA
+20691,Financiamentos imobiliários - Taxas reguladas,direcionado,pj,F,NA,NA,NA
+20692,Financiamentos imobiliários - Total,direcionado,pj,"20690,20691",NA,NA,NA
+20693,Crédito com recursos do BNDES - Capital de giro,direcionado,pj,F,NA,NA,NA
+20694,Crédito com recursos do BNDES - Financiamento a investimentos,direcionado,pj,F,NA,NA,NA
+20695,Crédito com recursos do BNDES - Financiamento agroindustrial,direcionado,pj,F,NA,NA,NA
+20696,Crédito com recursos do BNDES - Total,direcionado,pj,"20693,20694,20695",NA,NA,NA
+20697,Outros,direcionado,pj,F,NA,NA,NA
+20686,Total,direcionado,pj,"20697,20696,20692,20689",24446,NA,NA
+20699,Crédito rural - Taxas de mercado,direcionado,pf,F,NA,NA,NA
+20700,Crédito rural - Taxas reguladas,direcionado,pf,F,NA,NA,NA
+20701,Crédito rural - Total,direcionado,pf,"20699,20700",NA,NA,NA
+20702,Financiamentos imobiliários - Taxas de mercado,direcionado,pf,F,NA,NA,NA
+20703,Financiamentos imobiliários - Taxas reguladas,direcionado,pf,F,NA,NA,NA
+20704,Financiamentos imobiliários - Total,direcionado,pf,"20702,20703",NA,NA,NA
+20708,Crédito com recursos do BNDES - Total,direcionado,pf,F,NA,NA,NA
+20712,Microcrédito,direcionado,pf,F,NA,NA,NA
+20713,Outros,direcionado,pf,F,NA,NA,NA
+20698,Total,direcionado,pf,"20713,20712,20708,20704,20701",24447,NA,NA
+20634,Concessões - Livre (R$ bilhões),livre,total,"20635,20662",24442,NA,NA
+20685,Concessões - Direcionado (R$ bilhões),direcionado,total,"20698,20686",24445,NA,NA
+20631,Concessões - Total (R$ bilhões),total,total,"20634,20685",24439,NA,NA
+20632,Concessões - PJ (R$ bilhões),total,pj,"20635,20686",24440,NA,NA
+20633,Concessões - PF (R$ bilhões),total,pf,"20662,20698",24441,NA,NA
