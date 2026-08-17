@@ -1,0 +1,10 @@
+gerado em            : 2026-08-17 14:44:59.394878
+R                    : R version 4.6.0 (2026-04-24 ucrt)
+RJDemetra            : 0.2.8
+seastests            : 0.15.4
+JVM                  : 1.8.0_481
+jars                 : demetra-tstoolkit-2.2.5.jar, istack-commons-runtime-3.0.7.jar, javax.activation-api-1.2.0.jar, jaxb-api-2.4.0-b180830.0359.jar, jaxb-runtime-2.4.0-b180830.0438.jar, jdr-2.2.4.jar
+spec x13             : default do x13_spec() = RSA5c
+spec tramoseats      : default do tramoseats_spec() = RSAfull
+usrdef.varType       : default = Undefined
+séries               : 73
