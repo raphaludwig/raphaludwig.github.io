@@ -9,10 +9,10 @@ draft: false
 Dessazonalizar uma série temporal parece ser, à primeira vista, um problema macroeconométrico "resolvido". Você instala o pacote [`seasonal`](https://cran.r-project.org/web/packages/seasonal/index.html), [RJDemetra](https://cran.r-project.org/web/packages/RJDemetra/index.html) ou [`rjd3toolkit`](https://cran.r-project.org/web/packages/rjd3toolkit/index.html) no R (ou equivalentes em Python, EViews, etc.), chama uma função `seas()`-like, adiciona, se necessário, argumentos de pesos mensais customizados ou de tratamento de outliers específicos, sai uma série mais suave que guarda uma correlação interessante com a série original, e a vida segue. Na prática, contudo, sempre há três decisões implícitas nesse processo:
 
 1. **A série tem sazonalidade?** Rodar um filtro sazonal numa série sem sazonalidade não é neutro. Ele pode encontrar padrão onde não há e injetar ruído.
-2. **Se existe sazonalidade, qual método utilizar para tratá-la?** O *software* JDemetra+ oferece alguns pipelines completos de ajuste sazonal com filosofias diferentes, como, por exemplo, X-13ARIMA (RegARIMA + X-11) e TRAMO-SEATS (TRAMO + SEATS). Escolher qual seguir é uma decisão com consequências diferentes.
+2. **Se existe sazonalidade, qual método utilizar para tratá-la?** O *software* JDemetra+ oferece alguns pipelines completos de ajuste sazonal com filosofias diferentes, como, por exemplo, X-13ARIMA (RegARIMA + X-11) e TRAMO-SEATS (TRAMO + SEATS).
 3. **Se a série faz parte de uma hierarquia, você dessazonaliza o agregado ou as partes?** Ajuste sazonal não é linear. A soma das partes dessazonalizadas não é a dessazonalização da soma.
 
-> Neste post uso o pacote [`rjd3toolkit`](https://cran.r-project.org/web/packages/rjd3toolkit/index.html) versão 3.8.0 no R. Ele serve de interface para o [JDemetra+](https://github.com/jdemetra/jdemetra-app), o *software* de ajuste sazonal oficialmente recomendado pela Eurostat. Numa versão inicial, escrevi os códigos usando o pacote `RJDemetra`, porém ele embute o JDemetra+ **2.x** (na versão 0.2.8, atual no CRAN, o `demetra-tstoolkit-2.2.5.jar`). Isso é problemático, pois, como o README do projeto explicita: *"JDemetra+ v2 will reach its end of life in December 2026, which coincides with the end of Java 8's official support"*. Escrever hoje uma rotina de produção sobre um *runtime* com fim de vida marcado para daqui a alguns meses não me parece fazer muito sentido.
+> Neste *post* uso o pacote [`rjd3toolkit`](https://cran.r-project.org/web/packages/rjd3toolkit/index.html) versão 3.8.0 no R. Ele serve de interface para o [JDemetra+](https://github.com/jdemetra/jdemetra-app), o *software* de ajuste sazonal oficialmente recomendado pela Eurostat. Numa versão inicial, escrevi os códigos usando o pacote `RJDemetra`, porém ele embute o JDemetra+ **2.x** (na versão 0.2.8, atual no CRAN, o `demetra-tstoolkit-2.2.5.jar`). Isso é problemático, pois, como o README do projeto explicita: *"JDemetra+ v2 will reach its end of life in December 2026, which coincides with the end of Java 8's official support"*. Escrever hoje uma rotina de produção sobre um *runtime* com fim de vida marcado para daqui a alguns meses não me parece fazer muito sentido.
 
 
 ```{r}
@@ -40,7 +40,7 @@ Este post destrincha as três questões acima utilizando um caso concreto: as **
 
 Primeiro, pela própria importância delas. Ter um indicador de crédito sazonalmente ajustado confiável é extremamente relevante para mapear o impulso de crédito e seu efeito sobre atividade no Brasil.
 
-Além disso, o próprio BCB publica nos metadados do [BCB SGS](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries) o procedimento de ajuste sazonal empregado nas séries (texto abaixo). Contudo, diferentemente das séries do IBGE, o órgão não especifica os testes nem os componentes de efeito calendário e feriados utilizados (se esses fatores estão publicados em algum lugar, já peço perdão aqui pelo meu equívoco!), abrindo margem para resultados diferentes do oficial e uma possível discussão metodológica.
+Além disso, o próprio BCB publica nos metadados do [BCB SGS](https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries) o procedimento de ajuste sazonal empregado nas séries (texto abaixo). Contudo, diferentemente das séries do IBGE, o órgão não especifica os testes nem os componentes de efeitos de calendário e feriados utilizados (se esses fatores estão publicados em algum lugar, já peço perdão aqui pelo meu equívoco!), abrindo margem para resultados diferentes do oficial e uma possível discussão metodológica.
 
 > - O método empregado no processo de ajuste sazonal é o X-13 Arima Seats.
 > - Antes de realizar os ajustes sazonais, são realizados testes de detecção de sazonalidade. Quando a sazonalidade não é significante, a série não é ajustada.
@@ -49,7 +49,7 @@ Além disso, o próprio BCB publica nos metadados do [BCB SGS](https://www3.bcb.
 
 Por último, o BCB publica versão oficial dessazonalizada de alguns agregados, o que dá um gabarito raro para comparação e abre uma oportunidade para vislumbrar como seriam os resultados utilizando um método *bottom-up*.
 
-O roteiro daqui para frente é o seguinte: monto uma escada de testes de sazonalidade e um *scorecard* de escolha, e aplico os dois em três séries didáticas para mostrar os resultados diferentes que podem aparecer. Depois, rodo essa rotina inteira nas `r nrow(hierarquia)` séries e tento remontar os agregados de duas formas diferentes — a *bottom-up* e a *top-down* — comparando com as séries oficiais do BCB onde possível.
+O roteiro daqui para frente é o seguinte: monto uma escada de testes de sazonalidade e um *scorecard* de escolha, e aplico os dois em três séries didáticas para mostrar os resultados diferentes que podem aparecer. Depois, rodo essa rotina inteira nas `r nrow(hierarquia)` séries e tento remontar os agregados de duas formas diferentes - a *bottom-up* e a *top-down* - comparando com as séries oficiais do BCB onde possível.
 
 ## Os dados
 
@@ -89,7 +89,7 @@ db %>%
   kable(col.names = c("séries", "início", "fim", "meses"), align = c("r", "r", "r", "r"))
 ```
 
-O post, como fica claro nos *snips* de código acima, **não busca dados ao vivo**. `carregar_series()` lê um snapshot em CSV commitado no repositório, baixado do SGS com o pacote [`GetBCBData`](https://cran.r-project.org/package=GetBCBData) (sempre ele!) na data de escrita deste post. É importante frisar que o post inteiro é condicional à amostra, já que são dados que passam por revisões.
+O *post*, como fica claro nos *snips* de código acima, **não busca dados ao vivo**. `carregar_series()` lê um snapshot em CSV commitado no repositório, baixado do SGS com o pacote [`GetBCBData`](https://cran.r-project.org/package=GetBCBData) (sempre ele!) na data de escrita deste *post*. É importante frisar que o exercício inteiro é condicional à amostra, já que são dados que passam por revisões.
 
 ### As três séries do exemplo
 
@@ -145,7 +145,7 @@ ggplot(filter(db_ex, year(date) >= 2015), aes(x = date, y = value / 10^3)) +
 ::: {.zoomable-figure}
 :::
 
-Vou trabalhar no *post* inteiro com **valores nominais**. Primeiro, e mais importante, porque as séries oficiais dessazonalizadas que uso como comparação na última seção são nominais. Segundo, porque deflacionar **antes** do ajuste sazonal pode contaminar com a sazonalidade do próprio deflator. Terceiro, porque deflacionar **depois** do ajuste sazonal pode injetar sazonalidade de volta.
+Vou trabalhar com **valores nominais**. Primeiro, e mais importante, porque as séries oficiais dessazonalizadas que uso como comparação na última seção são nominais. Segundo, porque deflacionar **antes** do ajuste sazonal pode contaminar com a sazonalidade do próprio deflator. Terceiro, porque deflacionar **depois** do ajuste sazonal pode injetar sazonalidade de volta.
 
 ## Escada da sazonalidade
 
@@ -153,7 +153,7 @@ Vou trabalhar no *post* inteiro com **valores nominais**. Primeiro, e mais impor
 
 O primeiro "teste" de sazonalidade é simplesmente observar a dinâmica da série. Muitas vezes já saímos aplicando pacotes e fazendo contas complexas em situações que apenas olhar um simples gráfico já responderia se é necessário de fato fazer tudo isso. O *subseries plot* é um tipo de gráfico interessante nesse caso. Ele quebra a série por mês do ano: cada painel é um mês, a linha dentro dele percorre os anos em sequência, e a barra horizontal é a média daquele mês. Se há sazonalidade, as barras ficam em alturas visivelmente diferentes.
 
-Aqui, contudo, tenho que tomar alguns cuidados. Não é tão trivial quanto rodar a função `ggsubseriesplot()`. Como são séries nominais, elas possuem uma tendência de crescimento ao longo do tempo que pode dominar o gráfico e esconder a sazonalidade. Para expurgar essa tendência, uso uma **média móvel centrada 2x12**, um filtro clássico para isolar tendência-ciclo numa série mensal.
+Aqui, contudo, tenho que tomar alguns cuidados. Não é tão trivial quanto rodar a função `ggsubseriesplot()`. Como são séries nominais, elas podem possuir uma tendência de crescimento ao longo do tempo que pode dominar o gráfico e esconder a sazonalidade. Para expurgar essa tendência, uso uma **média móvel centrada 2x12**, um filtro clássico para isolar tendência-ciclo numa série mensal.
 
 A ideia é a seguinte. Qualquer janela de 12 meses consecutivos contém cada mês do calendário exatamente uma vez. Assim, a série da média móvel de 12 meses acaba sendo "cega" para a sazonalidade: a janela tem exatamente o tamanho do período sazonal e mata a sazonalidade por construção. Além disso, ela suaviza a série a ponto de atenuar o componente irregular e captar algo que pode ser interpretado como a tendência-ciclo.
 
@@ -242,7 +242,7 @@ Por mais que ajude, olhar os gráficos muitas vezes não é evidência conclusiv
 
 ### Degrau 2: a autocorrelação nos lags sazonais
 
-O *subseries plot* é sugestivo, mas subjetivo. O passo natural é procurar alguma estatística que indique a existência de sazonalidade de forma mais robusta. Uma ideia é olhar a autocorrelação serial. Se a série é mensal e sazonal, a correlação nos *lags* 12, 24 e 36 deveria se destacar dos lags vizinhos.
+O *subseries plot* é sugestivo, mas subjetivo. O passo natural é procurar alguma estatística que indique a existência de sazonalidade de forma mais robusta. Uma ideia é olhar a autocorrelação serial. Se a série é mensal e sazonal, a correlação nos *lags* 12, 24 e 36 deveria se destacar dos *lags* vizinhos.
 
 ```{r}
 #| label: fig-acf
@@ -306,7 +306,7 @@ r_acf <- function(cd, l) {
 banda_acf <- scales::number(db_acf$banda[1], accuracy = 0.01)
 ```
 
-O resultado também é decepcionante. A banda de 5% está em ±`r banda_acf`. No **consignado a servidores públicos**, uma das séries cujo *subseries plot* parece indicar um padrão sazonal, os três *lags* 12, 24 e 36 ficam **dentro** da banda (`r r_acf("20669", 12)`, `r r_acf("20669", 24)` e `r r_acf("20669", 36)`). No **crédito pessoal não consignado** o *lag* 12 fura (`r r_acf("20666", 12)`), mas o 24 e 36 não. Entre esses exemplos, nem na série de sazonalidade mais limpa do passo anterior todos os *lags* "sazonais" se destacam dos vizinhos. No caso da terceira série, nada nas defasagens sazonais.
+O resultado também é decepcionante. A banda de 5% está em ±`r banda_acf`. No **consignado a servidores públicos**, uma das séries cujo *subseries plot* parece indicar um padrão sazonal, os três *lags* 12, 24 e 36 ficam **dentro** da banda (`r r_acf("20669", 12)`, `r r_acf("20669", 24)` e `r r_acf("20669", 36)`). No **crédito pessoal não consignado** o *lag* 12 fura (`r r_acf("20666", 12)`), mas o 24 e 36 não. Entre esses exemplos, nem na série de sazonalidade mais limpa do passo anterior todos os *lags* "sazonais" se destacam dos vizinhos.
 
 ### Degrau 3: os testes clássicos
 
@@ -322,7 +322,7 @@ Diferentemente do QS, o KW não exige que janeiro deste ano seja particularmente
 
 Como no KW, só a ordem entra na conta, não a magnitude. Um dezembro 30% acima da média e um dezembro 3% acima contam igual, desde que dezembro seja consistentemente o maior do seu ano. A principal diferença entre eles é que KW compara os *rankings* globais dos grupos (todos os janeiros vs todos os fevereiros vs ...), enquanto Friedman primeiro rankeia dentro dos anos e depois verifica se esse *ranking* é um padrão recorrente.
 
-Para esses testes vou usar o pacote `seastests` (por opção, eles também estão implementados no `rjd3toolkit`). As funções rodam por default sobre a **série diferenciada** (`diff = TRUE`), não sobre o nível. Os três testam **sazonalidade estável**, ou seja, um padrão que se repete. Nenhum deles detecta sazonalidade que muda de forma ao longo do tempo.
+Para esses testes vou usar o pacote `seastests` (por opção, eles também estão implementados no `rjd3toolkit`). As funções rodam por *default* sobre a **série diferenciada** (`diff = TRUE`), não sobre o nível. Os três testam **sazonalidade estável**, ou seja, um padrão que se repete. Nenhum deles detecta sazonalidade que muda de forma ao longo do tempo.
 
 ```{r}
 #| label: testes-degrau3
@@ -374,14 +374,14 @@ E a terceira linha mostra um caso ainda mais desconfortável. QS não rejeita na
 
 ### Degrau 4: que *tipo* de sazonalidade?
 
-Os três testes anteriores respondem "há sazonalidade?". O degrau 4 responde uma pergunta diferente: **a sazonalidade é determinística ou estocástica?**
+Os três testes anteriores respondem "há sazonalidade?". O degrau 4 responde uma pergunta diferente: **a sazonalidade existe, podendo ela ser determinística ou estocástica?**
 
 - Sazonalidade **determinística** é um padrão fixo ao longo do tempo. Um conjunto de dummies mensais numa regressão resolve.
 - Sazonalidade **estocástica** é um padrão que tem dinâmica própria e pode evoluir, i.e., choques ao padrão sazonal podem alterá-lo de forma persistente.
 
 Para avaliar o tipo de sazonalidade, vamos retomar o teste da tabela ainda não explicado:
 
-- **`seasdum`**: a coluna "dummies sazonais" da tabela acima. A ideia é modelar a sazonalidade determinística de forma explícita através de dummies de mês. A especificação utilizada é de um ARIMA(0,1,1) não sazonal com tendência linear e onze dummies mensais como regressores externos, que são testados conjuntamente por uma estatística de Wald — o `seastests` a reescala e a refere a uma distribuição F, não a uma qui-quadrado (o argumento `autoarima` pode ser ativado; aqui não fez diferença).
+- **`seasdum`**: a coluna "dummies sazonais" da tabela acima. A ideia é modelar a sazonalidade determinística de forma explícita através de dummies de mês. A especificação utilizada é de um ARIMA(0,1,1) não sazonal com tendência linear e onze dummies mensais como regressores externos, que são testados conjuntamente por uma estatística de Wald (o argumento `autoarima` pode ser ativado; aqui não fez diferença).
 
 A $H_0$ é que os coeficientes das onze dummies são conjuntamente nulos. Portanto, rejeitar fornece evidência de que existe um perfil sazonal mensal determinístico. Não rejeitar, por outro lado, não permite concluir que ele não existe e tampouco exclui outras formas de sazonalidade, como uma sazonalidade estocástica ou variante no tempo.
 
@@ -405,11 +405,11 @@ Somando os quatro degraus, o veredito para as três séries é:
 
 Os quatro degraus acima são o que eu recomendo rodar para entender uma série, mas nenhum deles é quem dá o veredito sobre a existência de sazonalidade neste exercício. Quem dá é um último teste, o **teste combinado** que sai do próprio X-13.
 
-Ele está documentado em [**Ladiray & Quenneville**](https://www.researchgate.net/publication/316734492_Seasonal_Adjustment_with_the_X-11_Method) e é particularmente relevante porque opera sobre o componente $SI$, i.e., a série já limpa de tendência, de *outliers* e de efeitos de calendário produzida pela própria decomposição X-11. Além de avaliar a presença de sazonalidade estável, ele aponta e penaliza explicitamente a existência de sazonalidade móvel. Assim como o WO, o resultado é uma classificação, e não um p-valor, com três níveis: `Present`, `ProbablyNone`, `None`.
+Ele está documentado em [**Ladiray & Quenneville**](https://www.researchgate.net/publication/316734492_Seasonal_Adjustment_with_the_X-11_Method) e é particularmente relevante, porque opera sobre o componente $SI$, i.e., a série já limpa de tendência, de *outliers* e de efeitos de calendário, produzida pela própria decomposição X-11. Além de avaliar a presença de sazonalidade estável, ele aponta e penaliza explicitamente a existência de sazonalidade móvel. Assim como o WO, o resultado é uma classificação, e não um p-valor, com três níveis: `Present`, `ProbablyNone`, `None`.
 
-Dessa forma, ele já está acoplado ao *pipeline* que é utilizado neste exercício e, por isso, o seu emprego como teste principal neste post.
+Dessa forma, ele já está acoplado ao *pipeline* que é utilizado neste exercício e, por isso, o seu emprego como teste principal neste *post*.
 
-Uma ressalva é que a limpeza que o torna atraente é feita pelo mesmo motor cujo resultado ele avalia: as razões $SI$ saem da decomposição X-11 daquela série. Ele é, portanto, um diagnóstico condicional a esse pré-ajuste, e não um veredito externo. É justamente por isso que mantive a escada do `seastests` aqui, pois ela é o voto que não depende do motor que faz o ajuste.
+Uma ressalva é que a limpeza que o torna atraente é feita pelo mesmo motor cujo resultado ele avalia: $SI$ sai da decomposição X-11 daquela série. Ele é, portanto, um diagnóstico condicional a esse pré-ajuste, e não um veredito externo. É justamente por isso que mantive a escada do `seastests` aqui, pois ela é o voto que não depende do motor que faz o ajuste.
 
 Ainda assim, nas três séries de exemplo os dois caminhos chegam ao mesmo lugar (`Present`, `Present` e `None`, na ordem acima).
 
@@ -470,11 +470,11 @@ tibble(
 :::
 
 
-**SEATS**: Após o pré-ajuste, o algoritmo parte do modelo ARIMA para a série linearizada e procura representá-la como a soma dos componentes não observados $T_t$ (tendência), $S_t$ (sazonalidade) e $I_t$ (irregular, e eventualmente um transitório), cada um com sua própria dinâmica ARIMA. Como se tivesse um ARIMA "grande" da série e o SEATS encontrasse ARIMAs específicos para os componentes.
+**SEATS**: Após o pré-ajuste, o algoritmo parte do modelo com erros ARIMA para a série linearizada e procura representá-la como a soma dos componentes não observados $T_t$ (tendência), $S_t$ (sazonalidade) e $I_t$ (irregular, e eventualmente um transitório), cada um com sua própria dinâmica ARIMA. Como se tivesse um ARIMA "grande" da série e o SEATS encontrasse ARIMAs específicos para os componentes.
 
 Conhecidos os modelos probabilísticos dos componentes, ainda é necessário estimar seus valores, pois $T_t$, $S_t$ e $I_t$ não são diretamente observados. O SEATS utiliza para isso filtros de Wiener–Kolmogorov (bilaterais, também fazem uso dos *forecasts*/*backcasts* da série) que, de alguma forma, podem ser entendidos como médias ponderadas das observações. Contudo, diferentemente do X-11, seus pesos não pertencem a uma família pré-definida. Eles são implicados pelo modelo ARIMA da série e pela decomposição desse modelo nos componentes (*model-based*).
 
-A decomposição SEATS é diretamente condicionada à especificação ARIMA vinda do pré-ajuste / TRAMO. Já a decomposição X-11 é menos dependente dela, embora o RegARIMA continue importante no pré-ajuste e nas pontas.
+A decomposição SEATS é diretamente condicionada à especificação ARIMA vinda do pré-ajuste / TRAMO. Já a decomposição X-11 é menos dependente dela, embora o RegARIMA continue obviamente importante.
 
 ```{r}
 #| label: fig-decomposicao_tramo
@@ -529,7 +529,7 @@ O X-11 de 1965 é o único que introduz um algoritmo de decomposição, e ele co
 
 Daí a arrumação do JDemetra+ fazer mais sentido do que parece à primeira vista. O JDemetra+ separa por linhagem, enquanto o Census empacotou os dois num binário só e deu a ele o nome da versão seguinte.
 
-> Ele reparte os dois módulos entre as duas funções: `rjd3x13::x13_spec()` devolve `$regarima` + `$x11`, sem opção de decomposição SEATS; e `rjd3tramoseats::tramoseats_spec()` devolve o `$seats`.
+> A família `rjd3` reparte os dois módulos entre dois pacotes: `rjd3x13::x13_spec()` devolve `$regarima` + `$x11`, sem opção de decomposição SEATS; e `rjd3tramoseats::tramoseats_spec()` devolve o `$seats`.
 
 ### Os fatores de calendário
 
@@ -942,11 +942,11 @@ n_c3_present <- sum(
 n_nenhum_valido <- sum(status$status == "nenhum_metodo_valido", na.rm = TRUE)
 ```
 
-Das `r nrow(sazonais)` séries com sazonalidade identificável, o X-11 deixa sazonalidade residual em `r n_qs_x11` e o SEATS em `r n_qs_seats` (falhas no QS da série ajustada). Nas `r n_nenhum_valido` em que os dois falham, o scorecard não escolhe nenhum. A série sai sem ajuste e é marcada como `nenhum_metodo_valido`.
+Das `r nrow(sazonais)` séries com sazonalidade identificável, o X-11 deixa sazonalidade residual em `r n_qs_x11` e o SEATS em `r n_qs_seats` (falhas no QS da série ajustada). Nas `r n_nenhum_valido` em que os dois falham, o *scorecard* não escolhe nenhum. A série sai sem ajuste e é marcada como `nenhum_metodo_valido`.
 
 As `r n_seats` escolhas por SEATS vieram da regra `Q > 1`, decomposição X-11 fraca, que é a última antes do desempate. Nenhuma veio de sazonalidade residual. Os critérios 2 a 4, que são os que tratam do pecado capital, decidiram o destino de apenas `r n_por_residual` séries do lote inteiro. Em `r quantas(n_x11_por_residual)` o veredito foi contra o SEATS e a escolha caiu no X-11, em `r quantas(n_seats_por_residual)` contra o X-11, e nas outras `r quantas(n_nenhum_por_residual)` nenhum dos dois serviu.
 
-> Cabe registrar o que o critério 4 fez aqui: nada, e por um motivo que vale mais do que ele teria valido se tivesse decidido alguma coisa. Ele lê o veredito do JDemetra+ para os últimos três anos (`seas-sa-combined3`), e esse veredito voltou `None` em `r nrow(hierarquia) - n_c3_present` das `r nrow(hierarquia)` séries, nos dois motores. Ou seja, nenhum dos dois métodos deixou sazonalidade residual na janela recente em série nenhuma. O critério fica na hierarquia porque é justamente ali que a sazonalidade residual costuma aparecer primeiro quando aparece, e um lote de 73 séries sem nenhuma ocorrência é resultado, não ausência de teste.
+> Cabe registrar que o critério 4 não fez *nada* aqui, e por um motivo que vale mais do que ele teria valido se tivesse decidido alguma coisa. Ele lê o veredito do JDemetra+ para os últimos três anos (`seas-sa-combined3`), e esse veredito voltou `None` em `r nrow(hierarquia) - n_c3_present` das `r nrow(hierarquia)` séries, nos dois motores. Ou seja, nenhum dos dois métodos deixou sazonalidade residual na janela recente em série nenhuma. O critério fica na hierarquia porque é justamente ali que a sazonalidade residual costuma aparecer primeiro quando aparece, e um lote de 73 séries sem nenhuma ocorrência é resultado, não ausência de teste.
 
 **Os dois métodos removem sazonalidade igualmente bem quase sempre. O que os separa, quando algo separa, é a qualidade da decomposição, não a eficácia.** É por isso que o *scorecard* acaba não sendo um otimizador e, sim, um detector de exceção. Se você rodasse X-11 em todas que tiveram sazonalidade acusada pelo teste combinado, o ajuste sairia aceitável em `r nrow(sazonais) - n_qs_x11` das `r nrow(sazonais)`.
 
@@ -1148,11 +1148,9 @@ gap_dirpj <-
 
 O método *top-down*, mesmo na comparação da variação mensal, se aproxima bastante das séries oficiais do BCB. Isso parece indicar que, mesmo sendo uma *proxy*, os efeitos de calendário do IBC-Br cumprem de forma satisfatória seu papel de aproximar o tratamento que o BCB concede. O *bottom-up*, por sua vez, desvia um tanto mais das séries oficiais. Volto a esse ponto mais à frente.
 
-Olhar apenas para os grandes agregados, contudo, tem um limite. Num total que soma quinze ou vinte modalidades, um perfil sazonal que eu errei para mais em uma pode ser cancelado por outro que errei para menos em outra, e a soma bate mesmo com as partes tortas.
+Olhar apenas para os grandes agregados, contudo, tem um limite. Num total que soma quinze ou vinte modalidades, um perfil sazonal que eu errei para mais em uma pode ser cancelado por outro que errei para menos em outra, e a soma bate mesmo com as partes tortas. Posso "testar" esse cancelamento. O BCB publica séries desagregadas com versão oficial dessazonalizada, o que possibilita rodar a rotina *top-down* nas séries desagregadas e confrontar com o gabarito.
 
-Posso "testar" esse cancelamento. O BCB publica séries desagregadas com versão oficial dessazonalizada, o que possibilita então um teste que não permite esse cancelamento: rodar a rotina *top-down* nas séries desagregadas e confrontar com o gabarito.
-
-Aqui, me debruço sobre quatro séries: capital de giro total (PJ/livre), total não rotativo (PF/livre), aquisição de veículos (PF/livre) e cartão de crédito à vista (PF/livre). Algumas dessas também são agregados, o que possibilitaria o *bottom-up*, mas foco aqui apenas no *top-down*. A escada de testes e o *scorecard* são aplicados diretamente às séries publicadas, e comparo abaixo com as oficiais:
+Aqui, me debruço sobre quatro séries: capital de giro total (PJ/livre), total não rotativo (PF/livre), aquisição de veículos (PF/livre) e cartão de crédito à vista (PF/livre). Algumas dessas também são agregados, o que possibilitaria o *bottom-up*, mas foco aqui apenas no *top-down*. A escada de testes e o *scorecard* são aplicados diretamente às séries publicadas.
 
 ```{r}
 #| label: gabarito-dados
@@ -1290,7 +1288,7 @@ Dito isso tudo, para finalizar, termino o exercício com alguma convicção de q
 
 **Teste antes de ajustar, e com mais de um teste.** O QS sozinho, que é o porteiro padrão da maioria das rotinas, deixou passar uma série claramente sazonal e não flagrou o desacordo na série provavelmente não-sazonal. Uma escada de testes como a que montei custa milissegundos e mostra, série a série, quando os testes discordam e por quê. Sem ela você não sabe quais dos seus vereditos são apertados.
 
-**A escolha entre X-11 e SEATS importa menos do que se supõe, e é por isso que vale testar.** Nas `r nrow(sazonais)` séries sazonais, o X-11 deixou sazonalidade residual em `r n_qs_x11` e o SEATS em `r n_qs_seats`. O scorecard não existe para otimizar o caso médio. Existe para achar as poucas séries onde um dos dois falha, as `r n_nenhum_valido` onde os dois falham, e as `r sum(status$status == "sem_sazonalidade", na.rm = TRUE)` que não deveriam ser ajustadas.
+**A escolha entre X-11 e SEATS importa menos do que se supõe, e é por isso que vale testar.** Nas `r nrow(sazonais)` séries sazonais, o X-11 deixou sazonalidade residual em `r n_qs_x11` e o SEATS em `r n_qs_seats`. O *scorecard* não existe para otimizar o caso médio. Existe para achar as poucas séries onde um dos dois falha, as `r n_nenhum_valido` onde os dois falham, e as `r sum(status$status == "sem_sazonalidade", na.rm = TRUE)` que não deveriam ser ajustadas.
 
 **Modele calendário.** Os fatores de calendário mudaram o ajuste mais do que a escolha entre métodos, e mudaram o próprio veredito de sazonalidade em `r n_revela_calendario` séries, todas no sentido de revelar sazonalidade que o ruído de dias úteis escondia, nenhuma no sentido contrário.
 
