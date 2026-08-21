@@ -2,6 +2,7 @@
   {
     "listing": "/index.html",
     "items": [
+      "/blog/0002-ajuste-sazonal-credito.pt.html",
       "/blog/0001-kalman-filter-pt2-bssm.pt.html",
       "/blog/0001-kalman-filter-pt1-nairu.pt.html"
     ]
@@ -9,6 +10,7 @@
   {
     "listing": "/blog/index.html",
     "items": [
+      "/blog/0002-ajuste-sazonal-credito.pt.html",
       "/blog/0001-kalman-filter-pt2-bssm.pt.html",
       "/blog/0001-kalman-filter-pt1-nairu.pt.html"
     ]

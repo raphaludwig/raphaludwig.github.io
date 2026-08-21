@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2026-08-20">
+<meta name="description" content="Uma escada de testes para decidir se uma série é sazonal, um scorecard para escolher entre X-11 e TRAMO-SEATS, e o que acontece quando você aplica isso nas 73 séries de concessão de crédito do BCB e tenta remontar os agregados.">
+
+<title>Ajuste sazonal em cascata: testes, X-11 vs SEATS e os dados brasileiros de crédito – Raphael Ludwig</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../assets/img/monogram.svg" rel="icon" type="image/svg+xml">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-54c8e6fa4f5a32c10a0fc2649f353c31.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Home</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/raphael-ludwig-167347414" target="_blank"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:raphaludwig@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../pt/index.html" rel="alternate"> 
+<span class="menu-text">PT</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#os-dados" id="toc-os-dados" class="nav-link active" data-scroll-target="#os-dados">Os dados</a>
+  <ul class="collapse">
+  <li><a href="#as-três-séries-do-exemplo" id="toc-as-três-séries-do-exemplo" class="nav-link" data-scroll-target="#as-três-séries-do-exemplo">As três séries do exemplo</a></li>
+  </ul></li>
+  <li><a href="#escada-da-sazonalidade" id="toc-escada-da-sazonalidade" class="nav-link" data-scroll-target="#escada-da-sazonalidade">Escada da sazonalidade</a>
+  <ul class="collapse">
+  <li><a href="#degrau-1-olhar-para-o-dado" id="toc-degrau-1-olhar-para-o-dado" class="nav-link" data-scroll-target="#degrau-1-olhar-para-o-dado">Degrau 1: olhar para o dado</a></li>
+  <li><a href="#degrau-2-a-autocorrelação-nos-lags-sazonais" id="toc-degrau-2-a-autocorrelação-nos-lags-sazonais" class="nav-link" data-scroll-target="#degrau-2-a-autocorrelação-nos-lags-sazonais">Degrau 2: a autocorrelação nos lags sazonais</a></li>
+  <li><a href="#degrau-3-os-testes-clássicos" id="toc-degrau-3-os-testes-clássicos" class="nav-link" data-scroll-target="#degrau-3-os-testes-clássicos">Degrau 3: os testes clássicos</a></li>
+  <li><a href="#degrau-4-que-tipo-de-sazonalidade" id="toc-degrau-4-que-tipo-de-sazonalidade" class="nav-link" data-scroll-target="#degrau-4-que-tipo-de-sazonalidade">Degrau 4: que <em>tipo</em> de sazonalidade?</a></li>
+  <li><a href="#o-veredito" id="toc-o-veredito" class="nav-link" data-scroll-target="#o-veredito">O veredito</a></li>
+  </ul></li>
+  <li><a href="#x-13-vs-tramo-seats-x-11-vs-seats" id="toc-x-13-vs-tramo-seats-x-11-vs-seats" class="nav-link" data-scroll-target="#x-13-vs-tramo-seats-x-11-vs-seats">X-13 vs TRAMO-SEATS: X-11 vs SEATS</a>
+  <ul class="collapse">
+  <li><a href="#de-onde-vêm-esses-nomes" id="toc-de-onde-vêm-esses-nomes" class="nav-link" data-scroll-target="#de-onde-vêm-esses-nomes">De onde vêm esses nomes</a></li>
+  <li><a href="#os-fatores-de-calendário" id="toc-os-fatores-de-calendário" class="nav-link" data-scroll-target="#os-fatores-de-calendário">Os fatores de calendário</a></li>
+  </ul></li>
+  <li><a href="#scorecard-como-escolher-entre-x-11-e-seats" id="toc-scorecard-como-escolher-entre-x-11-e-seats" class="nav-link" data-scroll-target="#scorecard-como-escolher-entre-x-11-e-seats">Scorecard: como escolher entre X-11 e SEATS</a></li>
+  <li><a href="#aplicando-em-lote" id="toc-aplicando-em-lote" class="nav-link" data-scroll-target="#aplicando-em-lote">Aplicando em lote</a></li>
+  <li><a href="#oficial-bottom-up-e-top-down" id="toc-oficial-bottom-up-e-top-down" class="nav-link" data-scroll-target="#oficial-bottom-up-e-top-down">Oficial, bottom-up e top-down</a></li>
+  <li><a href="#o-que-eu-levo-daqui" id="toc-o-que-eu-levo-daqui" class="nav-link" data-scroll-target="#o-que-eu-levo-daqui">O que eu levo daqui</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Ajuste sazonal em cascata: testes, X-11 vs SEATS e os dados brasileiros de crédito</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">seasonal adjustment</div>
+    <div class="quarto-category">econometrics</div>
+    <div class="quarto-category">credit</div>
+    <div class="quarto-category">x13</div>
+    <div class="quarto-category">tramo-seats</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Uma escada de testes para decidir se uma série é sazonal, um scorecard para escolher entre X-11 e TRAMO-SEATS, e o que acontece quando você aplica isso nas 73 séries de concessão de crédito do BCB e tenta remontar os agregados.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 20, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Dessazonalizar uma série temporal parece ser, à primeira vista, um problema macroeconométrico “resolvido”. Você instala o pacote <a href="https://cran.r-project.org/web/packages/seasonal/index.html"><code>seasonal</code></a>, <a href="https://cran.r-project.org/web/packages/RJDemetra/index.html">RJDemetra</a> ou <a href="https://cran.r-project.org/web/packages/rjd3toolkit/index.html"><code>rjd3toolkit</code></a> no R (ou equivalentes em Python, EViews, etc.), chama uma função <code>seas()</code>-like, adiciona, se necessário, argumentos de pesos mensais customizados ou de tratamento de outliers específicos, sai uma série mais suave que guarda uma correlação interessante com a série original, e a vida segue. Na prática, contudo, sempre há três decisões implícitas nesse processo:</p>
+<ol type="1">
+<li><strong>A série tem sazonalidade?</strong> Rodar um filtro sazonal numa série sem sazonalidade não é neutro. Ele pode encontrar padrão onde não há e injetar ruído.</li>
+<li><strong>Se existe sazonalidade, qual método utilizar para tratá-la?</strong> O <em>software</em> JDemetra+ oferece alguns pipelines completos de ajuste sazonal com filosofias diferentes, como, por exemplo, X-13ARIMA (RegARIMA + X-11) e TRAMO-SEATS (TRAMO + SEATS). Escolher qual seguir é uma decisão com consequências diferentes.</li>
+<li><strong>Se a série faz parte de uma hierarquia, você dessazonaliza o agregado ou as partes?</strong> Ajuste sazonal não é linear. A soma das partes dessazonalizadas não é a dessazonalização da soma.</li>
+</ol>
+<blockquote class="blockquote">
+<p>Neste post uso o pacote <a href="https://cran.r-project.org/web/packages/rjd3toolkit/index.html"><code>rjd3toolkit</code></a> versão 3.8.0 no R. Ele serve de interface para o <a href="https://github.com/jdemetra/jdemetra-app">JDemetra+</a>, o <em>software</em> de ajuste sazonal oficialmente recomendado pela Eurostat. Numa versão inicial, escrevi os códigos usando o pacote <code>RJDemetra</code>, porém ele embute o JDemetra+ <strong>2.x</strong> (na versão 0.2.8, atual no CRAN, o <code>demetra-tstoolkit-2.2.5.jar</code>). Isso é problemático, pois, como o README do projeto explicita: <em>“JDemetra+ v2 will reach its end of life in December 2026, which coincides with the end of Java 8’s official support”</em>. Escrever hoje uma rotina de produção sobre um <em>runtime</em> com fim de vida marcado para daqui a alguns meses não me parece fazer muito sentido.</p>
+</blockquote>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/theme_blog.R"</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/sa_runner.R"</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>dir_dados <span class="ot">&lt;-</span> <span class="st">"data/seasonal-adjustment"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>hierarquia <span class="ot">&lt;-</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir_dados, <span class="st">"hierarquia_concessoes.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">codigo =</span> <span class="fu">as.character</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<blockquote class="blockquote">
+<p>Note a existência do script <code>sa_runner.R</code> nesse código. Nele várias rotinas e funções customizadas deste post são geradas. O arquivo está disponível no repositório do <a href="https://github.com/raphaludwig/raphaludwig.github.io/tree/main/blog/R">blog</a>.</p>
+</blockquote>
+<p>Este post destrincha as três questões acima utilizando um caso concreto: as <strong>73 séries de concessão de crédito nominal</strong> publicadas pelo Banco Central do Brasil (“BCB”), de março de 2011 até junho de 2026. Escolhi essas séries por alguns motivos.</p>
+<p>Primeiro, pela própria importância delas. Ter um indicador de crédito sazonalmente ajustado confiável é extremamente relevante para mapear o impulso de crédito e seu efeito sobre atividade no Brasil.</p>
+<p>Além disso, o próprio BCB publica nos metadados do <a href="https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries">BCB SGS</a> o procedimento de ajuste sazonal empregado nas séries (texto abaixo). Contudo, diferentemente das séries do IBGE, o órgão não especifica os testes nem os componentes de efeito calendário e feriados utilizados (se esses fatores estão publicados em algum lugar, já peço perdão aqui pelo meu equívoco!), abrindo margem para resultados diferentes do oficial e uma possível discussão metodológica.</p>
+<blockquote class="blockquote">
+<ul>
+<li>O método empregado no processo de ajuste sazonal é o X-13 Arima Seats.</li>
+<li>Antes de realizar os ajustes sazonais, são realizados testes de detecção de sazonalidade. Quando a sazonalidade não é significante, a série não é ajustada.</li>
+<li>Leva-se em conta a estrutura móvel do calendário, chamada efeito calendário. O número de dias úteis de cada mês pode mudar de ano para ano. Além disso, alguns feriados, como o Carnaval, são móveis, podendo cair em dias e meses diferentes de acordo com o ano.</li>
+<li>As séries de crédito nominais são dessazonalizadas diretamente (não é adotado o método de dessazonalização das séries componentes para se chegar à série agregada sazonalmente ajustada).</li>
+</ul>
+</blockquote>
+<p>Por último, o BCB publica versão oficial dessazonalizada de alguns agregados, o que dá um gabarito raro para comparação e abre uma oportunidade para vislumbrar como seriam os resultados utilizando um método <em>bottom-up</em>.</p>
+<p>O roteiro daqui para frente é o seguinte: monto uma escada de testes de sazonalidade e um <em>scorecard</em> de escolha, e aplico os dois em três séries didáticas para mostrar os resultados diferentes que podem aparecer. Depois, rodo essa rotina inteira nas 73 séries e tento remontar os agregados de duas formas diferentes — a <em>bottom-up</em> e a <em>top-down</em> — comparando com as séries oficiais do BCB onde possível.</p>
+<section id="os-dados" class="level2">
+<h2 class="anchored" data-anchor-id="os-dados">Os dados</h2>
+<p>As concessões são disponibilizadas pelo BCB de diferentes formas: através da planilha divulgada nas <a href="https://www.bcb.gov.br/estatisticas/estatisticasmonetariascredito">Estatísticas monetárias e de crédito</a> ou pelo <a href="https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries">BCB SGS</a>. Cada modalidade de crédito contém uma série de concessões nominais. A hierarquia vai de <code>Concessões - Total</code> até folhas mais desagregadas, contando com dois grandes pares de subdivisões: PF vs PJ e livre vs direcionado.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>codigos_oficiais <span class="ot">&lt;-</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  hierarquia <span class="sc">%&gt;%</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dessaz_oficial)) <span class="sc">%&gt;%</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(dessaz_oficial) <span class="sc">%&gt;%</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.character</span>()</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>db <span class="ot">&lt;-</span> <span class="fu">carregar_series</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(hierarquia<span class="sc">$</span>codigo, codigos_oficiais),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">cache_path =</span> <span class="fu">file.path</span>(dir_dados, <span class="st">"sgs_concessoes.csv"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>fatores <span class="ot">&lt;-</span> <span class="fu">carregar_fatores</span>(<span class="fu">file.path</span>(dir_dados, <span class="st">"dessaz_ibc_br.txt"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<blockquote class="blockquote">
+<p>Note que no código acima carrego um .txt com os fatores sazonais do IBC-Br que usei como proxy para os fatores de calendário citados pela metodologia do BCB (carnaval, feriados, etc).</p>
+</blockquote>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: right;">séries</th>
+<th style="text-align: right;">início</th>
+<th style="text-align: right;">fim</th>
+<th style="text-align: right;">meses</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">Mar/2011</td>
+<td style="text-align: right;">Jun/2026</td>
+<td style="text-align: right;">184</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>O post, como fica claro nos <em>snips</em> de código acima, <strong>não busca dados ao vivo</strong>. <code>carregar_series()</code> lê um snapshot em CSV commitado no repositório, baixado do SGS com o pacote <a href="https://cran.r-project.org/package=GetBCBData"><code>GetBCBData</code></a> (sempre ele!) na data de escrita deste post. É importante frisar que o post inteiro é condicional à amostra, já que são dados que passam por revisões.</p>
+<section id="as-três-séries-do-exemplo" class="level3">
+<h3 class="anchored" data-anchor-id="as-três-séries-do-exemplo">As três séries do exemplo</h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 44%">
+<col style="width: 7%">
+<col style="width: 6%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SGS</th>
+<th style="text-align: left;">modalidade</th>
+<th style="text-align: left;">recursos</th>
+<th style="text-align: left;">tomador</th>
+<th style="text-align: left;">papel no post</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">20666</td>
+<td style="text-align: left;">Crédito pessoal - Não consignado</td>
+<td style="text-align: left;">livre</td>
+<td style="text-align: left;">pf</td>
+<td style="text-align: left;">sazonalidade forte e limpa</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20669</td>
+<td style="text-align: left;">Crédito pessoal - Consignado - Servidores públicos</td>
+<td style="text-align: left;">livre</td>
+<td style="text-align: left;">pf</td>
+<td style="text-align: left;">sazonal, mas o teste mais popular não vê</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">20658</td>
+<td style="text-align: left;">Financiamento importações</td>
+<td style="text-align: left;">livre</td>
+<td style="text-align: left;">pj</td>
+<td style="text-align: left;">provavelmente não é sazonal</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-series-exemplo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-series-exemplo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-series-exemplo-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-series-exemplo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessazonalizada aqui.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Vou trabalhar no <em>post</em> inteiro com <strong>valores nominais</strong>. Primeiro, e mais importante, porque as séries oficiais dessazonalizadas que uso como comparação na última seção são nominais. Segundo, porque deflacionar <strong>antes</strong> do ajuste sazonal pode contaminar com a sazonalidade do próprio deflator. Terceiro, porque deflacionar <strong>depois</strong> do ajuste sazonal pode injetar sazonalidade de volta.</p>
+</section>
+</section>
+<section id="escada-da-sazonalidade" class="level2">
+<h2 class="anchored" data-anchor-id="escada-da-sazonalidade">Escada da sazonalidade</h2>
+<section id="degrau-1-olhar-para-o-dado" class="level3">
+<h3 class="anchored" data-anchor-id="degrau-1-olhar-para-o-dado">Degrau 1: olhar para o dado</h3>
+<p>O primeiro “teste” de sazonalidade é simplesmente observar a dinâmica da série. Muitas vezes já saímos aplicando pacotes e fazendo contas complexas em situações que apenas olhar um simples gráfico já responderia se é necessário de fato fazer tudo isso. O <em>subseries plot</em> é um tipo de gráfico interessante nesse caso. Ele quebra a série por mês do ano: cada painel é um mês, a linha dentro dele percorre os anos em sequência, e a barra horizontal é a média daquele mês. Se há sazonalidade, as barras ficam em alturas visivelmente diferentes.</p>
+<p>Aqui, contudo, tenho que tomar alguns cuidados. Não é tão trivial quanto rodar a função <code>ggsubseriesplot()</code>. Como são séries nominais, elas possuem uma tendência de crescimento ao longo do tempo que pode dominar o gráfico e esconder a sazonalidade. Para expurgar essa tendência, uso uma <strong>média móvel centrada 2x12</strong>, um filtro clássico para isolar tendência-ciclo numa série mensal.</p>
+<p>A ideia é a seguinte. Qualquer janela de 12 meses consecutivos contém cada mês do calendário exatamente uma vez. Assim, a série da média móvel de 12 meses acaba sendo “cega” para a sazonalidade: a janela tem exatamente o tamanho do período sazonal e mata a sazonalidade por construção. Além disso, ela suaviza a série a ponto de atenuar o componente irregular e captar algo que pode ser interpretado como a tendência-ciclo.</p>
+<p>Dessa forma, a razão expressa em desvio percentual entre o valor do mês corrente e o valor da média móvel centrada (<em>ratio-to-moving-average</em>) pode ser interpretada como o desvio em relação à tendência-ciclo. Nela sobra o que seria o efeito sazonal mais o componente irregular. Olhar para a média dessa métrica nos ajuda a entender se a série possui aspectos sazonais ou não.</p>
+<p>Contudo, como 12 é um número par, a média não tem um mês como ponto central. Ela cai no meio do caminho entre dois meses. No exemplo da janela jan → dez, entre junho e julho. Ou seja, ela está sempre meio mês adiante do mês ao qual eu gostaria de atribuí-la. A saída é calcular uma segunda janela, deslocada um mês para trás, e tirar a média das duas. Ilustrando:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>janela</th>
+<th>centro</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>dez/2019 → nov/2020</td>
+<td>entre mai e jun (5.5)</td>
+</tr>
+<tr class="even">
+<td>jan/2020 → dez/2020</td>
+<td>entre jun e jul (6.5)</td>
+</tr>
+<tr class="odd">
+<td><strong>média das duas</strong></td>
+<td><strong>junho, cravado (6.0)</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Daqui vem o nome “média móvel centrada 2x12”. Ela é centrada num mês cheio, e para isso é calculada sobre <strong>2</strong> janelas de <strong>12</strong> meses, uma delas deslocada um mês para trás.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Média móvel centrada 2x12: o filtro clássico para isolar tendência-ciclo numa</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># série mensal. Sem destendenciar, o crescimento da série domina o gráfico e a</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># sazonalidade some.</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>ma_2x12 <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>(stats<span class="sc">::</span><span class="fu">filter</span>(x, <span class="fu">c</span>(<span class="fl">0.5</span>, <span class="fu">rep</span>(<span class="dv">1</span>, <span class="dv">11</span>), <span class="fl">0.5</span>) <span class="sc">/</span> <span class="dv">12</span>, <span class="at">sides =</span> <span class="dv">2</span>))</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>db_sub <span class="ot">&lt;-</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  db_ex <span class="sc">%&gt;%</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(codigo, date) <span class="sc">%&gt;%</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">desvio =</span> <span class="dv">100</span> <span class="sc">*</span> (value <span class="sc">/</span> <span class="fu">ma_2x12</span>(value) <span class="sc">-</span> <span class="dv">1</span>), <span class="at">.by =</span> codigo) <span class="sc">%&gt;%</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(desvio)) <span class="sc">%&gt;%</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">mes =</span> <span class="fu">factor</span>(<span class="fu">month</span>(date), <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">12</span>, <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"jan"</span>, <span class="st">"fev"</span>, <span class="st">"mar"</span>, <span class="st">"abr"</span>, <span class="st">"mai"</span>, <span class="st">"jun"</span>, <span class="st">"jul"</span>, <span class="st">"ago"</span>, <span class="st">"set"</span>, <span class="st">"out"</span>, <span class="st">"nov"</span>, <span class="st">"dez"</span>)),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">ano =</span> <span class="fu">year</span>(date)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>medias_mes <span class="ot">&lt;-</span> db_sub <span class="sc">%&gt;%</span> <span class="fu">reframe</span>(<span class="at">media =</span> <span class="fu">mean</span>(desvio), <span class="at">.by =</span> <span class="fu">c</span>(rotulo, mes))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(db_sub, <span class="fu">aes</span>(<span class="at">x =</span> ano, <span class="at">y =</span> desvio)) <span class="sc">+</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="fu">pal_blog</span>(<span class="st">"main"</span>)[<span class="dv">2</span>], <span class="at">linewidth =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"lightgray"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_segment</span>(</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> medias_mes,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">aes</span>(<span class="at">x =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="at">xend =</span> <span class="cn">Inf</span>, <span class="at">y =</span> media, <span class="at">yend =</span> media),</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">colour =</span> <span class="fu">accent_blog</span>(<span class="st">"cool"</span>), <span class="at">linewidth =</span> <span class="fl">0.7</span>, <span class="at">inherit.aes =</span> <span class="cn">FALSE</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_grid</span>(rotulo <span class="sc">~</span> mes, <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">labeller =</span> <span class="fu">labeller</span>(<span class="at">rotulo =</span> <span class="fu">label_wrap_gen</span>(<span class="dv">22</span>))) <span class="sc">+</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Subseries plot: a média de cada mês é diferente das outras?"</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">subtitle =</span> <span class="st">"Desvio % da tendência (média móvel 2x12); linha vinho = média do mês"</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">caption_blog</span>(<span class="st">"BCB"</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_blog</span>(<span class="at">base_size =</span> <span class="dv">9</span>) <span class="sc">+</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.spacing.x =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="dv">1</span>, <span class="st">"pt"</span>),</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="dv">0</span>)</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output-display">
+<div id="fig-subseries" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-subseries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-subseries-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-subseries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Subseries plot: cada painel é um mês do ano, a linha percorre os anos e a barra é a média do mês. Séries em desvio percentual da tendência (média móvel centrada 2x12), para isolar a sazonalidade do crescimento.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Os dois primeiros painéis parecem ter um padrão sazonal, enquanto o terceiro parece não ter. No <strong>crédito pessoal não consignado</strong> as barras vinho desenham um perfil com fevereiro claramente abaixo da tendência e março e maio acima, com amplitude de 11.5 p.p. entre o menor e o maior mês. No <strong>consignado a servidores públicos</strong> a amplitude é ainda maior, 21.7 p.p.: janeiro, fevereiro, novembro e dezembro abaixo, maio a outubro acima. Repare que a segunda série tem o padrão sazonal mais amplo das duas.</p>
+<p>Por mais que ajude, olhar os gráficos muitas vezes não é evidência conclusiva. Sinceramente, diria até que nos três casos acima não é. Os próximos passos ajudam a dar robustez à decisão de usar o filtro sazonal ou não.</p>
+</section>
+<section id="degrau-2-a-autocorrelação-nos-lags-sazonais" class="level3">
+<h3 class="anchored" data-anchor-id="degrau-2-a-autocorrelação-nos-lags-sazonais">Degrau 2: a autocorrelação nos lags sazonais</h3>
+<p>O <em>subseries plot</em> é sugestivo, mas subjetivo. O passo natural é procurar alguma estatística que indique a existência de sazonalidade de forma mais robusta. Uma ideia é olhar a autocorrelação serial. Se a série é mensal e sazonal, a correlação nos <em>lags</em> 12, 24 e 36 deveria se destacar dos lags vizinhos.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-acf" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-acf-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-acf-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-acf-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Autocorrelação da primeira diferença. As barras vinho são os lags sazonais (12, 24, 36); as linhas tracejadas são a banda de significância a 5%.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>O resultado também é decepcionante. A banda de 5% está em ±0.14. No <strong>consignado a servidores públicos</strong>, uma das séries cujo <em>subseries plot</em> parece indicar um padrão sazonal, os três <em>lags</em> 12, 24 e 36 ficam <strong>dentro</strong> da banda (0.10, 0.13 e -0.04). No <strong>crédito pessoal não consignado</strong> o <em>lag</em> 12 fura (0.28), mas o 24 e 36 não. Entre esses exemplos, nem na série de sazonalidade mais limpa do passo anterior todos os <em>lags</em> “sazonais” se destacam dos vizinhos. No caso da terceira série, nada nas defasagens sazonais.</p>
+</section>
+<section id="degrau-3-os-testes-clássicos" class="level3">
+<h3 class="anchored" data-anchor-id="degrau-3-os-testes-clássicos">Degrau 3: os testes clássicos</h3>
+<p>Agora os testes propriamente ditos. Uso três, e eles atacam o problema por ângulos diferentes:</p>
+<ul>
+<li><p><strong>QS</strong>: é uma espécie de Ljung-Box especializado em sazonalidade. Ele é restrito a determinados <em>lags</em> (12 e 24) e unilateral. O racional é o que se espera de sazonalidade: se dezembro é alto, o dezembro seguinte também deve ser, então a correlação entre observações doze meses distantes tem que ter sinal positivo. <span class="math inline">\(H_0\)</span> é não haver sazonalidade ou, mais precisamente, que a autocorrelação avaliada não é positiva ou não é estatisticamente diferente de zero. Assim, rejeitar <span class="math inline">\(H_0\)</span> a um determinado nível de significância é uma evidência de sazonalidade.</p></li>
+<li><p><strong>Kruskal-Wallis</strong>: teste não-paramétrico (não trabalha diretamente com os valores da série e, sim, transforma as observações em <em>ranks</em>) que tenta responder à pergunta: “o janeiro típico é diferente do junho típico?”. O procedimento consiste em separar todas as observações em grupos determinados, nesse caso, pelos respectivos meses. Assim, as observações de janeiro vão num grupo, as de fevereiro em outro, e assim por diante. A <span class="math inline">\(H_0\)</span> do teste é que os doze grupos vêm da mesma distribuição. Portanto, basta que ao menos um mês apresente distribuição sistematicamente diferente para rejeitar a <span class="math inline">\(H_0\)</span> (a um determinado nível de significância) e gerar evidência de sazonalidade.</p></li>
+</ul>
+<p>Diferentemente do QS, o KW não exige que janeiro deste ano seja particularmente semelhante ao janeiro do ano passado; ele verifica se, quando considerados em conjunto, os janeiros tendem a ocupar <em>rankings</em> diferentes dos demais meses. Assim, alguma variação moderada na ordenação dos meses entre os anos ainda é compatível com a rejeição.</p>
+<ul>
+<li><strong>Friedman</strong>: teste também não-paramétrico que trata cada ano como um bloco e compara os meses dentro dele. Ele tenta responder à pergunta “dentro de cada ano, certos meses tendem sistematicamente a ficar acima ou abaixo dos demais?” testando se o <em>ranking</em> dos meses dentro do ano se repete consistentemente nos dados. A <span class="math inline">\(H_0\)</span> do teste é que não há diferença sistemática entre os meses, i.e., sob <span class="math inline">\(H_0\)</span> determinado mês não deveria tender a ser mais alto ou mais baixo que os outros.</li>
+</ul>
+<p>Como no KW, só a ordem entra na conta, não a magnitude. Um dezembro 30% acima da média e um dezembro 3% acima contam igual, desde que dezembro seja consistentemente o maior do seu ano. A principal diferença entre eles é que KW compara os <em>rankings</em> globais dos grupos (todos os janeiros vs todos os fevereiros vs …), enquanto Friedman primeiro rankeia dentro dos anos e depois verifica se esse <em>ranking</em> é um padrão recorrente.</p>
+<p>Para esses testes vou usar o pacote <code>seastests</code> (por opção, eles também estão implementados no <code>rjd3toolkit</code>). As funções rodam por default sobre a <strong>série diferenciada</strong> (<code>diff = TRUE</code>), não sobre o nível. Os três testam <strong>sazonalidade estável</strong>, ou seja, um padrão que se repete. Nenhum deles detecta sazonalidade que muda de forma ao longo do tempo.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>testes_sazonalidade <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  p <span class="ot">&lt;-</span> <span class="cf">function</span>(f) <span class="fu">tryCatch</span>(<span class="fu">as.numeric</span>(<span class="fu">f</span>(x)<span class="sc">$</span>Pval), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA_real_</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">qs_p      =</span> <span class="fu">p</span>(seastests<span class="sc">::</span>qs), <span class="co"># Ljung-Box nos lags sazonais</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">fried_p   =</span> <span class="fu">p</span>(seastests<span class="sc">::</span>fried), <span class="co"># Friedman</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">kw_p      =</span> <span class="fu">p</span>(seastests<span class="sc">::</span>kw), <span class="co"># Kruskal-Wallis</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">wo        =</span> <span class="fu">tryCatch</span>(seastests<span class="sc">::</span><span class="fu">isSeasonal</span>(x, <span class="at">test =</span> <span class="st">"wo"</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">seasdum_p =</span> <span class="fu">p</span>(seastests<span class="sc">::</span>seasdum) <span class="co"># Wald sobre dummies mensais: sazonalidade determinística</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<div id="tbl-testes" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-testes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1
+</figcaption>
+<div aria-describedby="tbl-testes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 45%">
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 13%">
+<col style="width: 15%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SGS</th>
+<th style="text-align: left;">modalidade</th>
+<th style="text-align: right;">QS</th>
+<th style="text-align: right;">Friedman</th>
+<th style="text-align: right;">Kruskal-Wallis</th>
+<th style="text-align: right;">dummies sazonais</th>
+<th style="text-align: center;">WO</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">20666</td>
+<td style="text-align: left;">Crédito pessoal - Não consignado</td>
+<td style="text-align: right;">0.0001</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: center;">TRUE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20669</td>
+<td style="text-align: left;">Crédito pessoal - Consignado - Servidores públicos</td>
+<td style="text-align: right;">0.0512</td>
+<td style="text-align: right;">0.0002</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: center;">TRUE</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">20658</td>
+<td style="text-align: left;">Financiamento importações</td>
+<td style="text-align: right;">1.0000</td>
+<td style="text-align: right;">0.0240</td>
+<td style="text-align: right;">0.0102</td>
+<td style="text-align: right;">0.0542</td>
+<td style="text-align: center;">FALSE</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<blockquote class="blockquote">
+<p>Uma nota de leitura antes de olhar os números: a função calcula <strong>cinco</strong> colunas, não três. As três primeiras são os testes deste degrau; as duas últimas — dummies sazonais (<code>seasdum</code>) e WO — respondem à pergunta do degrau 4 e estão explicadas lá.</p>
+</blockquote>
+<p>Repare no que acontece na segunda linha, o consignado a servidores públicos. O <strong>QS dá 0.051</strong>, não rejeitando a 5% por muito pouco. Como o QS e a ACF olham para o mesmo objeto, não é coincidência que os dois deixem de apontar sazonalidade. Se uma rotina de produção usa o QS como porteiro único, essa série passa direto, sem ajuste. Friedman e Kruskal-Wallis, por sua vez, rejeitam com p-valores duas a três ordens de grandeza menores, e o veredito combinado de Webel-Ollech diz que é sazonal (exploro esse teste mais adiante). É uma série sazonal que o teste mais popular deixa passar.</p>
+<p>E a terceira linha mostra um caso ainda mais desconfortável. QS não rejeita nada (1), mas Friedman (0.024) e Kruskal-Wallis (0.01) rejeitam a 5%. Os testes discordam de verdade. O próximo degrau ajuda a chegar numa conclusão.</p>
+</section>
+<section id="degrau-4-que-tipo-de-sazonalidade" class="level3">
+<h3 class="anchored" data-anchor-id="degrau-4-que-tipo-de-sazonalidade">Degrau 4: que <em>tipo</em> de sazonalidade?</h3>
+<p>Os três testes anteriores respondem “há sazonalidade?”. O degrau 4 responde uma pergunta diferente: <strong>a sazonalidade é determinística ou estocástica?</strong></p>
+<ul>
+<li>Sazonalidade <strong>determinística</strong> é um padrão fixo ao longo do tempo. Um conjunto de dummies mensais numa regressão resolve.</li>
+<li>Sazonalidade <strong>estocástica</strong> é um padrão que tem dinâmica própria e pode evoluir, i.e., choques ao padrão sazonal podem alterá-lo de forma persistente.</li>
+</ul>
+<p>Para avaliar o tipo de sazonalidade, vamos retomar o teste da tabela ainda não explicado:</p>
+<ul>
+<li><strong><code>seasdum</code></strong>: a coluna “dummies sazonais” da tabela acima. A ideia é modelar a sazonalidade determinística de forma explícita através de dummies de mês. A especificação utilizada é de um ARIMA(0,1,1) não sazonal com tendência linear e onze dummies mensais como regressores externos, que são testados conjuntamente por uma estatística de Wald — o <code>seastests</code> a reescala e a refere a uma distribuição F, não a uma qui-quadrado (o argumento <code>autoarima</code> pode ser ativado; aqui não fez diferença).</li>
+</ul>
+<p>A <span class="math inline">\(H_0\)</span> é que os coeficientes das onze dummies são conjuntamente nulos. Portanto, rejeitar fornece evidência de que existe um perfil sazonal mensal determinístico. Não rejeitar, por outro lado, não permite concluir que ele não existe e tampouco exclui outras formas de sazonalidade, como uma sazonalidade estocástica ou variante no tempo.</p>
+<blockquote class="blockquote">
+<p>Para quem quiser ir além, um teste adicional é o <strong>OCSB</strong> (Osborn, Chui, Smith e Birchenhall), disponível como <code>seastests::ocsb()</code>. É um Dickey-Fuller montado para a frequência sazonal, e ataca a mesma pergunta pelo lado da raiz unitária: a hipótese nula é que a raiz unitária sazonal existe, ou seja, que o padrão sazonal é estocástico e precisa de diferenciação sazonal para ficar estacionário. Rejeitar, portanto, é evidência de que o padrão é estável. Cheguei a rodá-lo em todas as séries deste post e ele acabou ficando de fora por não acrescentar nada.</p>
+</blockquote>
+<p>Já o procedimento de <strong>Webel &amp; Ollech</strong> responde a outra pergunta. Não a de qual tipo de sazonalidade está presente, mas a de se, no fim das contas, a série deve ou não ser tratada como sazonal.</p>
+<ul>
+<li><strong>WO</strong>: o veredito de <strong>Webel &amp; Ollech</strong> é mais um procedimento de classificação de sazonalidade que um teste. Ele tenta responder se, no conjunto de evidências disponível, devo classificar uma série como sazonal ou não (<em>overall seasonality test</em> na documentação do <code>seastests</code>). Ao contrário do <code>seasdum</code>, ele não devolve p-valor, e sim um <code>TRUE</code>/<code>FALSE</code>. É uma regra de decisão, calibrada para ser conservadora, que busca resolver o caso em que os testes individuais brigam entre si. <code>TRUE</code> = sazonal; <code>FALSE</code> = não.</li>
+</ul>
+<p>Ele usa <strong>três</strong> estatísticas. Primeiro, é calculado o p-valor de um teste QS convencional na primeira diferença da série. Em seguida, ajusta-se um ARIMA não sazonal via <code>autoarima</code>, captam-se os resíduos e são feitos dois testes, QS e KW, sobre eles (<span class="math inline">\(QS_r\)</span> e <span class="math inline">\(KW_r\)</span>). O teste devolve TRUE se algum dos 3 casos abaixo acontecer:</p>
+<p><span class="math display">\[(QS_r &lt; 1\%) \lor (KW_r &lt; 0.1\%) \lor (QS &lt; 1\% \land KW_r &lt; 1\%)\]</span></p>
+<p>Somando os quatro degraus, o veredito para as três séries é:</p>
+<ul>
+<li><strong>Crédito pessoal não consignado</strong>: sazonal, todos os testes concordam, componente determinístico forte. Caso fácil.</li>
+<li><strong>Consignado servidores públicos</strong>: sazonal, mas o QS quase não vê. Caso onde a escada ganha do teste único.</li>
+<li><strong>Financiamento a importações</strong>: os testes discordam entre si e o WO diz que não. Caso onde a resposta certa é provavelmente <strong>não dessazonalizar</strong>.</li>
+</ul>
+</section>
+<section id="o-veredito" class="level3">
+<h3 class="anchored" data-anchor-id="o-veredito">O veredito</h3>
+<p>Os quatro degraus acima são o que eu recomendo rodar para entender uma série, mas nenhum deles é quem dá o veredito sobre a existência de sazonalidade neste exercício. Quem dá é um último teste, o <strong>teste combinado</strong> que sai do próprio X-13.</p>
+<p>Ele está documentado em <a href="https://www.researchgate.net/publication/316734492_Seasonal_Adjustment_with_the_X-11_Method"><strong>Ladiray &amp; Quenneville</strong></a> e é particularmente relevante porque opera sobre o componente <span class="math inline">\(SI\)</span>, i.e., a série já limpa de tendência, de <em>outliers</em> e de efeitos de calendário produzida pela própria decomposição X-11. Além de avaliar a presença de sazonalidade estável, ele aponta e penaliza explicitamente a existência de sazonalidade móvel. Assim como o WO, o resultado é uma classificação, e não um p-valor, com três níveis: <code>Present</code>, <code>ProbablyNone</code>, <code>None</code>.</p>
+<p>Dessa forma, ele já está acoplado ao <em>pipeline</em> que é utilizado neste exercício e, por isso, o seu emprego como teste principal neste post.</p>
+<p>Uma ressalva é que a limpeza que o torna atraente é feita pelo mesmo motor cujo resultado ele avalia: as razões <span class="math inline">\(SI\)</span> saem da decomposição X-11 daquela série. Ele é, portanto, um diagnóstico condicional a esse pré-ajuste, e não um veredito externo. É justamente por isso que mantive a escada do <code>seastests</code> aqui, pois ela é o voto que não depende do motor que faz o ajuste.</p>
+<p>Ainda assim, nas três séries de exemplo os dois caminhos chegam ao mesmo lugar (<code>Present</code>, <code>Present</code> e <code>None</code>, na ordem acima).</p>
+</section>
+</section>
+<section id="x-13-vs-tramo-seats-x-11-vs-seats" class="level2">
+<h2 class="anchored" data-anchor-id="x-13-vs-tramo-seats-x-11-vs-seats">X-13 vs TRAMO-SEATS: X-11 vs SEATS</h2>
+<p>Ambos os métodos são compostos por duas etapas:</p>
+<ol type="1">
+<li><p><strong>Pré-ajuste</strong>: no X-13, o pré-ajuste é feito pelo procedimento RegARIMA do <a href="https://www-census-gov.translate.goog/data/software/x13as.html?_x_tr_sl=en&amp;_x_tr_tl=pt&amp;_x_tr_hl=pt&amp;_x_tr_pto=tc">Census Bureau</a>. No TRAMO-SEATS, pelo TRAMO (<em>Time series Regression with ARIMA noise, Missing observations and Outliers</em>, do <a href="https://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/98/Fic/dt9809e.pdf">Banco de España</a>). Ambos usam uma estrutura de regressão com erros ARIMA e contam com estruturas “prontas” para testar transformações log/nível, estimar efeitos de calendário e feriados, tratar <em>missing values</em>, e estimar <em>outliers</em>, entre outros procedimentos. A diferença entre eles está nas regras e algoritmos usados na tomada dessas decisões.</p>
+<p>Também estendem a série com previsões para os filtros terem o que mastigar nas pontas, o que mitiga o problema de borda.</p></li>
+<li><p><strong>Decomposição</strong>: aqui os métodos divergem de verdade. O <strong>X-11</strong> (no X-13) usa uma sequência iterativa de médias móveis e regras de tratamento de extremos, cujas famílias de filtros e critérios de seleção foram desenvolvidos e aperfeiçoados pelo Census Bureau. O <strong>SEATS</strong> (no TRAMO-SEATS) parte do modelo ARIMA estimado no pré-ajuste, decompõe esse modelo em modelos ARIMA para tendência, sazonalidade, componente transitório e irregular e, a partir dessa decomposição, deriva filtros ótimos de extração de sinal.</p></li>
+</ol>
+<p>Para ilustrar melhor:</p>
+<p><strong>X-11</strong>: Após o pré-ajuste, o algoritmo usa uma média móvel centrada 2x12 para obter uma primeira estimativa da tendência. Retirada essa tendência, organiza o componente sazonal-irregular em subgrupos de cada mês e aplica médias móveis ao longo dos anos, i.e., nos vizinhos próximos de mesmo mês. Essa média suavizada é tratada como fator sazonal. Em seguida, esse processo é replicado iterativamente aplicando um <a href="https://www.abs.gov.au/websitedbs/d3310114.nsf/4a256353001af3ed4b2562bb00121564/5fc845406def2c3dca256ce100188f8e">filtro Henderson</a> para melhorar a estimativa da tendência e refazendo o processo do fator sazonal.</p>
+<p>Decompondo uma série temporal em <span class="math inline">\(x_t = T_t + S_t + I_t\)</span> (tendência + sazonalidade + irregular), posso dizer que o X-11 faz um processo iterativo de dados → médias móveis → T, S, I. Não existe primeiro uma distribuição probabilística dizendo como <span class="math inline">\(T_t\)</span> ou <span class="math inline">\(S_t\)</span> evoluem. Ele é <em>filter-based</em>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-decomposicao_x11" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-decomposicao_x11-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-decomposicao_x11-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decomposicao_x11-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Decomposição do X-11 (via RegARIMA) para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p><strong>SEATS</strong>: Após o pré-ajuste, o algoritmo parte do modelo ARIMA para a série linearizada e procura representá-la como a soma dos componentes não observados <span class="math inline">\(T_t\)</span> (tendência), <span class="math inline">\(S_t\)</span> (sazonalidade) e <span class="math inline">\(I_t\)</span> (irregular, e eventualmente um transitório), cada um com sua própria dinâmica ARIMA. Como se tivesse um ARIMA “grande” da série e o SEATS encontrasse ARIMAs específicos para os componentes.</p>
+<p>Conhecidos os modelos probabilísticos dos componentes, ainda é necessário estimar seus valores, pois <span class="math inline">\(T_t\)</span>, <span class="math inline">\(S_t\)</span> e <span class="math inline">\(I_t\)</span> não são diretamente observados. O SEATS utiliza para isso filtros de Wiener–Kolmogorov (bilaterais, também fazem uso dos <em>forecasts</em>/<em>backcasts</em> da série) que, de alguma forma, podem ser entendidos como médias ponderadas das observações. Contudo, diferentemente do X-11, seus pesos não pertencem a uma família pré-definida. Eles são implicados pelo modelo ARIMA da série e pela decomposição desse modelo nos componentes (<em>model-based</em>).</p>
+<p>A decomposição SEATS é diretamente condicionada à especificação ARIMA vinda do pré-ajuste / TRAMO. Já a decomposição X-11 é menos dependente dela, embora o RegARIMA continue importante no pré-ajuste e nas pontas.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-decomposicao_tramo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-decomposicao_tramo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-decomposicao_tramo-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decomposicao_tramo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<section id="de-onde-vêm-esses-nomes" class="level3">
+<h3 class="anchored" data-anchor-id="de-onde-vêm-esses-nomes">De onde vêm esses nomes</h3>
+<p>Vale abrir um parêntese sobre a nomenclatura, porque a sequência X-11 → X-12 → X-13 sugere uma coisa que ela não é. Esses números são <strong>versão de programa</strong>, não método novo:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Marco</th>
+<th>Ano</th>
+<th>O que acrescentou</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Census Method I</td>
+<td>1954</td>
+<td>primeiro programa computadorizado de dessazonalização do Census Bureau</td>
+</tr>
+<tr class="even">
+<td>Method II + variantes X-0 a X-10</td>
+<td>1954–65</td>
+<td>o “X” é de <strong>experimental</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>X-11</strong> (<a href="https://www.census.gov/content/dam/Census/library/working-papers/1967/adrm/shiskinyoungmusgrave1967.pdf">Shiskin, Young &amp; Musgrave</a>)</td>
+<td>1965 (documentado em 1967)</td>
+<td>consolida o algoritmo X-11</td>
+</tr>
+<tr class="even">
+<td><strong>X-11ARIMA</strong> (Statistics Canada, <a href="https://www.researchgate.net/publication/235961508_The_X-II-ARIMA_seasonal_adjustment_method">Dagum</a>)</td>
+<td>1970/1980</td>
+<td>ARIMA para <em>forecasts</em> e <em>backcasts</em></td>
+</tr>
+<tr class="odd">
+<td><strong>TRAMO-SEATS</strong> (Banco de España, <a href="https://www.bde.es/f/webbde/SES/Secciones/Publicaciones/PublicacionesSeriadas/DocumentosTrabajo/98/Fic/dt9809e.pdf">Gómez &amp; Maravall</a>)</td>
+<td>~1996</td>
+<td>consolida a vertente <em>model-based</em></td>
+</tr>
+<tr class="even">
+<td><strong>X-12ARIMA</strong> (Census, <a href="https://www.census.gov/content/dam/Census/library/working-papers/1998/adrm/jbes98.pdf">Findley et al.</a>)</td>
+<td>1998</td>
+<td>amplia o RegARIMA + melhora em outliers, dias úteis, efeitos de calendário</td>
+</tr>
+<tr class="odd">
+<td><strong>X-13ARIMA-SEATS</strong> (<a href="https://www.census.gov/data/software/x13as.html">Census</a>)</td>
+<td>jul/2012</td>
+<td>combina o X-12ARIMA com o módulo SEATS no mesmo software</td>
+</tr>
+</tbody>
+</table>
+<p>O X-11 de 1965 é o único que introduz um algoritmo de decomposição, e ele continua sendo usado dentro do X-12 e do X-13. O que o X-11ARIMA e o X-12ARIMA fizeram foi embrulhar esse mesmo algoritmo num pré-ajuste cada vez melhor. E o X-13 não trocou nada: ele acrescentou uma segunda decomposição ao lado da primeira, o SEATS, que vem de outra linhagem inteira, o programa TRAMO-SEATS de Gómez &amp; Maravall.</p>
+<p>Daí a arrumação do JDemetra+ fazer mais sentido do que parece à primeira vista. O JDemetra+ separa por linhagem, enquanto o Census empacotou os dois num binário só e deu a ele o nome da versão seguinte.</p>
+<blockquote class="blockquote">
+<p>Ele reparte os dois módulos entre as duas funções: <code>rjd3x13::x13_spec()</code> devolve <code>$regarima</code> + <code>$x11</code>, sem opção de decomposição SEATS; e <code>rjd3tramoseats::tramoseats_spec()</code> devolve o <code>$seats</code>.</p>
+</blockquote>
+</section>
+<section id="os-fatores-de-calendário" class="level3">
+<h3 class="anchored" data-anchor-id="os-fatores-de-calendário">Os fatores de calendário</h3>
+<p>Antes de comparar os métodos, um ingrediente que muda o resultado mais do que a escolha entre eles: <strong>efeitos ou fatores de calendário</strong>. Por exemplo, fevereiro tem 28 dias, dezembro tem 31, Carnaval anda pelo calendário, e o número de dias úteis num mês varia de 18 a 23. Nada disso é sazonalidade, mas contamina a estimativa sazonal.</p>
+<p>O JDemetra+ tem algumas <em>specs</em> prontas para pré-processamento. Elas são indexadas por <code>rsa</code> e vão desde <code>rsa0</code> até <code>rsa5c</code>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>spec</th>
+<th>log</th>
+<th>ARIMA</th>
+<th>Outliers</th>
+<th>Dias úteis</th>
+<th>Páscoa</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>rsa0</td>
+<td>fixa nível</td>
+<td>fixo</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="even">
+<td>rsa1</td>
+<td>testa</td>
+<td>fixo</td>
+<td>AO/LS/TC</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>rsa2</td>
+<td>testa</td>
+<td>fixo</td>
+<td>AO/LS/TC</td>
+<td>TD2 + bissexto</td>
+<td>sim</td>
+</tr>
+<tr class="even">
+<td>rsa3</td>
+<td>testa</td>
+<td>auto</td>
+<td>AO/LS/TC</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr class="odd">
+<td>rsa4</td>
+<td>testa</td>
+<td>auto</td>
+<td>AO/LS/TC</td>
+<td>TD2 + bissexto</td>
+<td>sim</td>
+</tr>
+<tr class="even">
+<td>rsa5c</td>
+<td>testa</td>
+<td>auto</td>
+<td>AO/LS/TC</td>
+<td>TD7 + bissexto</td>
+<td>sim</td>
+</tr>
+</tbody>
+</table>
+<p>Neste exercício, quero usar o arranjo <code>TD7</code>, i.e., seis regressores de segunda a sábado, mais correção de ano bissexto (vs <code>TD2</code> que distingue apenas dia útil de final de semana) para tratar dias úteis. Uma saída é usar a <em>spec</em> <code>rsa5c</code>, a única que usa esse arranjo. Contudo, como já mencionado no começo do post, faço uma pequena mudança. Em vez de usar o <code>TD7</code> nativo, substituo pela <em>spec</em> do IBC-Br que mapeia exatamente o <code>TD7</code>, porém capturando os feriados (móveis) nacionais. Na ótica do Brasil, ele é construído com o calendário “certo” em vez do calendário genérico do JDemetra+.</p>
+<blockquote class="blockquote">
+<p>Como esses fatores precisam entrar <strong>no lugar</strong> do tratamento de calendário padrão do JDemetra+, não ao lado dele, o argumento <code>option</code> dentro de <code>set_tradingdays(...)</code> recebe “UserDefined” e defino os fatores do IBC-Br exogenamente. Além disso, <code>test</code> fica como “None” para que nenhum teste automático do algoritmo escolha dropar esses fatores. Por causa dessa substituição, a escolha pela spec <code>rsa5c</code> nessa função poderia até ser trocada por <code>rsa4</code> sem alterar resultados. Usar outra, contudo, já afeta os resultados porque ainda estou herdando os fatores de ano bissexto e Páscoa (teste e possível adição) das <em>specs</em> <code>rsa5c</code> e <code>rsa4</code>.</p>
+</blockquote>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Os itens do dicionário precisam ser pedidos por</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># chave, na chamada, e é isso que faz `fit$user_defined` existir.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>ITENS_DIC <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"diagnostics.seas-si-combined"</span>, <span class="co"># teste combinado sobre as razões SI</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"diagnostics.seas-sa-combined3"</span> <span class="co"># o mesmo, restrito aos últimos 3 anos</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>spec_x13 <span class="ot">&lt;-</span> <span class="cf">function</span>(fatores) {</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  rjd3toolkit<span class="sc">::</span><span class="fu">set_tradingdays</span>(</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    rjd3x13<span class="sc">::</span><span class="fu">x13_spec</span>(<span class="st">"rsa5c"</span>),</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Os seis fatores do IBC-Br entram NO LUGAR do bloco de dias úteis do</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># próprio JDemetra+, não empilhados sobre ele.</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">option =</span> <span class="st">"UserDefined"</span>,</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">uservariable =</span> fatores<span class="sc">$</span>uservars,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">test =</span> <span class="st">"None"</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>ajustar_x13 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, fatores) {</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  rjd3x13<span class="sc">::</span><span class="fu">x13</span>(x, <span class="fu">spec_x13</span>(fatores), <span class="at">context =</span> fatores<span class="sc">$</span>context, <span class="at">userdefined =</span> ITENS_DIC)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-calendario" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-calendario-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-calendario-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calendario-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada com os fatores do IBC-Br e a ajustada sem tratamento de calendário nenhum (RSA3), em % da série ajustada.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>A diferença entre modelar e não modelar calendário (usar <code>rsa3</code> sem a <em>spec</em> do IBC-Br) chega a 13.7 p.p. num mês isolado, e o desvio-padrão dessa diferença é 3.71 p.p..</p>
+<p>E há um efeito ainda mais forte que só aparece olhando o conjunto. Comparando o veredito do teste combinado do X-13 sem nenhum regressor de calendário contra o veredito com, 6 das 73 séries passam de não-sazonais para <code>Present</code>, contra 0 no caminho inverso. Modelar calendário não apaga sazonalidade; ele revela a sazonalidade que o ruído de dias úteis, entre outros efeitos, estava mascarando.</p>
+</section>
+</section>
+<section id="scorecard-como-escolher-entre-x-11-e-seats" class="level2">
+<h2 class="anchored" data-anchor-id="scorecard-como-escolher-entre-x-11-e-seats">Scorecard: como escolher entre X-11 e SEATS</h2>
+<p>Infelizmente, não existe teste formal aceito que arbitre entre X-11 e SEATS. As <em>M-statistics</em> do X-11 diagnosticam a qualidade da decomposição do X-11, e não têm análogo no SEATS. Cada M mede um sintoma diferente de decomposição malfeita, como <span class="math inline">\(I\)</span> grande demais em relação a <span class="math inline">\(T\)</span> ou <span class="math inline">\(S\)</span> instável de ano para ano. Já os diagnósticos do SEATS pressupõem o modelo escolhido no algoritmo. Não há estatística de teste com distribuição conhecida sob a <span class="math inline">\(H_0\)</span> “os dois métodos são equivalentes”.</p>
+<p>O que existe é diagnóstico comparativo. Neste post, emprego a hierarquia de critérios abaixo:</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post. Deixar este</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># chunk avaliar sombrearia a função do runner sem sombrear `razao_metodo()`,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># e as colunas "escolha" e "razão" da tabela passariam a discordar.</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>escolher_metodo <span class="ot">&lt;-</span> <span class="cf">function</span>(combined, dx13, dseats, qx11, <span class="at">limiar =</span> <span class="fl">0.05</span>) {</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  falha <span class="ot">&lt;-</span> <span class="cf">function</span>(p) <span class="sc">!</span><span class="fu">is.na</span>(p) <span class="sc">&amp;&amp;</span> p <span class="sc">&lt;</span> limiar</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="co"># O recorte de 3 anos é categórico, não p-valor: `Present` = sobrou</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># sazonalidade nos últimos 3 anos = o método falhou ali.</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  falha3 <span class="ot">&lt;-</span> <span class="cf">function</span>(v) <span class="sc">!</span><span class="fu">is.na</span>(v) <span class="sc">&amp;&amp;</span> v <span class="sc">==</span> <span class="st">"Present"</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">case_when</span>(</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Não há sazonalidade identificável -&gt; não ajusta nada</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    combined <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"None"</span>, <span class="st">"ProbablyNone"</span>) <span class="sc">~</span> <span class="st">"nenhum"</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Os dois deixam sazonalidade residual -&gt; nenhum serve</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">falha</span>(dx13<span class="sc">$</span>qs_sa) <span class="sc">&amp;</span> <span class="fu">falha</span>(dseats<span class="sc">$</span>qs_sa) <span class="sc">~</span> <span class="st">"nenhum"</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Só um deixa sazonalidade residual -&gt; o outro ganha</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">falha</span>(dseats<span class="sc">$</span>qs_sa) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">falha</span>(dx13<span class="sc">$</span>qs_sa) <span class="sc">~</span> <span class="st">"x11"</span>,</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">falha</span>(dx13<span class="sc">$</span>qs_sa) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">falha</span>(dseats<span class="sc">$</span>qs_sa) <span class="sc">~</span> <span class="st">"seats"</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. Mesmo critério, restrito aos últimos 3 anos, pelo veredito do motor</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">falha3</span>(dseats<span class="sc">$</span>combined3) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">falha3</span>(dx13<span class="sc">$</span>combined3) <span class="sc">~</span> <span class="st">"x11"</span>,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">falha3</span>(dx13<span class="sc">$</span>combined3) <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">falha3</span>(dseats<span class="sc">$</span>combined3) <span class="sc">~</span> <span class="st">"seats"</span>,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 5. Decomposição X-11 fraca (Q &gt; 1) -&gt; vai de SEATS</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(qx11<span class="sc">$</span>Q) <span class="sc">&amp;</span> qx11<span class="sc">$</span>Q <span class="sc">&gt;</span> <span class="dv">1</span> <span class="sc">~</span> <span class="st">"seats"</span>,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 6. Empate -&gt; X-11, por ser o mais robusto a ARIMA ruim</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> <span class="st">"x11"</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<blockquote class="blockquote">
+<p>No <code>rjd3toolkit</code> esse mesmo teste existe solto, como <code>seasonality_combined()</code>, sem precisar rodar um ajuste inteiro para obtê-lo como faço aqui. Eu o leio do objeto ajustado porque preciso do ajuste para os outros critérios de qualquer forma, mas quem quiser só o veredito não precisa pagar esse preço.</p>
+</blockquote>
+<p>A ordem tem uma lógica. Sazonalidade residual é o pecado capital de um ajuste sazonal. Se sobrou padrão sazonal na série, nenhuma outra qualidade do ajuste compensa. Por isso os critérios 2 a 4 vêm antes de qualquer medida de qualidade. Só depois entra o <code>Q</code> do X-11, e o desempate final vai para o X-11 pelo argumento da robustez.</p>
+<p>O <code>Q</code> é a nota de qualidade da decomposição do X-11, uma média ponderada das <em>M-statistics</em> que mencionei acima. O <code>Q</code> herda uma escala: abaixo de 1 a decomposição é considerada aceitável, acima de 1 ela é suspeita. É por isso que o critério 5 é <code>Q &gt; 1</code>.</p>
+<p>O critério 1 vem do teste combinado do X-13, o último teste que apresentei na escada. É ele, e só ele, que age como porteiro do padrão sazonal e, portanto, permite à série temporal entrar na disputa entre os dois métodos.</p>
+<blockquote class="blockquote">
+<p>O motor JDemetra+ não usa o resultado do teste combinado como porteiro. Ele ajusta e entrega qualquer série, <code>None</code> inclusive. Os diagnósticos são <em>post-hoc</em>, relatórios sobre um ajuste que já aconteceu, e não pré-condições para que ele aconteça. Sem sazonalidade estável não há padrão para o filtro extrair, então o que ele acaba removendo é ruído, inventando um perfil sazonal que não existia. O freio tem que vir <em>ex-ante</em> do próprio código.</p>
+</blockquote>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-x11-seats" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-x11-seats-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-x11-seats-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-x11-seats-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: X-11 e SEATS lado a lado. Em cima, uma série onde empatam; embaixo, aquela em que os dois métodos mais divergem no lote inteiro. O painel de baixo está truncado em R$ 6.2 bi para dar zoom: o pico de jul-ago/2023 sai da escala.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>No painel de cima as duas linhas se sobrepõem. X-11 e SEATS entregam praticamente a mesma série. A maior diferença entre elas em qualquer mês da amostra é de 2.9%, e a escolha entre os dois métodos é indiferente. No de baixo, não. As duas linhas discordam de forma um pouco mais visível em vários pontos do tempo.</p>
+<p>Aplicando o <em>scorecard</em> aos exemplos:</p>
+<div class="tbl-compact">
+<div class="cell">
+<div id="tbl-scorecard" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-scorecard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2
+</figcaption>
+<div aria-describedby="tbl-scorecard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 3%">
+<col style="width: 32%">
+<col style="width: 6%">
+<col style="width: 3%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 27%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SGS</th>
+<th style="text-align: left;">modalidade</th>
+<th style="text-align: left;">combinado</th>
+<th style="text-align: right;">Q</th>
+<th style="text-align: right;">QS X-11</th>
+<th style="text-align: right;">QS SEATS</th>
+<th style="text-align: right;">3a X-11</th>
+<th style="text-align: right;">3a SEATS</th>
+<th style="text-align: left;">escolha</th>
+<th style="text-align: left;">razão</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">20666</td>
+<td style="text-align: left;">Crédito pessoal - Não consignado</td>
+<td style="text-align: left;">Present</td>
+<td style="text-align: right;">0.577</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: left;">x11</td>
+<td style="text-align: left;">empate nos diagnósticos, X-11 por robustez</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20669</td>
+<td style="text-align: left;">Crédito pessoal - Consignado - Servidores públicos</td>
+<td style="text-align: left;">Present</td>
+<td style="text-align: right;">0.619</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: left;">x11</td>
+<td style="text-align: left;">empate nos diagnósticos, X-11 por robustez</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">20658</td>
+<td style="text-align: left;">Financiamento importações</td>
+<td style="text-align: left;">None</td>
+<td style="text-align: right;">1.136</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: left;">nenhum</td>
+<td style="text-align: left;">teste combinado: None</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20687</td>
+<td style="text-align: left;">Crédito rural - Taxas de mercado</td>
+<td style="text-align: left;">Present</td>
+<td style="text-align: right;">1.389</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: right;">None</td>
+<td style="text-align: left;">seats</td>
+<td style="text-align: left;">Q = 1.39 &gt; 1, decomposição X-11 fraca</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</div>
+<p>As colunas <code>QS</code> medem sazonalidade residual <strong>na série já após o filtro</strong>, e, consequentemente, a convenção se inverte em relação à tabela do degrau 3. Lá, p-valor baixo era o sinal que se procurava (série crua). Aqui, p-valor baixo é o problema, evidência de que sobrou padrão sazonal no que deveria estar limpo (resíduo). As colunas <code>3a</code> respondem à mesma pergunta restrita aos últimos três anos, mas em outra moeda: ali o JDemetra+ não publica p-valor, só um veredito, e <code>Present</code> é o valor ruim.</p>
+<p>Nas duas primeiras séries os diagnósticos empatam. Nenhum dos dois métodos deixa sazonalidade residual e <code>Q &lt; 1</code>, e a escolha cai no critério 6, X-11 por robustez. A terceira nem chega a essa disputa, porque o critério 1 a exclui antes, com o teste combinado dizendo <code>None</code>. A quarta é a única das quatro que não termina no X-11. No crédito rural a taxas de mercado, nenhum dos dois métodos deixa sazonalidade residual pelo QS, então os critérios 2 a 4 não têm o que separar. Quem decide é o <code>Q</code>: a decomposição do X-11 sai com 1.39, acima da linha de corte, e o critério 5 manda a série para o SEATS.</p>
+</section>
+<section id="aplicando-em-lote" class="level2">
+<h2 class="anchored" data-anchor-id="aplicando-em-lote">Aplicando em lote</h2>
+<p>A rotina inteira vira uma função, <code>ajustar_serie()</code>, que devolve duas coisas: a série ajustada e uma linha de status dizendo o que foi testado, o que foi decidido e por quê.</p>
+<p>Os cinco testes do <code>seastests</code>, os degraus 3 e 4, são calculados para todas as séries e viajam junto no relatório, mas não entram na decisão. <code>escolher_metodo()</code> recebe apenas o veredito do teste combinado, os diagnósticos de sazonalidade residual e o <code>Q</code> do X-11. Os degraus ficam ali como registro para quando uma série chamar atenção.</p>
+<div class="cell" data-cache.extra="9148b9665de371b53e55cd332569322f">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resultado <span class="ot">&lt;-</span> <span class="fu">rodar_lote</span>(db, hierarquia<span class="sc">$</span>codigo, fatores, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>status <span class="ot">&lt;-</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  resultado<span class="sc">$</span>status <span class="sc">%&gt;%</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hierarquia <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino, agg), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="tbl-narrow">
+<div class="cell">
+<div id="tbl-status" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-status-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3
+</figcaption>
+<div aria-describedby="tbl-status-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">status</th>
+<th style="text-align: left;">método escolhido</th>
+<th style="text-align: right;">séries</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ajustada</td>
+<td style="text-align: left;">x11</td>
+<td style="text-align: right;">51</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ajustada</td>
+<td style="text-align: left;">seats</td>
+<td style="text-align: right;">7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sem_sazonalidade</td>
+<td style="text-align: left;">nenhum</td>
+<td style="text-align: right;">13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">nenhum_metodo_valido</td>
+<td style="text-align: left;">nenhum</td>
+<td style="text-align: right;">2</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-vereditos" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-vereditos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-vereditos-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-vereditos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão, por tipo de recurso.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Das 60 séries com sazonalidade identificável, o X-11 deixa sazonalidade residual em 2 e o SEATS em 4 (falhas no QS da série ajustada). Nas 2 em que os dois falham, o scorecard não escolhe nenhum. A série sai sem ajuste e é marcada como <code>nenhum_metodo_valido</code>.</p>
+<p>As 7 escolhas por SEATS vieram da regra <code>Q &gt; 1</code>, decomposição X-11 fraca, que é a última antes do desempate. Nenhuma veio de sazonalidade residual. Os critérios 2 a 4, que são os que tratam do pecado capital, decidiram o destino de apenas 4 séries do lote inteiro. Em 2 o veredito foi contra o SEATS e a escolha caiu no X-11, em nenhuma contra o X-11, e nas outras 2 nenhum dos dois serviu.</p>
+<blockquote class="blockquote">
+<p>Cabe registrar o que o critério 4 fez aqui: nada, e por um motivo que vale mais do que ele teria valido se tivesse decidido alguma coisa. Ele lê o veredito do JDemetra+ para os últimos três anos (<code>seas-sa-combined3</code>), e esse veredito voltou <code>None</code> em 73 das 73 séries, nos dois motores. Ou seja, nenhum dos dois métodos deixou sazonalidade residual na janela recente em série nenhuma. O critério fica na hierarquia porque é justamente ali que a sazonalidade residual costuma aparecer primeiro quando aparece, e um lote de 73 séries sem nenhuma ocorrência é resultado, não ausência de teste.</p>
+</blockquote>
+<p><strong>Os dois métodos removem sazonalidade igualmente bem quase sempre. O que os separa, quando algo separa, é a qualidade da decomposição, não a eficácia.</strong> É por isso que o <em>scorecard</em> acaba não sendo um otimizador e, sim, um detector de exceção. Se você rodasse X-11 em todas que tiveram sazonalidade acusada pelo teste combinado, o ajuste sairia aceitável em 58 das 60.</p>
+</section>
+<section id="oficial-bottom-up-e-top-down" class="level2">
+<h2 class="anchored" data-anchor-id="oficial-bottom-up-e-top-down">Oficial, bottom-up e top-down</h2>
+<p>Chegamos à pergunta prática. Para um agregado como <code>Concessões - Total</code>, há três formas de obter uma série dessazonalizada:</p>
+<ul>
+<li><strong>Oficial</strong>: a série que o próprio BCB publica já ajustada.</li>
+<li><strong>Top-down</strong>: pegar o agregado publicado (não ajustado) e rodar a rotina nele.</li>
+<li><strong>Bottom-up</strong>: dessazonalizar cada folha e somar.</li>
+</ul>
+<p>Se eu não tiver acesso às oficiais, qual usar?</p>
+<p>Ajuste sazonal não é uma operação linear, então as três dão resultados diferentes por construção.</p>
+<div class="cell" data-cache.extra="9148b9665de371b53e55cd332569322f">
+<details class="code-fold">
+<summary>Show code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>alvos <span class="ot">&lt;-</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  hierarquia <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dessaz_oficial), <span class="fu">is.na</span>(use)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(codigo, modalidade, tipo, destino, dessaz_oficial) <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dessaz_oficial =</span> <span class="fu">as.character</span>(dessaz_oficial))</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># top-down: a rotina aplicada ao agregado publicado</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>td <span class="ot">&lt;-</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  resultado<span class="sc">$</span>sa <span class="sc">%&gt;%</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(codigo <span class="sc">%in%</span> alvos<span class="sc">$</span>codigo) <span class="sc">%&gt;%</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">top_down =</span> value_sa)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="co"># bottom-up: soma das folhas dessazonalizadas</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>bu <span class="ot">&lt;-</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  alvos<span class="sc">$</span>codigo <span class="sc">%&gt;%</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map</span>(<span class="sc">~</span> <span class="fu">bottom_up</span>(.x, hierarquia, resultado<span class="sc">$</span>sa)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_rbind</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">bottom_up =</span> value_sa)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co"># oficial</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>of <span class="ot">&lt;-</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  db <span class="sc">%&gt;%</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(codigo <span class="sc">%in%</span> alvos<span class="sc">$</span>dessaz_oficial) <span class="sc">%&gt;%</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="at">dessaz_oficial =</span> codigo, date, <span class="at">oficial =</span> value) <span class="sc">%&gt;%</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alvos <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, dessaz_oficial), <span class="fu">join_by</span>(dessaz_oficial))</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>cmp <span class="ot">&lt;-</span></span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  td <span class="sc">%&gt;%</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(bu, <span class="fu">join_by</span>(codigo, date)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(of <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, date, oficial), <span class="fu">join_by</span>(codigo, date)) <span class="sc">%&gt;%</span></span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alvos <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-nivel-3versoes" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nivel-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-nivel-3versoes-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nivel-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Concessões totais: as três versões dessazonalizadas em nível. Praticamente indistinguíveis.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Em nível é difícil ver diferença. Entretanto, ninguém lê conjuntura no nível, lê na variação mensal.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-mom-3versoes" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-mom-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-mom-3versoes-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mom-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: A mesma comparação, em variação mensal. Aqui as três versões deixam de ser indistinguíveis.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-dispersao-mom" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dispersao-mom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-dispersao-mom-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dispersao-mom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Discordância na variação mensal entre as três versões, por agregado: desvio-padrão da diferença de MoM contra a série oficial do BCB.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<blockquote class="blockquote">
+<p>Uma ressalva sobre uma das barras. Em <code>Concessões - Direcionado PJ</code> a soma dos filhos publicados difere do agregado publicado em -0.51% já na série crua, provavelmente porque falta uma modalidade que o BCB agrega ali e não publica separadamente. O bottom-up dessa série carrega, então, um erro de nível que não tem nada a ver com ajuste sazonal.</p>
+</blockquote>
+<p>O método <em>top-down</em>, mesmo na comparação da variação mensal, se aproxima bastante das séries oficiais do BCB. Isso parece indicar que, mesmo sendo uma <em>proxy</em>, os efeitos de calendário do IBC-Br cumprem de forma satisfatória seu papel de aproximar o tratamento que o BCB concede. O <em>bottom-up</em>, por sua vez, desvia um tanto mais das séries oficiais. Volto a esse ponto mais à frente.</p>
+<p>Olhar apenas para os grandes agregados, contudo, tem um limite. Num total que soma quinze ou vinte modalidades, um perfil sazonal que eu errei para mais em uma pode ser cancelado por outro que errei para menos em outra, e a soma bate mesmo com as partes tortas.</p>
+<p>Posso “testar” esse cancelamento. O BCB publica séries desagregadas com versão oficial dessazonalizada, o que possibilita então um teste que não permite esse cancelamento: rodar a rotina <em>top-down</em> nas séries desagregadas e confrontar com o gabarito.</p>
+<p>Aqui, me debruço sobre quatro séries: capital de giro total (PJ/livre), total não rotativo (PF/livre), aquisição de veículos (PF/livre) e cartão de crédito à vista (PF/livre). Algumas dessas também são agregados, o que possibilitaria o <em>bottom-up</em>, mas foco aqui apenas no <em>top-down</em>. A escada de testes e o <em>scorecard</em> são aplicados diretamente às séries publicadas, e comparo abaixo com as oficiais:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset tabset-figuras">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">Capital de giro</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Total não rotativo</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-3" role="tab" aria-controls="tabset-1-3" aria-selected="false" href="">Aquisição de veículos</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-4" role="tab" aria-controls="tabset-1-4" aria-selected="false" href="">Cartão à vista</a></li></ul>
+<div class="tab-content tabset-figuras">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-gabarito-giro" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gabarito-giro-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-giro-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-giro-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12: Capital de giro total (PJ, livre): nossa rotina contra a do BCB.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-gabarito-naorotativo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gabarito-naorotativo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-naorotativo-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-naorotativo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;13: Total não rotativo (PF, livre): nossa rotina contra a do BCB.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-3-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-gabarito-veiculos" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gabarito-veiculos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-veiculos-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-veiculos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;14: Aquisição de veículos (PF, livre): nossa rotina contra a do BCB.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-1-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-4-tab">
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-gabarito-cartao" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gabarito-cartao-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-cartao-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-cartao-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;15: Cartão de crédito à vista (PF, livre): nossa rotina contra a do BCB.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div id="tbl-gabarito" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-gabarito-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;4
+</figcaption>
+<div aria-describedby="tbl-gabarito-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 7%">
+<col style="width: 35%">
+<col style="width: 15%">
+<col style="width: 12%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SGS</th>
+<th style="text-align: left;">modalidade</th>
+<th style="text-align: right;">corr. nível</th>
+<th style="text-align: right;">corr. MoM</th>
+<th style="text-align: right;">dp da dif. MoM (p.p.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">20642</td>
+<td style="text-align: left;">Capital de giro - Total</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.986</td>
+<td style="text-align: right;">2.401</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20663</td>
+<td style="text-align: left;">Total não rotativo</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.967</td>
+<td style="text-align: right;">1.361</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">20673</td>
+<td style="text-align: left;">Aquisição de veículos</td>
+<td style="text-align: right;">0.999</td>
+<td style="text-align: right;">0.969</td>
+<td style="text-align: right;">1.798</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">20681</td>
+<td style="text-align: left;">Cartão de crédito - À vista</td>
+<td style="text-align: right;">1.000</td>
+<td style="text-align: right;">0.959</td>
+<td style="text-align: right;">1.200</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>A rotina vai muito bem no nível desagregado. A pior das quatro correlações de nível é 0.999, e a pior de variação mensal, 0.959. O desvio-padrão da diferença de variação mensal contra o gabarito tem mediana de 1.58 p.p. aqui, contra 1.10 p.p. nos 9 agregados da seção anterior.</p>
+<blockquote class="blockquote">
+<p>Lembrando que os metadados do BCB dizem que “o método empregado é o X-13 Arima Seats”, sem cravar qual decomposição foi usada, X-11 ou SEATS. Também não diz se o software é o do Census ou o JDemetra+, que dão resultados próximos mas não idênticos.</p>
+</blockquote>
+<p>Essa tabela joga luz num argumento interessante. Se a minha rotina reproduz de perto o ajuste oficial nas quatro séries desagregadas em que dá para comparar, há motivo para confiar nela nas outras 69, onde não há gabarito nenhum. Porém, como demonstrado nos resultados do <em>bottom-up</em>, o melhor caminho (sendo o objetivo replicar as séries oficiais) parece ser o <em>top-down</em>.</p>
+<p>Isso parece um paradoxo, mas há algumas razões. Um filtro sazonal não satisfaz uma espécie de propriedade de aditividade (como já falado antes), não tenho acesso aos pesos oficiais dos fatores de calendário usados e também não sei exatamente qual procedimento e que <em>software</em> o BCB usa. Ademais, acredito que pode haver outra explicação mais interessante para esse fenômeno do descasamento entre <em>bottom-up</em> e <em>top-down</em>.</p>
+<p>É razoável pensar que o BCB divulgue a maior parte das séries em que realiza ajuste sazonal, se não todas, por <em>accountability</em> e pela natureza das regras de insulamento burocrático a que está submetido. Assim sendo, é bem possível que o meu <em>scorecard</em> decida dessazonalizar séries que o BCB, por motivos técnicos ou <em>ad-hoc</em>, escolheu não mexer, nascendo aí uma fonte de divergência grande que é carregada para cima no <em>bottom-up</em>.</p>
+<p>Dito isso tudo, para finalizar, termino o exercício com alguma convicção de que a escada que construí funciona e que consigo tanto aproximar as séries de concessões das oficiais quanto gerar ajustes confiáveis onde não há contrapartida oficial.</p>
+</section>
+<section id="o-que-eu-levo-daqui" class="level2">
+<h2 class="anchored" data-anchor-id="o-que-eu-levo-daqui">O que eu levo daqui</h2>
+<p><strong>Teste antes de ajustar, e com mais de um teste.</strong> O QS sozinho, que é o porteiro padrão da maioria das rotinas, deixou passar uma série claramente sazonal e não flagrou o desacordo na série provavelmente não-sazonal. Uma escada de testes como a que montei custa milissegundos e mostra, série a série, quando os testes discordam e por quê. Sem ela você não sabe quais dos seus vereditos são apertados.</p>
+<p><strong>A escolha entre X-11 e SEATS importa menos do que se supõe, e é por isso que vale testar.</strong> Nas 60 séries sazonais, o X-11 deixou sazonalidade residual em 2 e o SEATS em 4. O scorecard não existe para otimizar o caso médio. Existe para achar as poucas séries onde um dos dois falha, as 2 onde os dois falham, e as 13 que não deveriam ser ajustadas.</p>
+<p><strong>Modele calendário.</strong> Os fatores de calendário mudaram o ajuste mais do que a escolha entre métodos, e mudaram o próprio veredito de sazonalidade em 6 séries, todas no sentido de revelar sazonalidade que o ruído de dias úteis escondia, nenhuma no sentido contrário.</p>
+<p><strong>E deixe a rotina falar.</strong> A decisão de projeto mais importante do <em>runner</em> não foi estatística. Foi devolver uma linha de status por série, com os testes que rodaram, a escolha que saiu deles e a regra que a produziu. No final, isso me possibilitou entender as diferenças entre <em>bottom-up</em> e <em>top-down</em> e escolher o que usar. Uma rotina que devolve a série crua em silêncio quando o ajuste falha é pior do que uma que quebra, porque produz um número que parece uma série dessazonalizada e pode não ser.</p>
+<p>O código completo está em <a href="https://github.com/raphaludwig/raphaludwig.github.io/blob/main/blog/R/sa_runner.R"><code>blog/R/sa_runner.R</code></a>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+// Language switch. The navbar link (rel="alternate", declared in _quarto-en.yml /
+// _quarto-pt.yml) ships with a static href pointing at the other language's home.
+// This upgrades it to the counterpart of the *current* page, and emits the
+// matching hreflang <link>s.
+//
+// Degradation is deliberate: if the fetch fails (opening docs/ over file://, for
+// instance) the static home href stays and the button still works.
+(function () {
+  var link = document.querySelector('.navbar a.nav-link[rel="alternate"]');
+  if (!link) return;
+
+  var isPT = document.documentElement.lang === "pt";
+
+  // Derive both site roots from the href Quarto already resolved for this page's
+  // depth — more reliable than assuming the site is served from the domain root.
+  var declared = new URL(link.getAttribute("href"), location.href).pathname;
+  var enRoot = isPT
+    ? declared.replace(/index\.html$/, "")
+    : declared.replace(/pt\/index\.html$/, "");
+  var ptRoot = enRoot + "pt/";
+
+  var here = isPT ? ptRoot : enRoot;
+  var there = isPT ? enRoot : ptRoot;
+  if (location.pathname.indexOf(here) !== 0) return;
+  var rel = location.pathname.slice(here.length) || "index.html";
+
+  // Match on the slug with the .pt suffix made optional, rather than on the raw
+  // path: a post's EN file drops the .pt (0001-x.pt.qmd -> 0001-x.qmd), so once
+  // it is translated the two trees stop mirroring each other path-for-path.
+  //
+  // Not matched on the numeric prefix — it is a *series* number here, shared by
+  // every part of a multi-post series (0001-...-pt1-, 0001-...-pt2-).
+  var stem = rel.replace(/\.html$/, "").replace(/\.pt$/, "");
+  var isPost = rel.indexOf("blog/") === 0 && rel !== "blog/index.html";
+
+  fetch(there + "search.json")
+    .then(function (r) { return r.json(); })
+    .then(function (entries) {
+      var pages = {};
+      entries.forEach(function (e) { pages[e.href.split("#")[0]] = true; });
+
+      // Both profiles render every post, so each tree holds both language files.
+      // Prefer the one actually written in the target language; the other is the
+      // untranslated placeholder and only wins when the preferred one is absent.
+      var order = isPT
+        ? [stem + ".html", stem + ".pt.html"]   // going to EN
+        : [stem + ".pt.html", stem + ".html"];  // going to PT
+      var target = order.filter(function (c) {
+        return pages[c];
+      })[0] || (isPost ? "blog/index.html" : "index.html");
+
+      link.setAttribute("href", there + target);
+
+      var alt = document.createElement("link");
+      alt.rel = "alternate";
+      alt.hreflang = isPT ? "en" : "pt";
+      alt.href = new URL(there + target, location.href).href;
+      document.head.appendChild(alt);
+
+      var self = document.createElement("link");
+      self.rel = "alternate";
+      self.hreflang = isPT ? "pt" : "en";
+      self.href = location.href.split("#")[0];
+      document.head.appendChild(self);
+    })
+    .catch(function () { /* keep the static home fallback */ });
+})();
+</script>
+<script src="../assets/js/lightbox.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Raphael Ludwig</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:raphaludwig@gmail.com">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/raphael-ludwig-167347414">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

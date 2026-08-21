@@ -80,3 +80,60 @@
   max-height: 100%;
   border-radius: 8px;
 }
+
+/* ── Tabelas dos posts ──
+   O kable sai sem nenhum controle de largura: com 10 colunas o cabeçalho quebra
+   em duas ou três linhas e as colunas de texto longo comem o espaço das curtas. */
+#quarto-document-content table th,
+.quarto-float table th {
+  vertical-align: middle;
+}
+
+/* Cabeçalho numa linha só; as colunas de texto longo cedem a largura. */
+.tbl-compact table {
+  font-size: 0.86rem;
+}
+.tbl-compact table th {
+  white-space: nowrap;
+  text-align: center;
+}
+.tbl-compact table td {
+  vertical-align: middle;
+}
+/* modalidade e razão: as duas únicas colunas de texto corrido. */
+.tbl-compact table td:nth-child(2) { max-width: 11rem; }
+.tbl-compact table td:last-child {
+  max-width: 9rem;
+  font-size: 0.95em;
+  line-height: 1.25;
+}
+
+/* Tabela curta: largura pelo conteúdo, não pelos 900px do container. */
+.tbl-narrow table {
+  width: auto;
+  min-width: 24rem;
+}
+.tbl-narrow table th { white-space: nowrap; }
+
+/* ── Painel de abas (figuras alternáveis) ── */
+.tabset-figuras .nav-tabs { border-bottom: 1px solid var(--pal-border); }
+.tabset-figuras .nav-tabs .nav-link {
+  color: var(--pal-text-mute);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  font-weight: 600;
+  transition: color 0.18s ease, border-color 0.18s ease;
+}
+.tabset-figuras .nav-tabs .nav-link:hover { color: var(--pal-accent); }
+.tabset-figuras .nav-tabs .nav-link.active {
+  color: var(--pal-accent);
+  background: transparent;
+  border-bottom-color: var(--pal-accent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabset-figuras .tab-pane.active {
+    animation: contentFadeIn 0.3s ease both;
+  }
+}

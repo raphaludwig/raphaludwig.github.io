@@ -5,6 +5,14 @@
 # Java 8 e não há garantia de que sigam carregando depois. Este script é a
 # config "A" do teste controlado da migração — sem ele não há contra o quê
 # comparar o motor novo.
+#
+# HISTÓRICO, NÃO RODA MAIS. Ficou aqui como procedência dos CSVs
+# `baseline_rjdemetra_2x_*` que estão em data/seasonal-adjustment/, e não como
+# script executável. O `R/sa_runner.R` que ele carrega migrou para a família
+# rjd3: aborta em Java < 21 (o que este script exige que NÃO aconteça),
+# `carregar_fatores()` devolve o pacote do 3.x em vez de uma matriz e
+# `rodar_lote()` ganhou o argumento `calendario`. Reproduzir o baseline exigiria
+# o `sa_runner.R` na revisão fe26c8d, RJDemetra 0.2.8 e Java 8.
 
 setwd("C:/dev/raphaludwig.github.io/blog")
 suppressMessages(source("R/sa_runner.R"))

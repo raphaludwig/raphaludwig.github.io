@@ -20,6 +20,14 @@ project:
     - .nojekyll
     - cv/Raphael_Ludwig_CV.pdf
     - cv/Raphael_Ludwig_CV_EN.pdf
+    # Sem estas exclusões o Quarto trata os diretórios de saída como recursos do
+    # projeto e copia um dentro do outro: cada build gera docs/_site/,
+    # docs/pt/_site/ e docs/pt/_site-en/_site/, e o build seguinte copia aquilo de
+    # novo. Cresce a cada rodada — já chegou a 8 GB uma vez.
+    - "!_site/"
+    - "!_site-en/"
+    - "!_site-pt/"
+    - "!docs/"
 
 website:
   title: "Raphael Ludwig"

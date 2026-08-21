@@ -19,13 +19,30 @@ de saída publicado do Quarto e é apagado a cada build — ver 0001.
 Aqui: decisão **perene, que vale para mais de um post** — infra do site ou convenção
 do blog, sempre com razão e trade-off.
 
-Em `blog/notes/`, um arquivo por post: tudo que é **daquele post só**. Isso inclui
-duas coisas de vidas diferentes, e está tudo bem que dividam o arquivo —
+Em `blog/notes/`, **uma pasta por post**: tudo que é daquele post só. Dentro dela
+convivem duas coisas de vidas diferentes e, desde 17/08/2026, em arquivos
+separados — porque só uma das duas merece ser versionada:
 
-- nota de trabalho, que morre quando o post é publicado (estado, como retomar,
-  pendências);
-- decisão de **modelagem**, que não morre: justifica código que está no ar, como
-  o post de Kalman construir o modelo bssm nativamente em vez de usar `as_bssm()`.
+| arquivo | o que é | versionado? |
+|---|---|---|
+| `nota.md` | nota de trabalho: estado, como retomar, pendências. Morre quando o post é publicado. | **não** (`.gitignore`) |
+| `adr-NNNN-*.md` | decisão de **modelagem**, que não morre: justifica código que está no ar. | **sim** |
+
+O ADR precisa ser legível por terceiros — é o gênero dele —, enquanto a nota de
+trabalho é rascunho endereçado à próxima sessão e envelhece mal em público.
+
+**A numeração dos ADRs de post recomeça em `0001` dentro de cada pasta** e é
+independente da série da raiz. `adr/0001` (site bilíngue) e
+`blog/notes/0002-ajuste-sazonal-credito/adr-0001` (usar `rjd3` em vez de
+`RJDemetra`) são documentos diferentes, e isso é intencional: a série da raiz é do
+repositório, a de cada pasta é do post.
+
+Existentes:
+
+| post | ADR |
+|---|---|
+| 0001 (Kalman / NAIRU) | [decisões de modelagem](../blog/notes/0001-kalman-filter/adr-0001-decisoes-de-modelagem.md) — bssm nativo em vez de `as_bssm()`, estimação em estágio único, fonte pública do EX3 Serviços |
+| 0002 (ajuste sazonal / crédito) | [usar a família `rjd3`](../blog/notes/0002-ajuste-sazonal-credito/adr-0001-rjd3-sobre-rjdemetra.md) — EOL do JDemetra+ 2.x em dez/2026 |
 
 Material que o autor **não** escreveu (papers, PDFs, código de referência) e
 exploração descartável não entram no repo — ficam na pasta do tema em

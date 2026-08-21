@@ -4,13 +4,13 @@
 # sazonalidade + scorecard de escolha de método, (3) agregação bottom-up sobre
 # a hierarquia de concessões, com contagem de folhas.
 #
-# Nenhuma função aqui devolve a série crua disfarçada de série ajustada: quando
+# Nenhuma função aqui devolve a série crua disfarçada de série ajustada. Quando
 # o ajuste não acontece, `status` diz por quê.
 
-# O motor é o JDemetra+ 3.x, via família `rjd3` — não o `RJDemetra`, que está
+# O motor é o JDemetra+ 3.x, via família `rjd3`, e não o `RJDemetra`, que está
 # preso ao JDemetra+ 2.x e cujo runtime chega ao fim da vida em dezembro de 2026.
 # Exige Java 21+ (aqui: OpenJDK 25). O `seastests` continua no degrau 3 de
-# propósito: ele é voto independente do motor que faz o ajuste.
+# propósito, para ser um voto independente do motor que faz o ajuste.
 suppressMessages({
   library(dplyr)
   library(purrr)
@@ -23,8 +23,8 @@ suppressMessages({
 
 # Falha com echo, e cedo. Sob uma JVM velha os pacotes carregam sem reclamar e
 # só quebram na primeira chamada, com um `UnsupportedClassVersionError` cru que
-# não diz o que fazer. Acontece de verdade: basta um shell aberto antes de o
-# JAVA_HOME ter sido apontado para o JDK novo.
+# não diz o que fazer. Acontece de verdade. Basta abrir o shell antes de apontar
+# o JAVA_HOME para o JDK novo.
 local({
   v <- rJava::.jcall("java/lang/System", "S", "getProperty", "java.version")
   maior <- as.integer(str_extract(v, "^\\d+"))
@@ -42,8 +42,8 @@ local({
 
 #' Lê o snapshot congelado das séries do SGS
 #'
-#' O render lê CSV, não a API. Não é só conveniência de disponibilidade (o SGS
-#' devolve 502 com frequência): o post inteiro é condicional à amostra como os
+#' O render lê CSV, não a API. Não é só conveniência de disponibilidade, embora
+#' o SGS devolva 502 com frequência. O post inteiro é condicional à amostra: os
 #' p-valores dos testes, a escolha X-11 vs SEATS série a série e os gaps de
 #' reconciliação mudariam a cada revisão publicada.
 carregar_series <- function(codigos, cache_path) {
@@ -58,7 +58,7 @@ carregar_series <- function(codigos, cache_path) {
   filter(db, codigo %in% codigos)
 }
 
-#' Regrava o snapshot a partir do SGS — rodar À MÃO, nunca no render
+#' Regrava o snapshot a partir do SGS. Rodar À MÃO, nunca no render
 baixar_snapshot <- function(
   codigos,
   cache_path,
@@ -140,8 +140,8 @@ carregar_fatores <- function(path, grupo = "ibcbr") {
 # 2. Escada de testes
 # ---------------------------------------------------------------------------
 
-#' Degraus 2 a 4 da escada: QS, Friedman, Kruskal-Wallis, WO, sazonalidade
-#' determinística (seasdum) e raiz unitária sazonal (OCSB).
+#' Degraus 2 a 4 da escada: QS, Friedman, Kruskal-Wallis, WO e sazonalidade
+#' determinística (seasdum).
 #'
 #' O degrau 1 (subseries plot) é visual e vive no post, não aqui.
 testes_sazonalidade <- function(x) {
@@ -153,11 +153,7 @@ testes_sazonalidade <- function(x) {
     wo = tryCatch(seastests::isSeasonal(x, test = "wo"), error = function(e) {
       NA
     }),
-    seasdum_p = p(seastests::seasdum),
-    ocsb_stat = tryCatch(
-      as.numeric(seastests::ocsb(x)$stat),
-      error = function(e) NA_real_
-    )
+    seasdum_p = p(seastests::seasdum)
   )
 }
 
@@ -172,7 +168,7 @@ ITENS_DIC <- c(
   "diagnostics.seas-sa-combined3" # o mesmo, restrito aos últimos 3 anos
 )
 
-#' Specs pinadas — nunca o default
+#' Specs pinadas, nunca o default
 #'
 #' Os defaults divergem entre as gerações: `RJDemetra::x13_spec()` entregava
 #' RSA5c, `rjd3x13::x13_spec()` entrega rsa4. Depender do default trocaria o
@@ -180,7 +176,7 @@ ITENS_DIC <- c(
 #'
 #' `calendario = TRUE` põe os seis fatores do IBC-BR **no lugar** do bloco de
 #' dias úteis do JDemetra+, em vez de empilhar um sobre o outro. É o que
-#' `set_tradingdays(option = "UserDefined")` faz — `add_usrdefvar()` não serve
+#' `set_tradingdays(option = "UserDefined")` faz. O `add_usrdefvar()` não serve
 #' aqui, porque a própria documentação exclui o componente de calendário do que
 #' ela sabe alocar.
 spec_x13 <- function(fatores, calendario = TRUE) {
@@ -236,14 +232,24 @@ ajustar_seats <- function(x, fatores, calendario = TRUE) {
   )
 }
 
+#' Contrafactual "sem calendário nenhum", via RSA3
+#'
+#' Não confundir com `calendario = FALSE`, que ainda deixa o bloco de dias úteis
+#' do próprio JDemetra+ ligado (é a réplica do 2.x, onde os fatores entravam por
+#' fora como regressores indefinidos). O RSA3 desliga o tratamento de calendário
+#' inteiro, e é ele que responde "quanto muda por causa do calendário?".
+ajustar_x13_rsa3 <- function(x) {
+  rjd3x13::x13(x, rjd3x13::x13_spec("rsa3"), userdefined = ITENS_DIC)
+}
+
 #' Série dessazonalizada, seja qual for o motor
 #'
 #' As duas saídas não têm a mesma forma. O X-13 devolve séries diretas com a
 #' nomenclatura das tabelas do X-11 (`d11final` = série ajustada, `d12final` =
 #' tendência, `d16` = fatores sazonais, `d13final` = irregular, `e1` = original).
 #' O TRAMO-SEATS devolve nomes semânticos (`sa`, `t`, `s`, `i`, `series`), mas
-#' cada um embrulhado numa lista `$data` (amostra) + `$fcasts` (previsão) — só o
-#' `$data` interessa aqui.
+#' cada um embrulhado numa lista com `$data` (amostra) e `$fcasts` (previsão).
+#' Só o `$data` interessa aqui.
 dados_de <- function(x) as.numeric(if (is.list(x)) x$data else x)
 
 serie_sa_ts <- function(fit) {
@@ -274,26 +280,31 @@ componentes <- function(fit) {
   }
 }
 
-#' Diagnósticos pós-ajuste, do próprio motor que fez o ajuste
+#' Diagnósticos pós-ajuste da série ajustada
 #'
-#' `qs_sa` e `f_sa` medem sazonalidade residual na série ajustada; `l3` faz o
-#' mesmo restrito aos últimos 3 anos, que é onde a sazonalidade residual
-#' costuma aparecer primeiro. p-valor baixo = sobrou sazonalidade = ruim.
-#' NOTA DE TRADUÇÃO 2.x -> 3.x: o `l3`
+#' `qs_sa` e `f_sa` medem sazonalidade residual na série ajustada; `combined3`
+#' faz o mesmo restrito aos últimos 3 anos, que é onde a sazonalidade residual
+#' costuma aparecer primeiro. Nos p-valores, baixo = sobrou sazonalidade = ruim;
+#' no `combined3`, que é categórico, o valor ruim é `Present`.
 #'
-#' O 2.x publicava uma linha "Residual seasonality (last 3 years)" com p-valor
-#' pronto. O dicionário do 3.x não tem esse p-valor — só `seas-sa-combined3`,
-#' que devolve veredito (`Present`/`None`), não número. Para o scorecard
-#' continuar comparando p-valores entre os dois métodos, o `l3` passa a ser o
-#' QS restrito aos últimos 3 anos da série ajustada.
+#' Sobre o recorte de 3 anos, que mudou na tradução do 2.x para o 3.x. O 2.x
+#' publicava uma linha "Residual seasonality (last 3 years)" com p-valor pronto.
+#' O dicionário do 3.x não tem esse p-valor, só o `seas-sa-combined3`, que
+#' devolve veredito (`Present`/`None`) e não número. A primeira tradução aqui
+#' recalculou um QS à mão sobre os últimos 36 meses, para o scorecard seguir
+#' comparando p-valor com p-valor. Não funcionou: ~36 observações já
+#' diferenciadas, num teste unilateral, colapsam a estatística a zero, e o
+#' p-valor saía **exatamente 1 nas 73 séries, nos dois motores**. O critério
+#' nunca separava nada. Por isso o scorecard passou a ler o veredito categórico
+#' do próprio motor, que é o que este campo devolve.
 #'
-#' **Sobre a primeira diferença**: o QS do `rjd3toolkit` é aplicado à série como
-#' ela chega, e uma série ajustada em nível ainda tem tendência — a
-#' autocorrelação da tendência domina e o p-valor vai a zero em toda série,
-#' sazonal ou não. Diferenciar antes é o que o próprio motor faz internamente,
-#' e é o que torna `seasonality_qs()` comparável ao `seas.qstest.sa` do
-#' diagnóstico interno. O veredito `combined3` vai junto no status, como
-#' conferência independente.
+#' Sobre a primeira diferença. O `rjd3toolkit` aplica o QS à série como ela
+#' chega, e uma série ajustada em nível ainda tem tendência. A autocorrelação da
+#' tendência domina e o p-valor vai a zero em toda série, sazonal ou não.
+#' Diferenciar antes é o que o próprio motor faz internamente.
+#' `qs_sa` e `l3` saem os dois dessa receita, sobre a mesma transformação, para
+#' que o número do X-11 e o do SEATS sejam comparáveis. O veredito `combined3`
+#' vai junto no status, como conferência independente.
 diagnosticos <- function(fit) {
   p <- function(no) {
     tryCatch(as.numeric(no$pvalue), error = function(e) NA_real_)
@@ -301,19 +312,27 @@ diagnosticos <- function(fit) {
   d <- fit$result$diagnostics
   sa <- tryCatch(serie_sa_ts(fit), error = function(e) NULL)
 
+  # QS sobre a mesma transformação nos dois motores. O `seas.qstest.sa` do
+  # relatório não serve para comparar X-11 com SEATS. O motor diferencia a SA
+  # conforme o (d, bd) do modelo ARIMA que ele próprio escolheu, e quando o
+  # TRAMO escolhe bd = 0 e o RegARIMA do X-13 escolhe bd = 1, o QS do SEATS sai
+  # de uma série que ainda tem tendência e o do X-11 não. Aqui os dois números
+  # vêm do mesmo objeto: primeira diferença da SA, sobre a amostra inteira.
+  qs <- function() {
+    if (is.null(sa)) {
+      return(NA_real_)
+    }
+    tryCatch(
+      as.numeric(
+        rjd3toolkit::seasonality_qs(diff(sa), period = 12)$pvalue
+      ),
+      error = function(e) NA_real_
+    )
+  }
+
   tibble(
-    qs_sa = p(d$seas.qstest.sa),
+    qs_sa = qs(),
     f_sa = p(d$seas.ftest.sa),
-    l3 = if (is.null(sa)) {
-      NA_real_
-    } else {
-      tryCatch(
-        as.numeric(
-          rjd3toolkit::seasonality_qs(diff(sa), period = 12, nyears = -3)$pvalue
-        ),
-        error = function(e) NA_real_
-      )
-    },
     combined3 = tryCatch(
       as.character(fit$user_defined[["diagnostics.seas-sa-combined3"]]),
       error = function(e) NA_character_
@@ -334,15 +353,22 @@ qualidade_x11 <- function(fit) {
 
 #' Veredito do teste combinado (Ladiray & Quenneville)
 #'
-#' É o mesmo teste que o 2.x expunha como `combined_test`: a variante calculada
+#' É o mesmo teste que o 2.x expunha como `combined_test`, a variante calculada
 #' sobre as razões SI, `seas-si-combined`. O dicionário do 3.x oferece outras
 #' variantes (`-sa-`, `-lin-`, `-res-`) que respondem perguntas diferentes e
 #' **não** são substitutas.
 veredito_combinado <- function(fit) {
-  tryCatch(
+  v <- tryCatch(
     as.character(fit$user_defined[["diagnostics.seas-si-combined"]]),
     error = function(e) NA_character_
   )
+  # `NULL[["chave"]]` devolve NULL em vez de dar erro, então o tryCatch acima não
+  # dispara quando o ajuste falhou e `fit` é NULL: o veredito sairia como
+  # `character(0)`, que se propaga em silêncio. `case_when()` recicla todas as
+  # condições para tamanho 0, `escolher_metodo()` devolve `character(0)` e o
+  # `switch()` do runner quebra com "EXPR must be a length 1 vector" — a série
+  # vira `erro` em vez de cair no outro motor.
+  if (length(v) != 1) NA_character_ else v
 }
 
 # ---------------------------------------------------------------------------
@@ -357,14 +383,17 @@ veredito_combinado <- function(fit) {
 #' um ajuste), depois o recorte recente, e só então qualidade da decomposição.
 escolher_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
   falha <- function(p) !is.na(p) && p < limiar
+  # O recorte de 3 anos é categórico, não p-valor: `Present` = sobrou
+  # sazonalidade nos últimos 3 anos = o método falhou ali.
+  falha3 <- function(v) !is.na(v) && v == "Present"
 
   case_when(
     combined %in% c("None", "ProbablyNone") ~ "nenhum",
     falha(dx13$qs_sa) & falha(dseats$qs_sa) ~ "nenhum",
     falha(dseats$qs_sa) & !falha(dx13$qs_sa) ~ "x11",
     falha(dx13$qs_sa) & !falha(dseats$qs_sa) ~ "seats",
-    falha(dseats$l3) & !falha(dx13$l3) ~ "x11",
-    falha(dx13$l3) & !falha(dseats$l3) ~ "seats",
+    falha3(dseats$combined3) & !falha3(dx13$combined3) ~ "x11",
+    falha3(dx13$combined3) & !falha3(dseats$combined3) ~ "seats",
     !is.na(qx11$Q) & qx11$Q > 1 ~ "seats",
     .default = "x11"
   )
@@ -372,6 +401,9 @@ escolher_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
 
 razao_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
   falha <- function(p) !is.na(p) && p < limiar
+  # O recorte de 3 anos é categórico, não p-valor: `Present` = sobrou
+  # sazonalidade nos últimos 3 anos = o método falhou ali.
+  falha3 <- function(v) !is.na(v) && v == "Present"
 
   case_when(
     combined %in% c("None", "ProbablyNone") ~ str_glue(
@@ -383,8 +415,10 @@ razao_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
       !falha(dx13$qs_sa) ~ "SEATS deixa sazonalidade residual (QS)",
     falha(dx13$qs_sa) &
       !falha(dseats$qs_sa) ~ "X-11 deixa sazonalidade residual (QS)",
-    falha(dseats$l3) & !falha(dx13$l3) ~ "SEATS falha nos últimos 3 anos",
-    falha(dx13$l3) & !falha(dseats$l3) ~ "X-11 falha nos últimos 3 anos",
+    falha3(dseats$combined3) &
+      !falha3(dx13$combined3) ~ "SEATS deixa sazonalidade residual nos últimos 3 anos",
+    falha3(dx13$combined3) &
+      !falha3(dseats$combined3) ~ "X-11 deixa sazonalidade residual nos últimos 3 anos",
     !is.na(qx11$Q) & qx11$Q > 1 ~ str_glue(
       "Q = {round(qx11$Q, 2)} > 1, decomposição X-11 fraca"
     ),
@@ -401,8 +435,7 @@ razao_metodo <- function(combined, dx13, dseats, qx11, limiar = 0.05) {
 #'
 #' Devolve sempre duas coisas: uma linha de `status` (o que foi testado, o que
 #' foi decidido, por quê) e a série em `sa`. Quando `status != "ajustada"`, a
-#' coluna `value_sa` repete a série crua — mas isso está declarado, não
-#' escondido.
+#' coluna `value_sa` repete a série crua, e isso está declarado, não escondido.
 ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) {
   d <-
     db %>%
@@ -429,7 +462,7 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) 
   }
 
   sem_diag <- tibble(
-    qs_sa = NA_real_, f_sa = NA_real_, l3 = NA_real_, combined3 = NA_character_
+    qs_sa = NA_real_, f_sa = NA_real_, combined3 = NA_character_
   )
   testes <- testes_sazonalidade(x)
   combined <- veredito_combinado(fx13)
@@ -443,6 +476,23 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) 
 
   metodo <- escolher_metodo(combined, dx13, dseats, qx11)
   razao <- razao_metodo(combined, dx13, dseats, qx11)
+
+  # O scorecard decide olhando diagnósticos, e um motor que falhou entrega
+  # diagnósticos NA — que `falha()` lê como "não falhou". Sem esta guarda, os
+  # critérios 4 e 5 podem mandar para o SEATS uma série cujo `fseat` é NULL, e
+  # `serie_sa(NULL)` devolveria `numeric(0)`.
+  existe <- c(x11 = !is.null(fx13), seats = !is.null(fseat))
+  if (metodo %in% names(existe) && !existe[[metodo]]) {
+    alternativa <- setdiff(names(existe)[existe], metodo)
+    if (length(alternativa) == 1) {
+      razao <- str_glue("{razao}; {metodo} não ajustou, caiu para {alternativa}")
+      metodo <- alternativa
+    } else {
+      razao <- str_glue("{razao}; {metodo} não ajustou e não há alternativa")
+      metodo <- "nenhum"
+    }
+    razao <- as.character(razao)
+  }
 
   valores_sa <- switch(
     metodo,
@@ -471,8 +521,6 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) 
       M7 = qx11$M7,
       qs_sa_x11 = dx13$qs_sa,
       qs_sa_seats = dseats$qs_sa,
-      l3_x11 = dx13$l3,
-      l3_seats = dseats$l3,
       combined3_x11 = dx13$combined3,
       combined3_seats = dseats$combined3,
       metodo = metodo,
@@ -536,9 +584,9 @@ folhas_de <- function(codigo, h) {
 
 #' Soma bottom-up das folhas dessazonalizadas
 #'
-#' `na.rm = FALSE` de propósito: se uma folha falta num mês, o agregado daquele
-#' mês tem que ser NA e não um número que parece completo. As colunas
-#' `n_folhas_*` existem para que isso seja diagnosticável em vez de misterioso.
+#' `na.rm = FALSE` de propósito. Se uma folha falta num mês, o agregado daquele
+#' mês tem que ser NA, e não um número que parece completo. As colunas
+#' `n_folhas_*` estão ali para que isso apareça em vez de virar mistério.
 bottom_up <- function(codigo, h, sa) {
   folhas <- folhas_de(codigo, h)
   sa %>%
@@ -550,6 +598,15 @@ bottom_up <- function(codigo, h, sa) {
     ) %>%
     mutate(
       codigo = .env$codigo,
-      n_folhas_esperadas = length(folhas)
+      n_folhas_esperadas = length(folhas),
+      # `na.rm = FALSE` protege contra valor NA, não contra linha ausente. Uma
+      # folha que terminou como `erro` não contribui linha nenhuma, e a soma
+      # sairia menor — sem NA e sem aviso. Aqui ela vira NA, como manda a regra
+      # declarada acima.
+      value_sa = if_else(
+        n_folhas_presentes < n_folhas_esperadas,
+        NA_real_,
+        value_sa
+      )
     )
 }
