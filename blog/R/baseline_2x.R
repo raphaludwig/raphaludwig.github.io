@@ -3,7 +3,7 @@
 # Rodar À MÃO, e obrigatoriamente ANTES de trocar o Java da máquina para a
 # versão 21+ que a família rjd3 exige: os jars 2.2.5 foram compilados para
 # Java 8 e não há garantia de que sigam carregando depois. Este script é a
-# config "A" do teste controlado da migração — sem ele não há contra o quê
+# config "A" do teste controlado da migração - sem ele não há contra o quê
 # comparar o motor novo.
 #
 # HISTÓRICO, NÃO RODA MAIS. Ficou aqui como procedência dos CSVs

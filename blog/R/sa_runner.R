@@ -366,7 +366,7 @@ veredito_combinado <- function(fit) {
   # dispara quando o ajuste falhou e `fit` é NULL: o veredito sairia como
   # `character(0)`, que se propaga em silêncio. `case_when()` recicla todas as
   # condições para tamanho 0, `escolher_metodo()` devolve `character(0)` e o
-  # `switch()` do runner quebra com "EXPR must be a length 1 vector" — a série
+  # `switch()` do runner quebra com "EXPR must be a length 1 vector" - a série
   # vira `erro` em vez de cair no outro motor.
   if (length(v) != 1) NA_character_ else v
 }
@@ -478,7 +478,7 @@ ajustar_serie <- function(db, codigo, fatores, min_obs = 48, calendario = TRUE) 
   razao <- razao_metodo(combined, dx13, dseats, qx11)
 
   # O scorecard decide olhando diagnósticos, e um motor que falhou entrega
-  # diagnósticos NA — que `falha()` lê como "não falhou". Sem esta guarda, os
+  # diagnósticos NA - que `falha()` lê como "não falhou". Sem esta guarda, os
   # critérios 4 e 5 podem mandar para o SEATS uma série cujo `fseat` é NULL, e
   # `serie_sa(NULL)` devolveria `numeric(0)`.
   existe <- c(x11 = !is.null(fx13), seats = !is.null(fseat))
@@ -601,7 +601,7 @@ bottom_up <- function(codigo, h, sa) {
       n_folhas_esperadas = length(folhas),
       # `na.rm = FALSE` protege contra valor NA, não contra linha ausente. Uma
       # folha que terminou como `erro` não contribui linha nenhuma, e a soma
-      # sairia menor — sem NA e sem aviso. Aqui ela vira NA, como manda a regra
+      # sairia menor - sem NA e sem aviso. Aqui ela vira NA, como manda a regra
       # declarada acima.
       value_sa = if_else(
         n_folhas_presentes < n_folhas_esperadas,

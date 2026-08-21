@@ -624,7 +624,7 @@ Tabela&nbsp;1
 </div>
 </div>
 <blockquote class="blockquote">
-<p>Uma nota de leitura antes de olhar os números: a função calcula <strong>cinco</strong> colunas, não três. As três primeiras são os testes deste degrau; as duas últimas — dummies sazonais (<code>seasdum</code>) e WO — respondem à pergunta do degrau 4 e estão explicadas lá.</p>
+<p>Uma nota de leitura antes de olhar os números: a função calcula <strong>cinco</strong> colunas, não três. As três primeiras são os testes deste degrau; as duas últimas - dummies sazonais (<code>seasdum</code>) e WO - respondem à pergunta do degrau 4 e estão explicadas lá.</p>
 </blockquote>
 <p>Repare no que acontece na segunda linha, o consignado a servidores públicos. O <strong>QS dá 0.051</strong>, não rejeitando a 5% por muito pouco. Como o QS e a ACF olham para o mesmo objeto, não é coincidência que os dois deixem de apontar sazonalidade. Se uma rotina de produção usa o QS como porteiro único, essa série passa direto, sem ajuste. Friedman e Kruskal-Wallis, por sua vez, rejeitam com p-valores duas a três ordens de grandeza menores, e o veredito combinado de Webel-Ollech diz que é sazonal (exploro esse teste mais adiante). É uma série sazonal que o teste mais popular deixa passar.</p>
 <p>E a terceira linha mostra um caso ainda mais desconfortável. QS não rejeita nada (1), mas Friedman (0.024) e Kruskal-Wallis (0.01) rejeitam a 5%. Os testes discordam de verdade. O próximo degrau ajuda a chegar numa conclusão.</p>
@@ -1052,7 +1052,7 @@ Tabela&nbsp;2
 <h2 class="anchored" data-anchor-id="aplicando-em-lote">Aplicando em lote</h2>
 <p>A rotina inteira vira uma função, <code>ajustar_serie()</code>, que devolve duas coisas: a série ajustada e uma linha de status dizendo o que foi testado, o que foi decidido e por quê.</p>
 <p>Os cinco testes do <code>seastests</code>, os degraus 3 e 4, são calculados para todas as séries e viajam junto no relatório, mas não entram na decisão. <code>escolher_metodo()</code> recebe apenas o veredito do teste combinado, os diagnósticos de sazonalidade residual e o <code>Q</code> do X-11. Os degraus ficam ali como registro para quando uma série chamar atenção.</p>
-<div class="cell" data-cache.extra="4314ca907b61989a36bace8b90ff7e51">
+<div class="cell" data-cache.extra="0202f954d92bd356be95cb83dec4cb62">
 <details class="code-fold">
 <summary>Mostrar código</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resultado <span class="ot">&lt;-</span> <span class="fu">rodar_lote</span>(db, hierarquia<span class="sc">$</span>codigo, fatores, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
@@ -1142,7 +1142,7 @@ Figura&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão,
 </ul>
 <p>Se eu não tiver acesso às oficiais, qual usar?</p>
 <p>Ajuste sazonal não é uma operação linear, então as três dão resultados diferentes por construção.</p>
-<div class="cell" data-cache.extra="4314ca907b61989a36bace8b90ff7e51">
+<div class="cell" data-cache.extra="0202f954d92bd356be95cb83dec4cb62">
 <details class="code-fold">
 <summary>Mostrar código</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>alvos <span class="ot">&lt;-</span></span>
@@ -1248,7 +1248,7 @@ Figura&nbsp;11: Discordância na variação mensal entre as três versões, por 
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-giro-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-giro-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;12: Capital de giro total (PJ, livre): nossa rotina contra a do BCB.
+Figura&nbsp;12: Capital de giro total (PJ, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1264,7 +1264,7 @@ Figura&nbsp;12: Capital de giro total (PJ, livre): nossa rotina contra a do BCB.
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-naorotativo-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-naorotativo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;13: Total não rotativo (PF, livre): nossa rotina contra a do BCB.
+Figura&nbsp;13: Total não rotativo (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1280,7 +1280,7 @@ Figura&nbsp;13: Total não rotativo (PF, livre): nossa rotina contra a do BCB.
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-veiculos-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-veiculos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;14: Aquisição de veículos (PF, livre): nossa rotina contra a do BCB.
+Figura&nbsp;14: Aquisição de veículos (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1296,7 +1296,7 @@ Figura&nbsp;14: Aquisição de veículos (PF, livre): nossa rotina contra a do B
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-cartao-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-cartao-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;15: Cartão de crédito à vista (PF, livre): nossa rotina contra a do BCB.
+Figura&nbsp;15: Cartão de crédito à vista (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1402,7 +1402,7 @@ Tabela&nbsp;4
   var isPT = document.documentElement.lang === "pt";
 
   // Derive both site roots from the href Quarto already resolved for this page's
-  // depth — more reliable than assuming the site is served from the domain root.
+  // depth - more reliable than assuming the site is served from the domain root.
   var declared = new URL(link.getAttribute("href"), location.href).pathname;
   var enRoot = isPT
     ? declared.replace(/index\.html$/, "")
@@ -1418,7 +1418,7 @@ Tabela&nbsp;4
   // path: a post's EN file drops the .pt (0001-x.pt.qmd -> 0001-x.qmd), so once
   // it is translated the two trees stop mirroring each other path-for-path.
   //
-  // Not matched on the numeric prefix — it is a *series* number here, shared by
+  // Not matched on the numeric prefix - it is a *series* number here, shared by
   // every part of a multi-post series (0001-...-pt1-, 0001-...-pt2-).
   var stem = rel.replace(/\.html$/, "").replace(/\.pt$/, "");
   var isPost = rel.indexOf("blog/") === 0 && rel !== "blog/index.html";

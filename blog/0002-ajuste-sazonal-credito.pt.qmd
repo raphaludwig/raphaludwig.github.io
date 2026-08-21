@@ -366,7 +366,7 @@ tab_testes %>%
   )
 ```
 
-> Uma nota de leitura antes de olhar os números: a função calcula **cinco** colunas, não três. As três primeiras são os testes deste degrau; as duas últimas — dummies sazonais (`seasdum`) e WO — respondem à pergunta do degrau 4 e estão explicadas lá.
+> Uma nota de leitura antes de olhar os números: a função calcula **cinco** colunas, não três. As três primeiras são os testes deste degrau; as duas últimas - dummies sazonais (`seasdum`) e WO - respondem à pergunta do degrau 4 e estão explicadas lá.
 
 Repare no que acontece na segunda linha, o consignado a servidores públicos. O **QS dá `r round(tab_testes$qs_p[tab_testes$codigo == "20669"], 3)`**, não rejeitando a 5% por muito pouco. Como o QS e a ACF olham para o mesmo objeto, não é coincidência que os dois deixem de apontar sazonalidade. Se uma rotina de produção usa o QS como porteiro único, essa série passa direto, sem ajuste. Friedman e Kruskal-Wallis, por sua vez, rejeitam com p-valores duas a três ordens de grandeza menores, e o veredito combinado de Webel-Ollech diz que é sazonal (exploro esse teste mais adiante). É uma série sazonal que o teste mais popular deixa passar.
 
@@ -1173,7 +1173,7 @@ gab <-
   }) %>%
   list_rbind() %>%
   pivot_longer(c(nossa, oficial), names_to = "versao", values_to = "valor") %>%
-  mutate(versao = recode_values(versao, "nossa" ~ "nossa rotina", "oficial" ~ "oficial BCB"))
+  mutate(versao = recode_values(versao, "nossa" ~ "top-down", "oficial" ~ "oficial BCB"))
 
 # Mesmas três métricas da tabela abaixo, calculadas aqui porque a mediana do
 # `dp_mom` também é citada no texto depois da tabela.
@@ -1182,12 +1182,12 @@ resumo_gab <-
   pivot_wider(names_from = versao, values_from = valor) %>%
   arrange(codigo, date) %>%
   mutate(
-    mom_nossa = 100 * (`nossa rotina` / dplyr::lag(`nossa rotina`) - 1),
+    mom_nossa = 100 * (`top-down` / dplyr::lag(`top-down`) - 1),
     mom_ofic = 100 * (`oficial BCB` / dplyr::lag(`oficial BCB`) - 1),
     .by = codigo
   ) %>%
   reframe(
-    corr_nivel = cor(`nossa rotina`, `oficial BCB`, use = "complete.obs"),
+    corr_nivel = cor(`top-down`, `oficial BCB`, use = "complete.obs"),
     corr_mom = cor(mom_nossa, mom_ofic, use = "complete.obs"),
     dp_mom = sd(mom_nossa - mom_ofic, na.rm = TRUE),
     .by = c(codigo, modalidade)
@@ -1208,7 +1208,7 @@ grafico_gabarito <- function(cd) {
     scale_y_continuous(labels = scales::comma) +
     labs(
       title = first(d$modalidade),
-      subtitle = "Nossa rotina contra o gabarito do BCB, R$ milhões",
+      subtitle = "Top-down contra o gabarito do BCB, R$ milhões",
       x = NULL,
       caption = caption_blog("BCB")
     ) +
@@ -1222,7 +1222,7 @@ grafico_gabarito <- function(cd) {
 
 ```{r}
 #| label: fig-gabarito-giro
-#| fig-cap: "Capital de giro total (PJ, livre): nossa rotina contra a do BCB."
+#| fig-cap: "Capital de giro total (PJ, livre): o top-down contra o gabarito do BCB."
 #| echo: false
 #| fig-height: 4.2
 grafico_gabarito("20642")
@@ -1232,7 +1232,7 @@ grafico_gabarito("20642")
 
 ```{r}
 #| label: fig-gabarito-naorotativo
-#| fig-cap: "Total não rotativo (PF, livre): nossa rotina contra a do BCB."
+#| fig-cap: "Total não rotativo (PF, livre): o top-down contra o gabarito do BCB."
 #| echo: false
 #| fig-height: 4.2
 grafico_gabarito("20663")
@@ -1242,7 +1242,7 @@ grafico_gabarito("20663")
 
 ```{r}
 #| label: fig-gabarito-veiculos
-#| fig-cap: "Aquisição de veículos (PF, livre): nossa rotina contra a do BCB."
+#| fig-cap: "Aquisição de veículos (PF, livre): o top-down contra o gabarito do BCB."
 #| echo: false
 #| fig-height: 4.2
 grafico_gabarito("20673")
@@ -1252,7 +1252,7 @@ grafico_gabarito("20673")
 
 ```{r}
 #| label: fig-gabarito-cartao
-#| fig-cap: "Cartão de crédito à vista (PF, livre): nossa rotina contra a do BCB."
+#| fig-cap: "Cartão de crédito à vista (PF, livre): o top-down contra o gabarito do BCB."
 #| echo: false
 #| fig-height: 4.2
 grafico_gabarito("20681")
