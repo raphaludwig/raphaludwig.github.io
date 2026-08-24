@@ -34,7 +34,7 @@ website:
         aria-label: Email
       # See the note in _quarto-en.yml. Without JS this lands on the EN home.
       - text: "EN"
-        href: "../index.html"
+        href: "../en/index.html"
         rel: alternate
         aria-label: "View in English"
   page-footer:

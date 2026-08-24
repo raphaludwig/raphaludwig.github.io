@@ -6,8 +6,14 @@
 # rather than replacing them, so those keys cannot sit in the shared base.
 #
 # Layout produced:
-#   docs/         English (the native version)
+#   docs/         dispatcher only - a single index.html that sends the bare root
+#                 to /pt/, plus redirect stubs for the pre-/en/ English URLs
+#   docs/en/      English
 #   docs/pt/      Portuguese
+#
+# The two versions are siblings, so every in-tree link resolves relatively and a
+# visitor stays in whichever version they entered - no JavaScript involved. The
+# only page that decides anything is the root dispatcher.
 #
 # docs/ is wiped and rebuilt each time so that files deleted from the source do
 # not linger in the published site. The staging dirs (_site-en, _site-pt) are
@@ -54,7 +60,8 @@ if (Test-Path _site-pt\blog\index-pt.html) {
 # exclusions, so the wrong language's twin can appear in a tree.
 Remove-Item _site-en\blog\index-pt.html -ErrorAction SilentlyContinue
 
-Move-Item _site-en docs -ErrorAction Stop
+New-Item -ItemType Directory docs | Out-Null
+Move-Item _site-en docs\en -ErrorAction Stop
 Move-Item _site-pt docs\pt -ErrorAction Stop
 
 # Quarto treats a .qmd excluded from a profile's `render:` list as a *resource*
@@ -75,4 +82,63 @@ if ($strays) {
 # copies it, but only the root copy matters.
 if (-not (Test-Path docs\.nojekyll)) { New-Item -ItemType File docs\.nojekyll | Out-Null }
 
-Write-Host "==> Done. docs/ rebuilt (en at root, pt under docs/pt)." -ForegroundColor Green
+Write-Host "==> Root dispatcher and legacy redirects" -ForegroundColor Cyan
+
+# The bare root is a door, not a page: it always opens onto Portuguese. Stateless
+# on purpose - it remembers nothing, because it does not have to. Anyone who wants
+# English is already inside /en/, where every link keeps them.
+@'
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<title>Raphael Ludwig</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://raphaludwig.github.io/pt/">
+<meta http-equiv="refresh" content="0; url=pt/">
+<script>location.replace("pt/" + location.hash);</script>
+</head>
+<body><p><a href="pt/">Raphael Ludwig</a> &middot; <a href="en/">English</a></p></body>
+</html>
+'@ | Set-Content docs\index.html -Encoding utf8
+
+# Legacy. Before /en/ existed the English site WAS the root, and those URLs are
+# out in the world. Every English page therefore keeps a stub at its old address
+# pointing at the new one. Relative hrefs, not absolute: the site does not have to
+# be served from a domain root (see the same note in assets/html/lang-switch.html).
+#
+# docs/index.html is deliberately not among them - it is the dispatcher, and the
+# old English home now lives at /en/. That is the one URL this layout changes.
+$stubs = 0
+Get-ChildItem docs\en -Recurse -Filter *.html | ForEach-Object {
+    $rel = $_.FullName.Substring((Resolve-Path docs\en).Path.Length + 1).Replace([char]92, '/')
+    if ($rel -eq 'index.html') { return }
+    $up = '../' * ($rel.Split('/').Count - 1)
+    $target = "$up" + "en/$rel"
+    $dest = Join-Path docs $rel.Replace('/', [char]92)
+    New-Item -ItemType Directory (Split-Path $dest) -Force | Out-Null
+    @"
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="$target">
+<meta http-equiv="refresh" content="0; url=$target">
+<script>location.replace("$target" + location.hash);</script>
+</head>
+<body><p>This page moved to <a href="$target">$target</a>.</p></body>
+</html>
+"@ | Set-Content $dest -Encoding utf8
+    $stubs++
+}
+Write-Host "    $stubs legacy redirect stub(s)" -ForegroundColor DarkGray
+
+# A stub cannot stand in for a PDF - the old /cv/*.pdf links have to resolve to
+# actual bytes, so those are copied rather than redirected.
+if (Test-Path docs\en\cv) {
+    New-Item -ItemType Directory docs\cv -Force | Out-Null
+    Copy-Item docs\en\cv\*.pdf docs\cv\ -Force
+}
+
+Write-Host "==> Done. docs/ rebuilt (dispatcher at root, en/ and pt/ beside it)." -ForegroundColor Green

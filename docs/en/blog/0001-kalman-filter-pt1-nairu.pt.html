@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2026-07-17">
 <meta name="description" content="O que é um filtro de Kalman, a intuição por trás dele, uma derivação matemática simples e como usá-lo para estimar uma NAIRU variante no tempo. Replicando um exercício do Banco Central com três pacotes de R diferentes.">
 
 <title>Filtro de Kalman Pt 1: Estimando NAIRU para o Brasil através de uma Curva de Phillips – Raphael Ludwig</title>
@@ -94,17 +95,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "Nenhum resultado",
-    "search-matching-documents-text": "documentos correspondentes",
-    "search-copy-link-title": "Copiar link para a busca",
-    "search-hide-matches-text": "Esconder correspondências adicionais",
-    "search-more-match-text": "mais correspondência neste documento",
-    "search-more-matches-text": "mais correspondências neste documento",
-    "search-clear-button-title": "Limpar",
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancelar",
-    "search-submit-button-title": "Enviar",
-    "search-label": "Procurar"
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 
@@ -147,15 +148,15 @@ window.Quarto = {
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-            <div id="quarto-search" class="" title="Procurar"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Alternar de navegação" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
     <a class="nav-link" href="../index.html"> 
-<span class="menu-text">Início</span></a>
+<span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../blog/index.html"> 
@@ -174,8 +175,8 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../en/index.html" rel="alternate"> 
-<span class="menu-text">EN</span></a>
+    <a class="nav-link" href="../../pt/index.html" rel="alternate"> 
+<span class="menu-text">PT</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -190,7 +191,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Nesta página</h2>
+    <h2 id="toc-title">On this page</h2>
    
   <ul>
   <li><a href="#motivação" id="toc-motivação" class="nav-link active" data-scroll-target="#motivação">Motivação</a></li>
@@ -248,9 +249,9 @@ window.Quarto = {
 
     
     <div>
-    <div class="quarto-title-meta-heading">Data de Publicação</div>
+    <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">17 de julho de 2026</p>
+      <p class="date">July 17, 2026</p>
     </div>
   </div>
   
@@ -524,13 +525,13 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">ippcv =</span> <span class="fu">ifelse</span>(<span class="fu">is.na</span>(ippcv), <span class="dv">0</span>, ippcv)) <span class="sc">%&gt;%</span></span>
 <span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>  <span class="fu">na.trim</span>(<span class="st">"left"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="st">"2001-12-01"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="st">"2001-12-01"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>Nesse post, uso diretamente o resultado dessa etapa (<code>db_final.csv</code>) como ponto de partida. Assim quem quiser reproduzir o código abaixo não precisa da minha infra proprietária, só do CSV:</p>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(MARSS)</span>
@@ -556,7 +557,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="fl">1.1</span> <span class="co"># calibrado, não estimado</span></span>
 <span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">&lt;-</span> <span class="dv">120</span> <span class="co"># razão sinal-ruído central do exercício do BCB</span></span>
 <span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">head</span>(db <span class="sc">%&gt;%</span> <span class="fu">select</span>(date, pi_ssubj, pi_full_lag1, E_t, u_t, ippcv), <span class="dv">3</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(<span class="fu">head</span>(db <span class="sc">%&gt;%</span> <span class="fu">select</span>(date, pi_ssubj, pi_full_lag1, E_t, u_t, ippcv), <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
@@ -611,7 +612,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <h4 class="anchored" data-anchor-id="º-estágio">1º estágio</h4>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>stage1 <span class="ot">&lt;-</span> db <span class="sc">%&gt;%</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2001-12-01"</span>), date <span class="sc">&lt;=</span> <span class="fu">as.Date</span>(<span class="st">"2019-12-01"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(pi_full_lag1))</span>
@@ -647,7 +648,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>beta_marss <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_marss_1)<span class="sc">$</span>D[<span class="dv">1</span>]</span>
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>gamma_marss <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_marss_1)<span class="sc">$</span>D[<span class="dv">2</span>]</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_marss, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_marss, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_marss, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_marss, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>beta = 0.2193  gamma = 0.6933 </code></pre>
@@ -659,7 +660,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <p>Com <span class="math inline">\(\beta,\gamma\)</span> fixos, pré-computamos o <span class="math inline">\(y_t\)</span> líquido e sobra só <span class="math inline">\(\theta\)</span> e o estado:</p>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>stage2 <span class="ot">&lt;-</span> db <span class="sc">%&gt;%</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(date <span class="sc">&gt;=</span> <span class="fu">as.Date</span>(<span class="st">"2001-12-01"</span>), date <span class="sc">&lt;=</span> <span class="fu">as.Date</span>(<span class="st">"2024-11-01"</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(pi_full_lag1))</span>
@@ -713,7 +714,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">se =</span> sm_marss<span class="sc">$</span>.se <span class="sc">*</span> <span class="fu">sqrt</span>(sigma2_marss) <span class="sc">/</span> gamma_marss</span>
 <span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_marss, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_marss, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>theta = 1.525 </code></pre>
@@ -729,7 +730,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <h4 class="anchored" data-anchor-id="º-estágio-2">1º estágio</h4>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>y1_v <span class="ot">&lt;-</span> <span class="fu">pull</span>(stage1, pi_ssubj) <span class="sc">-</span> alpha <span class="sc">-</span> <span class="fu">pull</span>(stage1, E_t)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>model_kfas_1 <span class="ot">&lt;-</span> <span class="fu">SSModel</span>(</span>
@@ -745,7 +746,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>beta_kfas <span class="ot">&lt;-</span> out_kfas_1<span class="sc">$</span>alphahat[<span class="fu">nrow</span>(out_kfas_1<span class="sc">$</span>alphahat), <span class="st">"c_t"</span>]</span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>gamma_kfas <span class="ot">&lt;-</span> out_kfas_1<span class="sc">$</span>alphahat[<span class="fu">nrow</span>(out_kfas_1<span class="sc">$</span>alphahat), <span class="st">"d_t"</span>]</span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_kfas, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_kfas, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_kfas, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_kfas, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>beta = 0.2193  gamma = 0.6933 </code></pre>
@@ -757,7 +758,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <h4 class="anchored" data-anchor-id="º-estágio-3">2º estágio</h4>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>y2_v <span class="ot">&lt;-</span> <span class="fu">pull</span>(stage2, pi_ssubj) <span class="sc">-</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  alpha <span class="sc">-</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  beta_kfas <span class="sc">*</span> <span class="fu">pull</span>(stage2, pi_full_lag1) <span class="sc">-</span></span>
@@ -789,7 +790,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">se =</span> <span class="fu">sqrt</span>(out_kfas_2<span class="sc">$</span>V[<span class="dv">2</span>, <span class="dv">2</span>, ] <span class="sc">*</span> sigma2_kfas) <span class="sc">/</span> gamma_kfas</span>
 <span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_kfas, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_kfas, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>theta = 1.525 </code></pre>
@@ -804,7 +805,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <h4 class="anchored" data-anchor-id="º-estágio-4">1º estágio</h4>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>y1_row <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">pull</span>(stage1, pi_ssubj) <span class="sc">-</span> alpha <span class="sc">-</span> <span class="fu">pull</span>(stage1, E_t), <span class="at">nrow =</span> <span class="dv">1</span>)</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>Tn1 <span class="ot">&lt;-</span> <span class="fu">ncol</span>(y1_row)</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -841,7 +842,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>beta_kf <span class="ot">&lt;-</span> fit_kf_1<span class="sc">$</span>par[<span class="dv">1</span>]</span>
 <span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a>gamma_kf <span class="ot">&lt;-</span> fit_kf_1<span class="sc">$</span>par[<span class="dv">2</span>]</span>
 <span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_kf, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_kf, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"beta ="</span>, <span class="fu">round</span>(beta_kf, <span class="dv">4</span>), <span class="st">" gamma ="</span>, <span class="fu">round</span>(gamma_kf, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>beta = 0.2365  gamma = 0.8468 </code></pre>
@@ -852,7 +853,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <h4 class="anchored" data-anchor-id="º-estágio-5">2º estágio</h4>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>y2_row <span class="ot">&lt;-</span> <span class="fu">matrix</span>(</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(stage2, pi_ssubj) <span class="sc">-</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    alpha <span class="sc">-</span></span>
@@ -901,7 +902,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>  <span class="at">se =</span> <span class="fu">sqrt</span>(<span class="fu">as.numeric</span>(filt_kf<span class="sc">$</span>P_tt) <span class="sc">*</span> sigma2_kf) <span class="sc">/</span> gamma_kf</span>
 <span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_kf, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"theta ="</span>, <span class="fu">round</span>(theta_kf, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>theta = 1.588 </code></pre>
@@ -922,7 +923,7 @@ P_{t\mid t-1} = B_t P_{t-1\mid t-1}B_t' + Q_t
 <div id="tbl-coefs" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-coefs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;1
+Table&nbsp;1
 </figcaption>
 <div aria-describedby="tbl-coefs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -985,7 +986,7 @@ Tabela&nbsp;1
 <h3 class="anchored" data-anchor-id="a-trajetória-da-nairu">A trajetória da NAIRU</h3>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>nairu_all <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(nairu_marss, nairu_kfas, nairu_kf) <span class="sc">%&gt;%</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">lower =</span> nairu <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se, <span class="at">upper =</span> nairu <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se)</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1001,7 +1002,7 @@ Tabela&nbsp;1
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="cn">NULL</span>,</span>
 <span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">caption_blog</span>(<span class="st">"BCB"</span>)</span>
 <span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_blog</span>()</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_blog</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div id="fig-nairu" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -1010,7 +1011,7 @@ Tabela&nbsp;1
 <img src="0001-kalman-filter-pt1-nairu.pt_files/figure-html/fig-nairu-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nairu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;1: NAIRU estimada (com IC 95%) pelos três pacotes, dez/2001–nov/2024.
+Figure&nbsp;1: NAIRU estimada (com IC 95%) pelos três pacotes, dez/2001–nov/2024.
 </figcaption>
 </figure>
 </div>
@@ -1029,7 +1030,7 @@ Figura&nbsp;1: NAIRU estimada (com IC 95%) pelos três pacotes, dez/2001–nov/2
 <div id="tbl-comparison" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;2
+Table&nbsp;2
 </figcaption>
 <div aria-describedby="tbl-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -1184,12 +1185,12 @@ Tabela&nbsp;2
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copiada");
+      button.setAttribute("title", "Copied!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copiada");
+        button.setAttribute("data-bs-title", "Copied!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1232,7 +1233,7 @@ Tabela&nbsp;2
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io\/pt");
+        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io\/en");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1571,7 +1572,7 @@ Tabela&nbsp;2
 <p>© 2026 Raphael Ludwig</p>
 </div>   
     <div class="nav-footer-center">
-<p>Feito com <a href="https://quarto.org">Quarto</a></p>
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
 </div>
     <div class="nav-footer-right">
       <ul class="footer-items list-unstyled">

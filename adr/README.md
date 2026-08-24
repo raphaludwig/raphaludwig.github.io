@@ -10,6 +10,7 @@ different documents both called "ADR 0001"; merged on 2026-08-11.
 | [0002](0002-shared-theme-file.md) | blog | `theme_blog.R` compartilhado em vez de estilo inline por post |
 | [0003](0003-ragg-png-device-and-fig-width-defaults.md) | blog | defaults de chunk (`dev = "ragg_png"`, `fig.width`) moram no `theme_blog.R` |
 | [0004](0004-rotated-x-axis-labels.md) | blog | eixo X de data rotacionado 90° |
+| [0005](0005-language-trees-as-siblings.md) | site | `/en/` e `/pt/` como irmãos, com um despachante na raiz e stubs nas URLs inglesas antigas |
 
 ADRs ficam em `adr/` e não no convencional `docs/adr/` porque `docs/` é o diretório
 de saída publicado do Quarto e é apagado a cada build — ver 0001.

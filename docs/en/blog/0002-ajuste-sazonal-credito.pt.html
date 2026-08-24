@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.9.38">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="dcterms.date" content="2026-08-20">
 <meta name="description" content="Uma escada de testes para decidir se uma série é sazonal, um scorecard para escolher entre X-11 e TRAMO-SEATS, e o que acontece quando você aplica isso nas 73 séries de concessão de crédito do BCB e tenta remontar os agregados.">
 
 <title>Ajuste sazonal em cascata: testes, X-11 vs SEATS e os dados brasileiros de crédito – Raphael Ludwig</title>
@@ -94,17 +95,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   ],
   "show-item-context": false,
   "language": {
-    "search-no-results-text": "Nenhum resultado",
-    "search-matching-documents-text": "documentos correspondentes",
-    "search-copy-link-title": "Copiar link para a busca",
-    "search-hide-matches-text": "Esconder correspondências adicionais",
-    "search-more-match-text": "mais correspondência neste documento",
-    "search-more-matches-text": "mais correspondências neste documento",
-    "search-clear-button-title": "Limpar",
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
     "search-text-placeholder": "",
-    "search-detached-cancel-button-title": "Cancelar",
-    "search-submit-button-title": "Enviar",
-    "search-label": "Procurar"
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
   }
 }</script>
 
@@ -147,15 +148,15 @@ window.Quarto = {
   <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
-            <div id="quarto-search" class="" title="Procurar"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Alternar de navegação" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
     <a class="nav-link" href="../index.html"> 
-<span class="menu-text">Início</span></a>
+<span class="menu-text">Home</span></a>
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="../blog/index.html"> 
@@ -174,8 +175,8 @@ window.Quarto = {
 <span class="menu-text"></span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="../../en/index.html" rel="alternate"> 
-<span class="menu-text">EN</span></a>
+    <a class="nav-link" href="../../pt/index.html" rel="alternate"> 
+<span class="menu-text">PT</span></a>
   </li>  
 </ul>
           </div> <!-- /navcollapse -->
@@ -190,7 +191,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Nesta página</h2>
+    <h2 id="toc-title">On this page</h2>
    
   <ul>
   <li><a href="#os-dados" id="toc-os-dados" class="nav-link active" data-scroll-target="#os-dados">Os dados</a>
@@ -243,9 +244,9 @@ window.Quarto = {
 
     
     <div>
-    <div class="quarto-title-meta-heading">Data de Publicação</div>
+    <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">20 de agosto de 2026</p>
+      <p class="date">August 20, 2026</p>
     </div>
   </div>
   
@@ -268,7 +269,7 @@ window.Quarto = {
 </blockquote>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
@@ -280,7 +281,7 @@ window.Quarto = {
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>hierarquia <span class="ot">&lt;-</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir_dados, <span class="st">"hierarquia_concessoes.csv"</span>), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">codigo =</span> <span class="fu">as.character</span>(codigo))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">codigo =</span> <span class="fu">as.character</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <blockquote class="blockquote">
@@ -304,7 +305,7 @@ window.Quarto = {
 <p>As concessões são disponibilizadas pelo BCB de diferentes formas: através da planilha divulgada nas <a href="https://www.bcb.gov.br/estatisticas/estatisticasmonetariascredito">Estatísticas monetárias e de crédito</a> ou pelo <a href="https://www3.bcb.gov.br/sgspub/localizarseries/localizarSeries.do?method=prepararTelaLocalizarSeries">BCB SGS</a>. Cada modalidade de crédito contém uma série de concessões nominais. A hierarquia vai de <code>Concessões - Total</code> até folhas mais desagregadas, contando com dois grandes pares de subdivisões: PF vs PJ e livre vs direcionado.</p>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>codigos_oficiais <span class="ot">&lt;-</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  hierarquia <span class="sc">%&gt;%</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dessaz_oficial)) <span class="sc">%&gt;%</span></span>
@@ -316,7 +317,7 @@ window.Quarto = {
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">cache_path =</span> <span class="fu">file.path</span>(dir_dados, <span class="st">"sgs_concessoes.csv"</span>)</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>fatores <span class="ot">&lt;-</span> <span class="fu">carregar_fatores</span>(<span class="fu">file.path</span>(dir_dados, <span class="st">"dessaz_ibc_br.txt"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>fatores <span class="ot">&lt;-</span> <span class="fu">carregar_fatores</span>(<span class="fu">file.path</span>(dir_dados, <span class="st">"dessaz_ibc_br.txt"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <blockquote class="blockquote">
@@ -400,7 +401,7 @@ window.Quarto = {
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-series-exemplo-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-series-exemplo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessazonalizada aqui.
+Figure&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessazonalizada aqui.
 </figcaption>
 </figure>
 </div>
@@ -446,7 +447,7 @@ Figura&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessa
 <p>Daqui vem o nome “média móvel centrada 2x12”. Ela é centrada num mês cheio, e para isso é calculada sobre <strong>2</strong> janelas de <strong>12</strong> meses, uma delas deslocada um mês para trás.</p>
 <div class="cell">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Média móvel centrada 2x12: o filtro clássico para isolar tendência-ciclo numa</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># série mensal. Sem destendenciar, o crescimento da série domina o gráfico e a</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># sazonalidade some.</span></span>
@@ -486,7 +487,7 @@ Figura&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessa
 <span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_blank</span>(),</span>
 <span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="at">panel.spacing.x =</span> grid<span class="sc">::</span><span class="fu">unit</span>(<span class="dv">1</span>, <span class="st">"pt"</span>),</span>
 <span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">strip.text.y =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="dv">0</span>)</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output-display">
 <div id="fig-subseries" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -495,7 +496,7 @@ Figura&nbsp;1: As três séries do exemplo, em nível. Nenhuma delas está dessa
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-subseries-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-subseries-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;2: Subseries plot: cada painel é um mês do ano, a linha percorre os anos e a barra é a média do mês. Séries em desvio percentual da tendência (média móvel centrada 2x12), para isolar a sazonalidade do crescimento.
+Figure&nbsp;2: Subseries plot: cada painel é um mês do ano, a linha percorre os anos e a barra é a média do mês. Séries em desvio percentual da tendência (média móvel centrada 2x12), para isolar a sazonalidade do crescimento.
 </figcaption>
 </figure>
 </div>
@@ -518,7 +519,7 @@ Figura&nbsp;2: Subseries plot: cada painel é um mês do ano, a linha percorre o
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-acf-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-acf-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;3: Autocorrelação da primeira diferença. As barras vinho são os lags sazonais (12, 24, 36); as linhas tracejadas são a banda de significância a 5%.
+Figure&nbsp;3: Autocorrelação da primeira diferença. As barras vinho são os lags sazonais (12, 24, 36); as linhas tracejadas são a banda de significância a 5%.
 </figcaption>
 </figure>
 </div>
@@ -544,7 +545,7 @@ Figura&nbsp;3: Autocorrelação da primeira diferença. As barras vinho são os 
 <p>Para esses testes vou usar o pacote <code>seastests</code> (por opção, eles também estão implementados no <code>rjd3toolkit</code>). As funções rodam por <em>default</em> sobre a <strong>série diferenciada</strong> (<code>diff = TRUE</code>), não sobre o nível. Os três testam <strong>sazonalidade estável</strong>, ou seja, um padrão que se repete. Nenhum deles detecta sazonalidade que muda de forma ao longo do tempo.</p>
 <div class="cell">
 <details open="" class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post.</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>testes_sazonalidade <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
@@ -556,14 +557,14 @@ Figura&nbsp;3: Autocorrelação da primeira diferença. As barras vinho são os 
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">wo        =</span> <span class="fu">tryCatch</span>(seastests<span class="sc">::</span><span class="fu">isSeasonal</span>(x, <span class="at">test =</span> <span class="st">"wo"</span>), <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NA</span>),</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">seasdum_p =</span> <span class="fu">p</span>(seastests<span class="sc">::</span>seasdum) <span class="co"># Wald sobre dummies mensais: sazonalidade determinística</span></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
 <div id="tbl-testes" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-testes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;1
+Table&nbsp;1
 </figcaption>
 <div aria-describedby="tbl-testes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -685,7 +686,7 @@ Tabela&nbsp;1
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-decomposicao_x11-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decomposicao_x11-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;4: Decomposição do X-11 (via RegARIMA) para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
+Figure&nbsp;4: Decomposição do X-11 (via RegARIMA) para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
 </figcaption>
 </figure>
 </div>
@@ -705,7 +706,7 @@ Figura&nbsp;4: Decomposição do X-11 (via RegARIMA) para crédito pessoal não 
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-decomposicao_tramo-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-decomposicao_tramo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
+Figure&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consignado: série original, tendência-ciclo, componente sazonal e irregular.
 </figcaption>
 </figure>
 </div>
@@ -841,7 +842,7 @@ Figura&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consigna
 </blockquote>
 <div class="cell">
 <details open="" class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post.</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Os itens do dicionário precisam ser pedidos por</span></span>
@@ -864,7 +865,7 @@ Figura&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consigna
 <span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>ajustar_x13 <span class="ot">&lt;-</span> <span class="cf">function</span>(x, fatores) {</span>
 <span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  rjd3x13<span class="sc">::</span><span class="fu">x13</span>(x, <span class="fu">spec_x13</span>(fatores), <span class="at">context =</span> fatores<span class="sc">$</span>context, <span class="at">userdefined =</span> ITENS_DIC)</span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
@@ -875,7 +876,7 @@ Figura&nbsp;5: Decomposição do TRAMO-SEATS para crédito pessoal não consigna
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-calendario-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calendario-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada com os fatores do IBC-Br e a ajustada sem tratamento de calendário nenhum (RSA3), em % da série ajustada.
+Figure&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada com os fatores do IBC-Br e a ajustada sem tratamento de calendário nenhum (RSA3), em % da série ajustada.
 </figcaption>
 </figure>
 </div>
@@ -894,7 +895,7 @@ Figura&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada
 <p>O que existe é diagnóstico comparativo. Neste post, emprego a hierarquia de critérios abaixo:</p>
 <div class="cell">
 <details open="" class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reproduzido de R/sa_runner.R, que é quem de fato roda no post. Deixar este</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># chunk avaliar sombrearia a função do runner sem sombrear `razao_metodo()`,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># e as colunas "escolha" e "razão" da tabela passariam a discordar.</span></span>
@@ -921,7 +922,7 @@ Figura&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada
 <span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 6. Empate -&gt; X-11, por ser o mais robusto a ARIMA ruim</span></span>
 <span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">.default =</span> <span class="st">"x11"</span></span>
 <span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <blockquote class="blockquote">
@@ -941,7 +942,7 @@ Figura&nbsp;6: Efeito de modelar calendário: diferença entre a série ajustada
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-x11-seats-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-x11-seats-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;7: X-11 e SEATS lado a lado. Em cima, uma série onde empatam; embaixo, aquela em que os dois métodos mais divergem no lote inteiro. O painel de baixo está truncado em R$ 6.2 bi para dar zoom: o pico de jul-ago/2023 sai da escala.
+Figure&nbsp;7: X-11 e SEATS lado a lado. Em cima, uma série onde empatam; embaixo, aquela em que os dois métodos mais divergem no lote inteiro. O painel de baixo está truncado em R$ 6.2 bi para dar zoom: o pico de jul-ago/2023 sai da escala.
 </figcaption>
 </figure>
 </div>
@@ -957,7 +958,7 @@ Figura&nbsp;7: X-11 e SEATS lado a lado. Em cima, uma série onde empatam; embai
 <div id="tbl-scorecard" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-scorecard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;2
+Table&nbsp;2
 </figcaption>
 <div aria-describedby="tbl-scorecard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -1054,12 +1055,12 @@ Tabela&nbsp;2
 <p>Os cinco testes do <code>seastests</code>, os degraus 3 e 4, são calculados para todas as séries e viajam junto no relatório, mas não entram na decisão. <code>escolher_metodo()</code> recebe apenas o veredito do teste combinado, os diagnósticos de sazonalidade residual e o <code>Q</code> do X-11. Os degraus ficam ali como registro para quando uma série chamar atenção.</p>
 <div class="cell" data-cache.extra="0202f954d92bd356be95cb83dec4cb62">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>resultado <span class="ot">&lt;-</span> <span class="fu">rodar_lote</span>(db, hierarquia<span class="sc">$</span>codigo, fatores, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>status <span class="ot">&lt;-</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  resultado<span class="sc">$</span>status <span class="sc">%&gt;%</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hierarquia <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino, agg), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hierarquia <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino, agg), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="tbl-narrow">
@@ -1067,7 +1068,7 @@ Tabela&nbsp;2
 <div id="tbl-status" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-status-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;3
+Table&nbsp;3
 </figcaption>
 <div aria-describedby="tbl-status-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -1116,7 +1117,7 @@ Tabela&nbsp;3
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-vereditos-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-vereditos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão, por tipo de recurso.
+Figure&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão, por tipo de recurso.
 </figcaption>
 </figure>
 </div>
@@ -1144,7 +1145,7 @@ Figura&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão,
 <p>Ajuste sazonal não é uma operação linear, então as três dão resultados diferentes por construção.</p>
 <div class="cell" data-cache.extra="0202f954d92bd356be95cb83dec4cb62">
 <details class="code-fold">
-<summary>Mostrar código</summary>
+<summary>Show code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>alvos <span class="ot">&lt;-</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  hierarquia <span class="sc">%&gt;%</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(dessaz_oficial), <span class="fu">is.na</span>(use)) <span class="sc">%&gt;%</span></span>
@@ -1175,7 +1176,7 @@ Figura&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão,
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  td <span class="sc">%&gt;%</span></span>
 <span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(bu, <span class="fu">join_by</span>(codigo, date)) <span class="sc">%&gt;%</span></span>
 <span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">full_join</span>(of <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, date, oficial), <span class="fu">join_by</span>(codigo, date)) <span class="sc">%&gt;%</span></span>
-<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alvos <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alvos <span class="sc">%&gt;%</span> <span class="fu">select</span>(codigo, modalidade, tipo, destino), <span class="fu">join_by</span>(codigo))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <div class="cell">
@@ -1186,7 +1187,7 @@ Figura&nbsp;8: Veredito do teste combinado do X-13 nas 73 séries de concessão,
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-nivel-3versoes-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nivel-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;9: Concessões totais: as três versões dessazonalizadas em nível. Praticamente indistinguíveis.
+Figure&nbsp;9: Concessões totais: as três versões dessazonalizadas em nível. Praticamente indistinguíveis.
 </figcaption>
 </figure>
 </div>
@@ -1204,7 +1205,7 @@ Figura&nbsp;9: Concessões totais: as três versões dessazonalizadas em nível.
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-mom-3versoes-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-mom-3versoes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;10: A mesma comparação, em variação mensal. Aqui as três versões deixam de ser indistinguíveis.
+Figure&nbsp;10: A mesma comparação, em variação mensal. Aqui as três versões deixam de ser indistinguíveis.
 </figcaption>
 </figure>
 </div>
@@ -1221,7 +1222,7 @@ Figura&nbsp;10: A mesma comparação, em variação mensal. Aqui as três versõ
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-dispersao-mom-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dispersao-mom-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;11: Discordância na variação mensal entre as três versões, por agregado: desvio-padrão da diferença de MoM contra a série oficial do BCB.
+Figure&nbsp;11: Discordância na variação mensal entre as três versões, por agregado: desvio-padrão da diferença de MoM contra a série oficial do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1248,7 +1249,7 @@ Figura&nbsp;11: Discordância na variação mensal entre as três versões, por 
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-giro-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-giro-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;12: Capital de giro total (PJ, livre): o top-down contra o gabarito do BCB.
+Figure&nbsp;12: Capital de giro total (PJ, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1264,7 +1265,7 @@ Figura&nbsp;12: Capital de giro total (PJ, livre): o top-down contra o gabarito 
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-naorotativo-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-naorotativo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;13: Total não rotativo (PF, livre): o top-down contra o gabarito do BCB.
+Figure&nbsp;13: Total não rotativo (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1280,7 +1281,7 @@ Figura&nbsp;13: Total não rotativo (PF, livre): o top-down contra o gabarito do
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-veiculos-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-veiculos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;14: Aquisição de veículos (PF, livre): o top-down contra o gabarito do BCB.
+Figure&nbsp;14: Aquisição de veículos (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1296,7 +1297,7 @@ Figura&nbsp;14: Aquisição de veículos (PF, livre): o top-down contra o gabari
 <img src="0002-ajuste-sazonal-credito.pt_files/figure-html/fig-gabarito-cartao-1.png" class="img-fluid figure-img" width="864">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gabarito-cartao-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figura&nbsp;15: Cartão de crédito à vista (PF, livre): o top-down contra o gabarito do BCB.
+Figure&nbsp;15: Cartão de crédito à vista (PF, livre): o top-down contra o gabarito do BCB.
 </figcaption>
 </figure>
 </div>
@@ -1309,7 +1310,7 @@ Figura&nbsp;15: Cartão de crédito à vista (PF, livre): o top-down contra o ga
 <div id="tbl-gabarito" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl quarto-uncaptioned" id="tbl-gabarito-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Tabela&nbsp;4
+Table&nbsp;4
 </figcaption>
 <div aria-describedby="tbl-gabarito-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -1483,12 +1484,12 @@ Tabela&nbsp;4
       // flash "checked"
       button.classList.add('code-copy-button-checked');
       var currentTitle = button.getAttribute("title");
-      button.setAttribute("title", "Copiada");
+      button.setAttribute("title", "Copied!");
       let tooltip;
       if (window.bootstrap) {
         button.setAttribute("data-bs-toggle", "tooltip");
         button.setAttribute("data-bs-placement", "left");
-        button.setAttribute("data-bs-title", "Copiada");
+        button.setAttribute("data-bs-title", "Copied!");
         tooltip = new bootstrap.Tooltip(button, 
           { trigger: "manual", 
             customClass: "code-copy-button-tooltip",
@@ -1531,7 +1532,7 @@ Tabela&nbsp;4
     }
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
-        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io\/pt");
+        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io\/en");
       var isInternal = (href) => {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
@@ -1870,7 +1871,7 @@ Tabela&nbsp;4
 <p>© 2026 Raphael Ludwig</p>
 </div>   
     <div class="nav-footer-center">
-<p>Feito com <a href="https://quarto.org">Quarto</a></p>
+<p>Built with <a href="https://quarto.org">Quarto</a></p>
 </div>
     <div class="nav-footer-right">
       <ul class="footer-items list-unstyled">

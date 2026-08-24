@@ -14,11 +14,12 @@
 
   // Derive both site roots from the href Quarto already resolved for this page's
   // depth - more reliable than assuming the site is served from the domain root.
+  // The two trees are siblings (/en/ and /pt/), so the declared href always points
+  // at the *other* one's home and the pair follows by swapping the last segment.
   var declared = new URL(link.getAttribute("href"), location.href).pathname;
-  var enRoot = isPT
-    ? declared.replace(/index\.html$/, "")
-    : declared.replace(/pt\/index\.html$/, "");
-  var ptRoot = enRoot + "pt/";
+  var there0 = declared.replace(/index\.html$/, "");
+  var enRoot = isPT ? there0 : there0.replace(/pt\/$/, "en/");
+  var ptRoot = isPT ? there0.replace(/en\/$/, "pt/") : there0;
 
   var here = isPT ? ptRoot : enRoot;
   var there = isPT ? enRoot : ptRoot;
