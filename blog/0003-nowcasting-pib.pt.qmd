@@ -1,0 +1,1724 @@
+---
+title: "O PIB antes do PIB: um nowcasting em pseudo tempo real para o Brasil com FOCUS como régua"
+description: "Calendário de divulgações, X-13 a cada data, nove modelos e o que cada divulgação muda na previsão do trimestre."
+date: 2026-09-28
+categories: [nowcasting, econometrics, gdp, dfm, midas, x13]
+draft: false
+---
+
+Um escopo no qual é particularmente interessante aplicar o *horse race* tradicional de modelos preditivos é o *nowcasting*. O analista monta um cardápio de especificações e *engines* diferentes; realiza projeções *out-of-sample* um passo à frente simulando atualizações em tempo real da sua base de dados escolhida; e coleta para os diversos pontos no tempo estatísticas de erro de projeção. Ao final, ele tem DFM contra MIDAS, BVAR contra *random forest*, uma tabela de RMSEs (ou qualquer outra métrica de erro) comparando os diversos modelos e um grupo de vencedores para serem utilizados no *nowcasting* da variável na próxima data alvo.
+
+> Neste post, vou usar um vocabulário próprio para evitar confusões. O conceito de modelo ou modelo preditivo aparecerá aqui como o par ordenado {especificação, *engine* / estimador}, no qual especificação corresponde à matriz de regressores utilizada e, se necessário, hiperparâmetros solicitados pela *engine* escolhida, enquanto *engine* vai ser o método computacional escolhido para fitar o modelo (regressão simples, *random forest*, DFM etc.).
+
+Contudo, esse exercício que, no primeiro momento, busca a validação de algum modelo como o "melhor" tem várias armadilhas. Consequentemente, montei um exercício de *horse race* *nowcasting* como o descrito para o PIB brasileiro e busquei gastar a maior parte do tempo em algumas dessas armadilhas.
+
+Três decisões costumam vir antes de qualquer modelo e, às vezes, mexem mais no resultado do que a troca de um estimador por outro.
+
+1. **O que se sabia em cada data?** Aqui é uma dupla questão. A PIM de julho sai em setembro. Um *nowcast* datado de 31 de agosto que usa a PIM de julho está vendo o futuro. Respeito ao calendário é essencial. Além disso, a PIM, como vários outros indicadores, está sujeita a revisões. Portanto, o ideal é testar o modelo usando *vintages* dos períodos correspondentes para de fato simular qual era a informação disponível naquele momento.
+2. **Como dessazonalizar a série?** A série com ajuste sazonal que o IBGE publica hoje passou por um filtro que olha para os dois lados. Ele sempre reestima o valor dos coeficientes e decide ex-post o tratamento para diversos *outliers*. Dessa forma, na série dessazonalizada corrente um ponto de 2019 foi calculado com dados de 2026. Usá-la num exercício histórico também é ver o futuro, só que de um jeito mais discreto.
+3. **Contra o que se compara?** Bater um SARIMA é fácil [sic]. A previsão só vai ser útil de fato se o modelo acrescentar alguma coisa frente às projeções de especialistas, como a mediana do FOCUS (disponível de forma pública e gratuita).
+
+```{r}
+#| label: setup
+#| warning: false
+#| message: false
+
+library(tidyverse)
+library(knitr)
+
+source("R/theme_blog.R")
+
+dir_dados <- "data/nowcasting"
+ler <- function(arquivo) {
+  read_csv(file.path(dir_dados, arquivo), show_col_types = FALSE)
+}
+
+news_bloco <- ler("news_4a_bloco.csv")
+nowcasts <- ler("nowcasts.csv")
+realizado <- ler("realizado.csv")
+estabilidade <- ler("estabilidade_timings.csv")
+tempos <- ler("tempos.csv")
+
+# Números no texto com vírgula decimal.
+fmt <- function(x, digitos = 2) {
+  formatC(x, format = "f", digits = digitos, decimal.mark = ",")
+}
+
+# "2024Q3" -> data do primeiro dia do trimestre, para o eixo X.
+trimestre_data <- function(x) yq(str_replace(x, "Q", " Q"))
+```
+
+```{r}
+#| label: numeros-abertura
+#| echo: false
+#| warning: false
+#| message: false
+
+tri_f1 <- "2024Q3"
+rotulos_timing <- c(
+  m1 = "fim de M1",
+  m2 = "fim de M2",
+  m3 = "fim de M3",
+  vespera = "véspera"
+)
+
+news_f1 <-
+  news_bloco %>%
+  filter(trimestre == tri_f1, painel == "core") %>%
+  mutate(
+    timing = factor(rotulos_timing[timing], levels = rotulos_timing),
+    bloco = case_match(
+      bloco,
+      "hard" ~ "hard",
+      "soft" ~ "soft",
+      "financeiro" ~ "financeiro",
+      .default = "demais"
+    ),
+    bloco = factor(bloco, levels = c("hard", "soft", "financeiro", "demais"))
+  )
+
+caminho_f1 <- news_f1 %>% distinct(timing, nowcast_antes, nowcast_depois)
+
+# A news do dfms está em p.p. de dlog. Realizado e FOCUS vêm em variação %, então
+# passam para dlog antes de entrar no mesmo gráfico.
+para_dlog <- function(x) 100 * log(1 + x / 100)
+
+real_f1 <- realizado %>%
+  filter(trimestre == tri_f1) %>%
+  pull(qoq_sa)
+
+vespera_f1 <-
+  nowcasts %>%
+  filter(
+    trimestre == tri_f1,
+    timing == "vespera",
+    trilha %in% c("sa", "nsa"),
+    variante == "principal"
+  ) %>%
+  filter((modelo == "dfm_4a" & painel == "core") | modelo == "focus") %>%
+  select(modelo, aa) %>%
+  deframe()
+
+real_aa_f1 <- realizado %>%
+  filter(trimestre == tri_f1) %>%
+  pull(aa)
+
+impacto_m1 <- news_f1 %>%
+  filter(timing == "fim de M1") %>%
+  select(bloco, impacto) %>%
+  deframe()
+```
+
+Mas sem botar a carroça na frente dos bois. Antes de tudo, o que um *nowcasting* pode entregar e por que se digladiar com essas minúcias descritas acima?
+
+A beleza desse procedimento é, de formas diferentes a depender do modelo escolhido, atualizar em tempo real, conforme os dados vão sendo divulgados, a projeção da variável dependente escolhida. Por exemplo:
+
+No fim de junho de 2024, o DFM pequeno que uso neste post projetava `r fmt(caminho_f1$nowcast_antes[1])`% de variação trimestral dessazonalizada para o PIB do terceiro trimestre, uma leve queda. Um mês depois, em 31 de julho, projetava `r fmt(caminho_f1$nowcast_depois[1])`%. Dos `r fmt(caminho_f1$nowcast_depois[1] - caminho_f1$nowcast_antes[1])` p.p. de diferença, `r fmt(impacto_m1[["soft"]])` p.p. vieram das duas sondagens da FGV de julho, que saíram acima do que o modelo esperava. Dali até dezembro o *nowcast* andou pouco.
+
+Na véspera da divulgação, já em variação interanual, ele marcava `r fmt(vespera_f1[["dfm_4a"]])`%. A mediana do FOCUS estava em `r fmt(vespera_f1[["focus"]])`% e o IBGE publicou `r fmt(real_aa_f1)`%.
+
+```{r}
+#| label: fig-news-2024q3
+#| fig-cap: "Revisão do nowcast do DFM para 2024Q3 entre timings consecutivos, decomposta por bloco de séries. 'Demais' soma a série sem bloco, a revisão de dados já publicados e a reestimação dos parâmetros. Os números em vinho são o nowcast antes e depois de cada revisão."
+#| echo: false
+#| fig-height: 4.5
+
+rotulos_f1 <-
+  news_f1 %>%
+  reframe(
+    topo = sum(pmax(impacto, 0)),
+    .by = c(timing, nowcast_antes, nowcast_depois)
+  ) %>%
+  mutate(rotulo = str_glue("{fmt(nowcast_antes)} → {fmt(nowcast_depois)}"))
+
+ggplot(news_f1, aes(x = timing)) +
+  geom_col(aes(y = impacto, fill = bloco), width = 0.6, alpha = 0.7) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  geom_text(
+    data = rotulos_f1,
+    aes(y = topo, label = rotulo),
+    colour = accent_blog("cool"),
+    vjust = -0.7,
+    size = 3.6,
+    family = "Segoe UI Semibold"
+  ) +
+  scale_fill_blog("extended", 4) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.12))) +
+  labs(
+    title = "2024Q3: de onde veio cada revisão do nowcast",
+    subtitle = str_glue(
+      "Impacto por bloco, p.p. de dlog trimestral dessaz.; em vinho, nowcast antes → depois; realizado: {fmt(para_dlog(real_f1))}"
+    ),
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB", "FGV IBRE"))
+  ) +
+  theme_blog() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+::: {.zoomable-figure}
+:::
+
+Escolhi esse trimestre porque ele é bonito. Aviso desde já que a maioria não é. O intuito do post, contudo, não é apenas checar se o gráfico acima é regra ou sorte. A ideia aqui também é explicitar diferentes processos de *nowcasting* e pinçar alguns modelos que parecem melhores em fazer projeção nesse contexto.
+
+Adiantando a resposta, enquanto o trimestre está em curso, o DFM pequeno erra um pouco menos que o FOCUS. Na véspera da divulgação o FOCUS passa à frente. Entretanto, os testes estatísticos usados não separam um do outro.
+
+Olhando o copo meio cheio, é um modelo de baixa manutenção que replica o FOCUS. Não precisa fazer *tracker* projetando *bottom-up* abertura por abertura. Já o copo meio vazio é que, após tanto suor virtual e esforço cibernético, meu procedimento foi incapaz de bater o *benchmark*. Contudo, o que me interessa aqui não é o resultado, mas sim, como falei, ~~os amigos que fizemos durante~~ o caminho até ele e como lidei com as armadilhas.
+
+> Todo o código está no repositório [`nowcasting-pib-br`](https://github.com/raphaludwig/nowcasting-pib-br). Este post não estima nada. Ele lê os CSVs que a rodada gravou e desenha os gráficos. Os trechos de código que aparecem daqui para frente estão marcados como `eval: false` e são cópias do que roda lá.
+
+## O problema
+
+Começando do começo.
+
+O IBGE divulga as Contas Nacionais Trimestrais cerca de 60 dias depois do fim do trimestre. O PIB de julho a setembro de 2024 saiu em 3 de dezembro. Nesse intervalo de cinco meses entre o começo do trimestre e a divulgação saem dezenas de indicadores mensais que falam do mesmo período: a produção industrial, as vendas do varejo, o volume de serviços, as sondagens de confiança, os emplacamentos, o crédito, o câmbio.
+
+Um **nowcast** é a projeção do PIB do trimestre corrente feita com o que já saiu desses indicadores. A palavra "previsão" atrapalha um pouco aqui porque sugere horizonte. O alvo não muda de lugar. O que muda é quanta informação existe sobre ele.
+
+Para ser mais didático, avalio cada modelo em quatro datas por trimestre, as quais chamo de **timings**.
+
+| timing | data | para 2024Q3 |
+|---|---|---|
+| fim de M1 | último dia do primeiro mês do trimestre | 31/07/2024 |
+| fim de M2 | último dia do segundo mês | 31/08/2024 |
+| fim de M3 | último dia do trimestre | 30/09/2024 |
+| véspera | dia útil anterior à divulgação do PIB | 02/12/2024 |
+
+> O trimestre de 2024Q3 vai ser usado recorrentemente ao longo das próximas seções como exemplo ilustrativo.
+
+A véspera é o *timing* mais duro para qualquer modelo. É quando o FOCUS está mais informado. Boa parte dos analistas (se não todos) que respondem à pesquisa já rodou o próprio *tracking* com todos os indicadores do trimestre na mão.
+
+A janela de avaliação vai de 2019Q1 a 2026Q2. A estimação começa em 2011 e a amostra cresce a cada trimestre, sem janela móvel.
+
+## As regras do jogo
+
+### O calendário de divulgações
+
+O ponto de partida é compilar em uma tabela as datas em que cada observação de cada série foi publicada. Para as pesquisas do IBGE e para o PIB, as datas vêm do próprio instituto, pela API de calendário e pelo FTP de publicações antigas. Para crédito e IBC-Br, vêm do calendário do BCB. Onde não achei histórico, caso das sondagens da FGV e dos emplacamentos da Anfavea, uso uma regra de dia típico do mês. As séries de mercado entram como média dos dias disponíveis até a data.
+
+A figura abaixo mostra o resultado para o mesmo 2024Q3. Cada célula é o último mês de referência que estava publicado naquela data.
+
+```{r}
+#| label: fig-calendario
+#| fig-cap: "O que já tinha saído em cada timing de 2024Q3, para o PIB e as onze séries do core."
+#| echo: false
+#| fig-height: 4.2
+
+# Lido do calendário da esteira para 2024Q3. É um desenho, não um dado do congelado.
+ultimo_publicado <- tribble(
+  ~serie, ~m1, ~m2, ~m3, ~vespera,
+  "Sondagens FGV (ICI, ICC)", "jul", "ago", "set", "nov",
+  "PTAX e Ibovespa", "jul", "ago", "set", "dez",
+  "Anfavea, CAGED e crédito", "jun", "jul", "ago", "out",
+  "PIM, PMC e PMS", "mai", "jun", "jul", "set",
+  "IBC-Br", "mai", "jun", "jul", "set",
+  "PIB", "2024Q1", "2024Q1", "2024Q2", "2024Q2"
+)
+
+calendario_f2 <-
+  ultimo_publicado %>%
+  pivot_longer(-serie, names_to = "timing", values_to = "ultimo") %>%
+  mutate(
+    timing = factor(rotulos_timing[timing], levels = rotulos_timing),
+    serie = factor(serie, levels = rev(ultimo_publicado$serie)),
+    situacao = case_when(
+      ultimo %in% c("jul", "ago", "set") ~ "mês do trimestre alvo",
+      ultimo %in% c("out", "nov", "dez") ~ "mês posterior ao trimestre",
+      .default = "anterior ao trimestre"
+    ),
+    situacao = factor(
+      situacao,
+      levels = c(
+        "anterior ao trimestre",
+        "mês do trimestre alvo",
+        "mês posterior ao trimestre"
+      )
+    )
+  )
+
+ggplot(calendario_f2, aes(x = timing, y = serie)) +
+  geom_tile(aes(fill = situacao), colour = "white", linewidth = 1.2) +
+  geom_text(
+    aes(label = ultimo),
+    colour = "white",
+    size = 3.6,
+    family = "Segoe UI Semibold"
+  ) +
+  scale_fill_manual(values = pal_blog("extended")[c(4, 2, 1)]) +
+  labs(
+    title = "O que se sabia em cada data de 2024Q3",
+    subtitle = "Último período de referência publicado, por grupo de séries e timing",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB", "FGV IBRE", "Anfavea"))
+  ) +
+  theme_blog() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+::: {.zoomable-figure}
+:::
+
+Três fatos estilizados nessa figura chamam a atenção e norteiam o resto do post. No fim de M1 não existe nenhum dado *hard* do trimestre, só sondagens e mercado. Por isso, a revisão de julho de 2024 veio em boa parte do bloco *soft*. No fim de M3 o trimestre acabou e o modelo conhece só um mês de indústria, varejo e serviços. E, nesse trimestre, no fim de M1 e de M2 o PIB do trimestre **anterior** ainda não tinha saído, o que cria um problema próprio que trato abaixo.
+
+Esse formato de dados, com cada série terminando num mês diferente, é o que a literatura chama de *ragged edge*. Exercícios publicados o contornam de diferentes modos. Cortam todas as séries no mesmo mês, ou assumem uma defasagem fixa por série, ou agregam tudo a trimestral e esperam o trimestre fechar. Aqui a ponta irregular entra como ela é, com a data real de cada divulgação.
+
+Sobre o PIB do trimestre anterior. Como estou projetando a variação trimestral dessazonalizada e, no fim de M1 e às vezes no de M2, o PIB de t-1 ainda não saiu, a regra que adotei é que cada modelo usa o próprio *nowcast* mais recente do trimestre anterior. Um modelo que errou o trimestre passado carrega esse erro para o nível do trimestre corrente e, portanto, para a variação interanual.
+
+### `information_set()` e o pseudo tempo real
+
+O calendário diz quando cada número saiu. Falta garantir que, em cada data de corte, nenhum modelo use um número publicado depois dela. Esse é o erro mais fácil de cometer num exercício assim e o mais difícil de perceber depois, porque ele não quebra nada. O modelo só fica melhor do que seria na vida real.
+
+A garantia que adotei está na estrutura do código. Todo modelo, em todo timing, recebe os dados por uma única função, `information_set()`, que estabelece os freios temporais necessários.
+
+```{r}
+#| label: information-set
+#| eval: false
+#| code-fold: true
+#| code-summary: "information_set(): o painel cortado na data e dessazonalizado com o que existia"
+
+cortar_na_data <- function(painel, calendario, data) {
+  data <- as.Date(data)
+  inicio_cal <- min(calendario$periodo)
+  painel <- filter(painel, date <= data)
+  recente <- filter(painel, date >= inicio_cal)
+  publicado <- data_publicacao(recente$serie, recente$date, calendario) <= data
+  bind_rows(filter(painel, date < inicio_cal), recente[publicado, ]) %>%
+    arrange(serie, date)
+}
+
+information_set <- function(
+  data,
+  painel,
+  catalogo,
+  calendario,
+  trimestre = NA_character_,
+  timing = NA_character_,
+  inicio_ajuste = as.Date("2003-01-01")
+) {
+  data <- as.Date(data)
+  nsa <- cortar_na_data(cortar_painel(painel, inicio_ajuste), calendario, data)
+  conferir_ultima_linha(nsa, catalogo)
+  corte <- ajustar_corte(nsa, catalogo, inicio = inicio_ajuste)
+  if (is.null(corte$fatores)) {
+    stop("information_set: o alvo não ajustou em ", format(data))
+  }
+  list(
+    data = data,
+    trimestre = trimestre,
+    timing = timing,
+    nsa = nsa,
+    sa = corte$sa,
+    fatores = corte$fatores,
+    status = corte$status
+  )
+}
+```
+
+Dada uma data, a função faz três coisas.
+
+1. **Corta o painel.** Uma observação só entra se já tinha sido publicada naquela data, segundo o calendário da subseção anterior. Em 31 de julho de 2024 a PIM de maio entra e a de junho, que ainda não tinha saído, fica de fora. O histórico anterior ao início do calendário entra inteiro, porque foi todo publicado muito antes de qualquer data da grade.
+2. **Confere a ponta.** Aqui é mais um *debugging*. Nenhuma série trimestral pode terminar num trimestre cujo último mês ainda não apareceu em nenhuma série mensal.
+3. **Dessazonaliza o que sobrou.** O X-13 roda em cada série para cada ponto no tempo. A função devolve três coisas: as séries sem ajuste, as séries ajustadas e, para o PIB, os fatores sazonais projetados para os quatro trimestres seguintes. As duas próximas subseções explicam por que o ajuste é refeito a cada data e para que servem esses fatores.
+
+```{r}
+#| label: numeros-x13
+#| echo: false
+
+x13_tempo <- tempos %>% filter(str_detect(etapa, "X-13"))
+```
+
+Como não existem *vintages* para todos os dados, o exercício aqui é **pseudo tempo real**. Ou seja, cada corte respeita **quando** cada número saiu, mas não **qual** número saiu naquele ponto do tempo. O painel é uma foto tirada em setembro de 2026, com os valores de hoje. A PIM de maio de 2024 que o modelo vê já traz as revisões que o IBGE fez depois dessa data. Por isso o nome é pseudo tempo real, não simplesmente tempo real.
+
+### X-13 refeito a cada data
+
+Tratei de ajuste sazonal no [post anterior](0002-ajuste-sazonal-credito.pt.qmd), mas vale retomar um ponto aqui. Tanto o pré-ajuste com RegARIMA quanto o X-11 utilizam dados anteriores e posteriores à data nas suas estimações. Quando o IBGE publica hoje a série dessazonalizada do PIB, o ponto de 2019Q2 foi filtrado com dados de 2020 a 2026. Baixar essa série e cortá-la em 2019 entrega ao modelo uma informação que ninguém tinha em 2019.
+
+A saída adotada aqui é refazer o ajuste em cada data, só com a amostra que existia. O filtro continua bilateral, mas na ponta ele não tem futuro para olhar e se vira com projeções do próprio RegARIMA, como acontecia de verdade na época.
+
+> O IBGE documenta o procedimento de ajuste do PIB em [nota técnica](https://ftp.ibge.gov.br/Contas_Nacionais/Contas_Nacionais_Trimestrais/Ajuste_Sazonal/X13_NasContasTrimestrais.pdf). Ajuste direto de cada série, X-11 dentro do X-13, transformação escolhida automaticamente, teste de AIC para dias úteis e Páscoa, `pickmdl` entre cinco modelos ARIMA e detecção de todos os tipos de outlier. O procedimento roda de novo a cada divulgação. O modelo que ele escolhe muda. Entre o quarto trimestre de 2025 e o primeiro de 2026 o ARIMA do PIB passou de (2 1 2)(0 1 1) para (2 1 0)(0 1 1), por exemplo. Rodando esse procedimento sobre a série sem ajuste inteira, desde 1996, a variação trimestral bate com a da série oficial até a quarta casa decimal.
+
+Copiei o procedimento do IBGE em cada ponto no tempo.
+
+```{r}
+#| label: spec-x13
+#| eval: false
+#| code-fold: show
+#| code-summary: "A spec do X-13, igual para todas as séries"
+
+x13_args <- function(x, transform, alvo, pickmdl = TRUE) {
+  args <- list(
+    x = x,
+    transform.function = transform,
+    regression.aictest = c("td", "easter"),
+    outlier.types = "all",
+    x11 = ""
+  )
+  args <- c(
+    args,
+    if (pickmdl) {
+      list(pickmdl.method = "best", pickmdl.identify = "all", automdl = NULL)
+    } else {
+      list(automdl = "")
+    }
+  )
+  if (alvo) {
+    args <- c(
+      args,
+      list(
+        forecast.maxlead = MAXLEAD_ALVO,
+        x11.appendfcst = "yes",
+        x11.save = c("d10", "d16", "e18")
+      )
+    )
+  }
+  args
+}
+```
+
+No PIB a rodada também projeta quatro trimestres e guarda os fatores projetados. Eles levam o *nowcast* dessazonalizado de volta para a série sem ajuste, que é de onde sai a variação interanual. Assim, estou sempre comparando laranja com laranja.
+
+> Nem toda série passa pelo filtro. As que reprovam num teste de sazonalidade identificável entram sem ajuste. Câmbio, bolsa e juros ficam de fora por decisão. O teste roda uma vez só, na amostra cheia. O veredito fica fixo no catálogo de séries.
+
+```{r}
+#| label: numeros-sa
+#| echo: false
+
+comparacao_sa <-
+  realizado %>%
+  filter(trimestre >= "2011Q1", !is.na(qoq_sa), !is.na(qoq_sa_oficial)) %>%
+  mutate(data = trimestre_data(trimestre), diferenca = qoq_sa - qoq_sa_oficial)
+
+dif_media <- mean(abs(comparacao_sa$diferenca))
+dif_max <- comparacao_sa %>% slice_max(abs(diferenca), n = 1)
+
+rev_pib <- estabilidade %>%
+  filter(serie == "pib") %>%
+  pull(revisao_media_abs)
+rev_pim <- estabilidade %>%
+  filter(serie == "pim") %>%
+  pull(revisao_media_abs)
+```
+
+### Do dessazonalizado de volta ao número do IBGE
+
+Os modelos projetam a série dessazonalizada, que é onde a dinâmica do ciclo fica visível.
+
+Entretanto, o FOCUS coleta a expectativa em variação interanual, sem ajuste. Por isso a métrica de avaliação do post é a **variação interanual**, tendo como gabarito a variação oficial publicada pelo IBGE. Para chegar nela a partir de um modelo em série dessazonalizada são feitos três passos:
+
+1. O modelo devolve a variação trimestral dessazonalizada do trimestre alvo. Aplicada ao nível dessazonalizado do trimestre anterior, dá o nível dessazonalizado do trimestre alvo.
+2. A rodada do X-13 daquela data projetou os fatores sazonal e de calendário do PIB para os trimestres seguintes. O nível dessazonalizado vezes os fatores dá o nível sem ajuste implícito.
+3. O nível sem ajuste implícito sobre o nível publicado do mesmo trimestre do ano anterior, que sempre existe, dá a variação interanual projetada.
+
+Para evitar confusão, vale retomar que existem três séries dessazonalizadas do PIB nesta história:
+
+1. A **oficial** do IBGE, que não entra em nenhuma conta do exercício.
+2. A minha série **final**, que sai de rodar o procedimento acima uma única vez sobre a série inteira do snapshot. É dela o realizado em variação trimestral que aparece ao lado da *news*.
+3. A de **tempo real**, que é a que cada modelo vê em cada data, com a amostra cortada. São `r x13_tempo$n` versões dela, uma por conjunto de informação.
+
+> Por mais que o procedimento seja o mesmo do IBGE, o fato de, neste exercício, eu utilizar a série do PIB desde 2003 (em vez de 1996, como o dado oficial) faz com que a segunda série não crave a primeira. O `pickmdl` escolhe outro ARIMA, (0 1 2)(0 1 1), com fatores sazonais um pouco diferentes. Esse é mais um motivo para avaliar os modelos na variação interanual.
+
+```{r}
+#| label: fig-sa-propria-oficial
+#| fig-cap: "Diferença entre a variação trimestral do PIB na dessazonalização própria (série final do snapshot, spec acima) e na série oficial do IBGE."
+#| echo: false
+#| fig-height: 3.8
+
+ggplot(comparacao_sa, aes(x = data, y = diferenca)) +
+  geom_col(fill = pal_blog("main")[1], width = 70) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  scale_x_date_blog(comparacao_sa$data) +
+  labs(
+    title = "PIB: a dessazonalização própria contra a oficial",
+    subtitle = "Diferença na variação trimestral dessazonalizada, em p.p. (própria menos oficial)",
+    x = NULL,
+    caption = caption_blog("IBGE")
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+> A rodada principal, que chamo de **trilha SA**, é a descrita acima, com alvo e regressores ajustados pelo X-13 de cada data e depois recuperando a variação interanual não ajustada sazonalmente. Como robustez existe uma **trilha NSA**, em que o PIB entra sem ajuste e a sazonalidade vai para o lado direito da regressão. Ela só existe nos modelos que aceitam variáveis exógenas e aparece na seção de robustez, no fim do post.
+
+### A revisão tem que fechar
+
+A última regra é sobre como explicar uma revisão do *nowcast*. O gráfico de abertura sai de uma decomposição que [Bańbura e Modugno (2014)](https://onlinelibrary.wiley.com/doi/abs/10.1002/jae.2306) chamam de *news*. A ideia é que, com os parâmetros do DFM fixos e o passado intacto, o *nowcast* só muda entre duas datas por causa do que foi divulgado nesse intervalo. A contribuição de cada divulgação é a surpresa dela vezes um peso. A surpresa é o valor divulgado menos o que o próprio modelo previa para aquele número. Se a PIM vem exatamente como o modelo esperava, o *nowcast* não se mexe, por maior que seja o número.
+
+Neste exercício, nenhuma das duas condições vale. Entre duas datas o X-13 roda de novo e muda o passado dessazonalizado. O DFM também é reestimado e muda os parâmetros. O pacote [`dfms`](https://cran.r-project.org/package=dfms) calcula a *news*, mas sozinho não separa esses efeitos. Por isso quebro a revisão em três partes. Primeiro a **reestimação**, que é o quanto o *nowcast* muda só por trocar os parâmetros, com os dados antigos. Depois a **revisão de dados**, que é o quanto ele muda ao trocar os dados antigos pelos reajustados, sem acrescentar nenhuma observação nova. O que sobra é a *news* propriamente dita, só com o que saiu de novo. As três partes somam exatamente a revisão do *nowcast*.
+
+```{r}
+#| label: news
+#| eval: false
+#| code-fold: true
+#| code-summary: "news_dfm_4a(): surpresa vezes peso, mais revisão de dados e reestimação"
+
+X_novo <- matriz_dfm(info, catalogo, painel)
+X_antes <- matriz_dfm(
+  info_antes,
+  catalogo,
+  painel,
+  trimestre = t,
+  linhas = rownames(X_novo),
+  colunas = colnames(X_novo)
+)
+X_mascara <- X_novo
+X_mascara[is.na(X_antes)] <- NA # dados novos, disponibilidade velha
+
+m_novo <- ajustar_dfm(X_novo)
+m_antes <- ajustar_dfm(X_antes)
+m_mascara <- ajustar_dfm(X_mascara, estimar = FALSE)
+
+linha <- match(rotulo_mes(terceiro_mes(t)), rownames(X_novo))
+nw <- dfms::news(m_mascara, m_novo, t.fcst = linha, target.vars = "pib") # news pura
+nw_dados <- dfms::news(m_antes, m_novo, t.fcst = linha, target.vars = "pib") # dados velhos, parâmetros novos
+
+termos <- tibble(
+  serie = c("revisao", "reestimacao"),
+  impacto = c(
+    unname(nw$y_old) - unname(nw_dados$y_old),
+    unname(nw_dados$y_old) - nowcast_antes
+  )
+)
+```
+
+
+## Os dados
+
+### Quem entra no painel
+
+Foquei em dois critérios para adicionar uma série como regressor no painel.
+
+O primeiro é de reprodutibilidade. O leitor precisa conseguir baixar a série. O PMI da S&P Global e o IDAT do Itaú, por exemplo, ficam de fora por isso.
+
+O segundo é cortar toda série cujo passado é refeito por um modelo de terceiro com informação posterior. O Monitor do PIB da FGV é o caso exemplar. A cada divulgação das Contas Trimestrais a FGV reescala os meses para que a média do trimestre case com o número do IBGE. Pelo mesmo motivo fica de fora o Google Trends, que é reamostrado a cada consulta. O IBC-Br também sai de um modelo e é revisado, mas a revisão é publicada e não usa o PIB do trimestre alvo para reconstruir o passado, então ele entra.
+
+O Monitor volta no fim do post com outro papel, como referência para o caminho mensal que os modelos estimam dentro do trimestre.
+
+### Core, estendido e core longo
+
+```{r}
+#| label: paineis
+#| echo: false
+
+# Transcrito de series_catalog.csv, no repo da esteira. O catálogo não faz parte do congelado.
+core <- tribble(
+  ~serie, ~fonte, ~bloco, ~tratamento,
+  "IBC-Br", "BCB", "hard", "dlog, X-13",
+  "PIM, indústria geral", "IBGE", "hard", "dlog, X-13",
+  "PMC, varejo restrito", "IBGE", "hard", "dlog, X-13",
+  "PMS, volume de serviços", "IBGE", "hard", "dlog, X-13",
+  "Licenciamentos de veículos", "Anfavea", "hard", "dlog, X-13",
+  "ICI, confiança da indústria", "FGV IBRE", "soft", "nível, X-13",
+  "ICC, confiança do consumidor", "FGV IBRE", "soft", "nível, X-13",
+  "Estoque de emprego formal", "CAGED", "trabalho", "dlog, X-13",
+  "Concessões de crédito", "BCB", "financeiro", "dlog, X-13",
+  "PTAX", "BCB", "financeiro", "dlog, sem ajuste",
+  "Ibovespa", "B3", "financeiro", "dlog, sem ajuste"
+)
+
+blocos_estendido <- tribble(
+  ~bloco, ~series,
+  "hard", 36L,
+  "soft", 10L,
+  "financeiro", 7L,
+  "trabalho", 3L,
+  "agro", 3L
+)
+
+kable(
+  core,
+  col.names = c("série", "fonte", "bloco", "tratamento"),
+  align = "llll"
+)
+```
+
+O **core** tem as `r nrow(core)` séries da tabela acima e alimenta todos os modelos. O **estendido** tem `r sum(blocos_estendido$series)`, que são as aberturas das séries das pesquisas do IBGE por categoria e atividade, o resto das sondagens da FGV, PNAD, comércio exterior, fluxo de veículos em pedágios, carga de energia, papelão ondulado, combustíveis, passageiros aéreos, arrecadação e a projeção de safra do LSPA. Ele alimenta os modelos que aguentam painel largo e aparece como linha extra nas tabelas. A pergunta que ele responde é se cinco vezes mais séries compram alguma coisa.
+
+Cada série pertence a um **bloco**, que vai importar no DFM em blocos e na leitura da news. No estendido são `r blocos_estendido$series[1]` séries *hard*, `r blocos_estendido$series[2]` *soft*, `r blocos_estendido$series[3]` financeiras, `r blocos_estendido$series[4]` de trabalho e `r blocos_estendido$series[5]` de agro.
+
+O terceiro painel é o **core longo**, com 9 séries, que existe só para a seção de robustez, no fim do post. Três séries do core forçam o início da estimação em 2011, que são a PMS, as concessões de crédito na metodologia atual e o ICC. Sem elas e com a ocupação da PNAD retropolada, dá para começar em 2003. O core longo testa se 20 anos de amostra com 9 séries valem mais do que 8 anos com 11.
+
+### De onde vêm
+
+Como no [post da NAIRU](0001-kalman-filter-pt1-nairu.pt.qmd), os dados vêm de uma infra própria, um *data lake* em que cada rotina de coleta grava uma versão datada de cada tabela. O trecho abaixo está aqui para ilustrar o processo. Tudo o que é público dá para refazer com [`sidrar`](https://cran.r-project.org/web/packages/sidrar/vignettes/Introduction_to_sidrar.html), [`GetBCBData`](https://cran.r-project.org/web/packages/GetBCBData/index.html) e [`rbcb`](https://cran.r-project.org/web/packages/rbcb/index.html). O repositório traz o painel pronto em parquet para as fontes cuja licença permite redistribuição, mais um script para o leitor buscar na origem as que não permitem.
+
+```{r}
+#| label: leitura-lake
+#| eval: false
+#| code-fold: true
+#| code-summary: "Três leituras do painel (datalake.utils, não executado)"
+
+lake <- function(ds, tb) datalake.utils::read_vintage(ds, table = tb)
+
+# IBGE: PIM, indústria geral e categorias de uso
+painel_pim <- function() {
+  bind_rows(
+    lake("latam-brasil-pim", "headline") %>%
+      filter(headline == "Indústria geral") %>%
+      transmute(date, serie = "pim", valor = indice),
+    lake("latam-brasil-pim", "categoria") %>%
+      filter(categoria %in% names(categorias)) %>%
+      transmute(date, serie = unname(categorias[categoria]), valor = indice)
+  )
+}
+
+# BCB: FOCUS trimestral, mediana do PIB total, uma linha por dia de coleta
+ler_focus_lake <- function() {
+  x <- datalake.utils::read_vintage(
+    "latam-brasil-focus",
+    table = "db_focus_quarterly"
+  )
+  ref <- strsplit(x$DataReferencia, "/", fixed = TRUE)
+  x %>%
+    mutate(
+      trimestre = paste0(
+        vapply(ref, `[`, "", 2L),
+        "Q",
+        vapply(ref, `[`, "", 1L)
+      )
+    ) %>%
+    filter(Indicador == "PIB Total", baseCalculo == 0L) %>%
+    transmute(
+      trimestre,
+      data_coleta = as.Date(Data),
+      mediana = Mediana,
+      media = Media,
+      n_respondentes = numeroRespondentes
+    ) %>%
+    arrange(trimestre, data_coleta)
+}
+
+# Associação: Anfavea
+painel_anfavea <- function() {
+  nomes <- c(
+    licen_total = "anfavea_licen",
+    prod_total = "anfavea_prod",
+    exp_total = "anfavea_exp"
+  )
+  lake("latam-brasil-anfavea", "db_anfavea") %>%
+    filter(name %in% names(nomes)) %>%
+    transmute(date, serie = unname(nomes[name]), valor = value)
+}
+```
+
+O FOCUS é o único dado do exercício que é tempo real de verdade. A API do BCB guarda a mediana de cada dia de coleta, então em 31 de julho de 2024 leio a mediana que estava publicada em 31 de julho de 2024, sem aproximação nenhuma.
+
+## Os modelos
+
+São nove modelos em três famílias, mais três combinações feitas a partir deles. A ideia do *lineup* veio de três trabalhos, que são o [MF-BAVART de Huber e coautores](https://doi.org/10.1016/j.jeconom.2020.11.006), o toolkit de DFM e *machine learning* do FMI [(Dauphin e coautores, WP 2022/052)](https://www.imf.org/en/publications/wp/issues/2022/03/11/nowcasting-gdp-a-scalable-approach-using-dfm-machine-learning-and-novel-data-applied-to-513703) e a comparação de métodos para o Brasil publicada pelo [BID em 2023](https://publications.iadb.org/en/which-one-predicts-better-comparing-different-gdp-nowcasting-methods-using-brazilian-data). O FAMIDAS veio depois, do [*factor-augmented sparse MIDAS* de Beyhum e Striaukas](https://arxiv.org/abs/2306.13362). Ele entrou no lugar do MF-BAVART.
+
+A derivação do filtro de Kalman que está por trás de alguns deles já apareceu neste blog, no [primeiro post](0001-kalman-filter-pt1-nairu.pt.qmd).
+
+| # | modelo | família | painéis | como vê a ponta irregular | densidade |
+|---|---|---|---|---|---|
+| 1 | SARIMA | benchmark | só o PIB | não vê | gaussiana |
+| 2 | FOCUS | benchmark | nenhum | mediana do dia | não |
+| 3 | Ridge | regressão | core, estendido | realinhamento vertical | não |
+| 4 | LASSO | regressão | core, estendido | realinhamento vertical | não |
+| 5 | Random forest | regressão | core, estendido | realinhamento vertical | não |
+| 6 | FAMIDAS | regressão | core, estendido | pesos MIDAS | não |
+| 7 | DFM | espaço de estado | core, estendido | filtro de Kalman | sim |
+| 8 | DFM em blocos | espaço de estado | core, estendido | filtro de Kalman | sim |
+| 9 | MF-BVAR | espaço de estado | core | filtro de Kalman | sim |
+
+: Lineup dos modelos {#tbl-lineup}
+
+### Três jeitos de juntar mês com trimestre
+
+O fato de o PIB ser trimestral e os indicadores serem mensais representa um problema que tem algumas soluções.
+
+Um jeito tradicional e bem utilizado é montar *bridge equations*. A ideia é agregar cada indicador em trimestre, completando os meses que faltam de alguma forma. Pode ser com um ARIMA ou outro modelo preditivo, com carrego dos dados ou com a expectativa do analista. Depois, regride-se o PIB nesse número trimestral. Por ser um método mais convencional, não vou me debruçar sobre ele. Fujo do problema de três outros jeitos.
+
+O **primeiro** jeito é não resolver, pois não precisa (!). O SARIMA só olha o PIB.
+
+O **segundo** é manter o PIB trimestral e colocar os meses dos indicadores numa regressão, cada mês numa coluna.
+
+Cada linha da regressão é um trimestre. À esquerda fica a variação trimestral do PIB. À direita ficam os últimos k meses publicados de cada indicador, um por coluna. No fim de M1 de 2024Q3, por exemplo, a última PIM publicada era a de maio, então a linha de 2024Q3 tem maio na primeira coluna, abril na segunda, março na terceira. No fim de M2 já saiu junho e as colunas andam um mês: junho, maio, abril.
+
+A regressão estima um coeficiente para cada coluna a partir dos trimestres passados. Assim, ninguém precisa dizer como os meses se somam para formar o trimestre. Se a PIM de três meses atrás diz pouco sobre o PIB, o coeficiente dela sai pequeno. É o MIDAS sem restrição nos pesos, que a literatura chama de U-MIDAS. Ridge, LASSO, *random forest* e FAMIDAS são variações dessa ideia, que diferem no modo de impedir que o número de colunas saia do controle.
+
+O **terceiro** é inverter o problema e supor que existe um PIB mensal que ninguém observa. Seja $y^m_t$ a variação mensal desse PIB latente, em log. Se o PIB do trimestre é a média dos três meses, a variação trimestral, que só se observa no terceiro mês de cada trimestre, é aproximadamente
+
+$$
+y^q_t \;=\; \tfrac{1}{3}\left(y^m_t + 2\,y^m_{t-1} + 3\,y^m_{t-2} + 2\,y^m_{t-3} + y^m_{t-4}\right).
+$$
+
+É a aproximação de [Mariano e Murasawa (2003)](https://doi.org/10.1002/jae.695). Os pesos em triângulo saem de comparar a média de três meses com a média dos três anteriores. Essa terceira forma aparece nos casos dos DFMs e do MF-BVAR que são explicados mais à frente.
+
+### Os benchmarks
+
+O **SARIMA** é um `auto.arima()` na variação trimestral da série dessazonalizada do PIB. Sem parte sazonal, já que a série chega ajustada. Ele não enxerga nenhum indicador mensal. Serve de piso.
+
+O **FOCUS** é a régua. A pesquisa do BCB coleta a expectativa para o PIB trimestral em variação interanual, sem ajuste sazonal. Ele entra na avaliação exatamente assim, a mediana do dia contra o número do IBGE.
+
+### Regressão com realinhamento vertical
+
+Ridge, LASSO e *random forest* são modelos de corte transversal, assim o *ragged edge* é um problema para eles, pois precisam de uma matriz retangular. A saída usual já citada, que é a do *toolkit* do FMI, é agregar cada série de alguma forma a trimestral.
+
+Aqui eu uso o que chamo de **realinhamento vertical**. Cada série é deslocada para que a última observação publicada na data do *timing* ocupe a primeira coluna. As k-1 colunas seguintes (aqui, k=6) são as observações anteriores. O significado da coluna muda de série para série. No fim de M1 de 2024Q3, a primeira coluna da PIM é maio e a primeira coluna do ICI é julho.
+
+```{r}
+#| label: fig-realinhamento
+#| fig-cap: "Realinhamento vertical no fim de M1 de 2024Q3. Cada série entra na regressão pelas seis últimas observações publicadas, L0 a L5, qualquer que seja o mês a que se referem."
+#| echo: false
+#| fig-height: 3.2
+
+meses_f <- c("dez", "jan", "fev", "mar", "abr", "mai", "jun", "jul")
+
+realinhamento <-
+  tribble(
+    ~serie, ~ultimo,
+    "ICI", 8L,
+    "Licenciamentos Anfavea", 7L,
+    "PIM", 6L
+  ) %>%
+  expand_grid(mes = seq_along(meses_f)) %>%
+  mutate(
+    lag = ultimo - mes,
+    rotulo = if_else(lag >= 0 & lag <= 5, str_c("L", lag), NA_character_),
+    situacao = case_when(
+      lag < 0 ~ "não publicado",
+      lag <= 5 ~ "entra na regressão",
+      .default = "publicado, fora da janela"
+    ),
+    situacao = factor(
+      situacao,
+      levels = c(
+        "entra na regressão",
+        "publicado, fora da janela",
+        "não publicado"
+      )
+    ),
+    mes = factor(meses_f[mes], levels = meses_f),
+    serie = factor(serie, levels = c("PIM", "Licenciamentos Anfavea", "ICI"))
+  )
+
+ggplot(realinhamento, aes(x = mes, y = serie)) +
+  geom_tile(aes(fill = situacao), colour = "white", linewidth = 1.2) +
+  geom_text(
+    aes(label = rotulo),
+    colour = "white",
+    size = 3.8,
+    family = "Segoe UI Semibold",
+    na.rm = TRUE
+  ) +
+  scale_fill_manual(values = pal_blog("extended")[c(2, 4, 5)]) +
+  labs(
+    title = "A mesma coluna, meses diferentes",
+    subtitle = "Meses de dez/2023 a jul/2024 publicados em 31/07/2024 e as colunas L0 a L5 de cada série",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "FGV IBRE", "Anfavea"))
+  ) +
+  theme_blog() +
+  theme(
+    axis.text.x = element_text(angle = 0, hjust = 0.5),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+::: {.zoomable-figure}
+:::
+
+O preço é que o coeficiente de "L0 da PIM" não quer dizer a mesma coisa em M1 e em M3. Por isso estimo um modelo por *timing*. O treino, quando necessário, também é em pseudo tempo real. A linha de 2017Q2 do modelo de M1 usa o que estava publicado no fim de M1 de 2017Q2. O *cross-validation* que escolhe a penalização usa cinco blocos de trimestres adjacentes.
+
+No core são 11 séries com seis colunas cada, mais a última variação publicada do PIB, o que dá 67 regressores para uma amostra de treino que tem cerca de 30 trimestres no começo da janela de avaliação e cerca de 60 no fim. Sem penalização isso não se estima.
+
+O **Ridge** encolhe todos os coeficientes na direção de zero e não zera nenhum. O **LASSO** zera parte deles e, portanto, escolhe quais colunas ficam. O ***random forest*** troca a reta por uma média de árvores e captura não linearidade, ao custo de nunca prever fora do intervalo que viu no treino, o que cobra caro em 2020.
+
+Perceba o porquê de 6 colunas. No fim de M3 de 2024Q3 as três últimas observações do ICI e da PTAX são julho, agosto e setembro, exatamente o trimestre alvo. Na véspera, dois meses depois, as do ICI viraram setembro, outubro e novembro. As da PTAX viraram outubro, novembro e um dezembro com um dia útil de média. Tudo isso estava publicado na data, então não há vazamento. Seis é o menor número de colunas que mantém o trimestre alvo inteiro na janela de qualquer série em qualquer *timing*.
+
+Sobra uma pergunta. Na véspera, o que já saiu sobre outubro e novembro deve entrar no nowcast do terceiro trimestre? Não sei responder de antemão, então todo modelo que usa indicadores mensais roda nas duas leituras.
+
+- **Com tudo.** O modelo vê o que estava publicado na data, inclusive meses posteriores ao trimestre alvo. É a linha principal das tabelas.
+- **Só o trimestre.** O modelo só enxerga meses de referência até o fim do trimestre alvo. No nowcast de 2024Q3 os dados param em setembro. O que já saiu sobre outubro e novembro fica de fora. No treino vale o mesmo para cada linha. A comparação entre as duas leituras fica para a seção de robustez.
+
+O **FAMIDAS** é o [*factor-augmented sparse MIDAS* de Beyhum e Striaukas](https://arxiv.org/abs/2306.13362). Na especificação do paper, o modelo combina três ideias: MIDAS, sparse-group LASSO e fatores comuns.
+
+A **primeira peça** é o MIDAS (*Mixed-Data Sampling*), que permite relacionar indicadores de maior frequência ao PIB trimestral sem estimar um coeficiente independente para cada defasagem. A ideia é reduzir a dimensionalidade temporal. Em vez de estimar, por exemplo, seis coeficientes independentes para seis meses da PIM, estima-se uma pequena quantidade de parâmetros que descreve o formato da curva de pesos.
+
+$$
+PIB_t =
+\alpha+
+\beta
+\sum_{j=0}^{K}
+w(j;\theta)x_{3t-j}
++\varepsilon_t
+$$
+
+de forma que
+
+$$
+\beta_j=\beta w(j;\theta)
+$$
+
+Beyhum e Striaukas implementam essa ideia usando uma base de polinômios de Legendre. Aqui o índice $j$ não conta a partir do fim do trimestre no calendário. Ele conta a partir da última observação publicada de cada série na data do *timing*, o mesmo ponto de partida do realinhamento dos modelos acima.
+
+Cada série entra com os seus seis últimos meses publicados. As quatro colunas de Legendre são somas ponderadas desses seis valores. O objetivo é reduzir a dimensionalidade temporal sem ainda afetar a *cross-section* e preservando flexibilidade na forma como observações mais recentes e mais antigas afetam o PIB.
+
+Isso resolve parte do problema de dimensionalidade, mas ainda pode deixar centenas de regressores quando muitas séries entram no modelo. A **segunda peça** é, portanto, criar fatores através de PCA para procurar sinal comum entre os indicadores. Mas os autores deliberadamente não jogam fora as séries individuais depois de extrair os fatores. O problema óbvio é que agora, em vez de diminuir, o número de regressores aumentou.
+
+A **terceira peça** lida com essa questão. O **sparse-group LASSO** (sg-LASSO) decide quais séries individuais realmente merecem entrar. A penalização atua tanto entre grupos quanto dentro deles, permitindo eliminar uma variável inteira (os quatro regressores MIDAS dela) ou manter a variável selecionando apenas algumas de suas componentes MIDAS. Ele faz simultaneamente seleção entre variáveis e seleção dentro da parametrização temporal de cada variável. Os fatores não sofrem essa penalização.
+
+A ideia central é combinar dois tipos de sinal. Os fatores capturam o componente denso e comum da economia, enquanto o sg-LASSO permite que algumas séries tenham informação específica adicional para o PIB.
+
+O pacote [`midasml`](https://cran.r-project.org/package=midasml) traz a função pronta, precisando de poucas alterações.
+
+### Frequência mista em espaço de estado
+
+Os outros três modelos tratam o PIB mensal como variável latente. O painel também não para no fim do trimestre alvo. Na véspera entram também os meses seguintes que já foram publicados. O suavizador decide quanto eles dizem sobre o trimestre que fechou. É a prática da literatura e o caso base neste exercício. Como nos outros casos, estimo também modelos com dados travados até o trimestre alvo do *nowcasting* para robustez.
+
+O **DFM** é o modelo de fatores dinâmicos de [Bańbura e Modugno](https://onlinelibrary.wiley.com/doi/abs/10.1002/jae.2306) na implementação do [`dfms`](https://cran.r-project.org/package=dfms). É o modelo em que mais me demoro, porque é dele que sai a *news* da abertura.
+
+Todo indicador entra padronizado, com média zero e variância um. Cada um é escrito como uma regressão contra fatores comuns que ninguém observa. São as equações de observação. Os coeficientes dos fatores eu chamo de cargas. Para a série $i$ no mês $t$,
+
+$$
+x_{it} = \lambda_i' f_t + e_{it}, \qquad f_t = A f_{t-1} + u_t, \qquad e_{it} = \rho_i\, e_{i,t-1} + \varepsilon_{it},
+$$
+
+com $Q = \text{Var}(u_t)$ e $\sigma_i^2 = \text{Var}(\varepsilon_{it})$.
+
+Os fatores $f_t$ são dois e seguem um VAR(1), a escolha tradicional. Eles resumem o estado da economia no mês. O componente idiossincrático $e_{it}$ é o que sobra de cada série depois de descontado o ciclo. Os idiossincráticos são independentes entre si, cada um com a sua variância. Eles podem ser ruído branco ou ter estrutura própria. Aqui cada um segue um AR(1).
+
+Uma consequência prática do AR(1) é que $e_{it}$ passa a morar no vetor de estado junto com os fatores. Quando a PIM surpreende, o filtro reparte a surpresa. A parte que é ciclo move $f_t$. A parte que é desvio persistente da própria PIM move $e_{\text{PIM},t}$.
+
+O PIB mensal latente é mais uma linha desse sistema, com carga própria e idiossincrático AR(1) próprio, $y^m_t = \lambda_y' f_t + e_{y,t}$. Essa linha nunca é observada. O que se observa é o PIB trimestral. Basta substituir a equação do PIB mensal na equação dos pesos em triângulo de Mariano e Murasawa para juntar as duas:
+
+$$
+y^q_t = \tfrac{1}{3}\,\lambda_y' \left(f_t + 2f_{t-1} + 3f_{t-2} + 2f_{t-3} + f_{t-4}\right) + \tfrac{1}{3}\left(e_{y,t} + 2e_{y,t-1} + 3e_{y,t-2} + 2e_{y,t-3} + e_{y,t-4}\right).
+$$
+
+Essa é a equação de observação do PIB trimestral, que só tem dado no terceiro mês de cada trimestre.
+
+Os parâmetros $\{\lambda_i, A, Q, \rho_i, \sigma_i^2\}$ saem do algoritmo EM. O EM é o laço de fora. A cada volta ele chama por dentro o filtro e o suavizador de Kalman, que reconstroem os fatores dados os parâmetros. Depois, reestima os parâmetros dados os fatores. Para a primeira volta ele precisa de um chute.
+
+O chute, tanto em [Doz, Giannone e Reichlin](https://www.ecb.europa.eu/pub/pdf/scpwps/ecbwp1564.pdf) quanto em Bańbura e Modugno, sai de um PCA. Os buracos do painel são preenchidos provisoriamente, inclusive os meses 1 e 2 de cada trimestre na coluna do PIB trimestral. Na matriz preenchida, o PCA estima os fatores. Com eles em mãos, uma regressão de cada série mensal nos componentes dá as cargas. Um AR(1) nos resíduos dessa regressão, só nos meses em que a série foi observada, dá $\rho_i$ e $\sigma_i^2$. Um VAR(1) nos fatores dá $A$ e $Q$.
+
+O PIB é o caso especial. É aqui que Mariano-Murasawa já aparece. Não dá para regredir o PIB mensal nos componentes, porque ele não existe nos dados, mas a equação acima resolve. A carga inicial do PIB sai de uma regressão restrita do PIB trimestral observado nos componentes de $t$, $t-1$, $t-2$, $t-3$ e $t-4$, com os cinco coeficientes forçados a ficar na proporção 1:2:3:2:1. O AR(1) do idiossincrático do PIB não é estimado no chute. O $\rho$ e a variância começam fixos.
+
+Falta o estado inicial. O filtro precisa de um $f_0$ e da variância dele, $P_0$. Como tudo está padronizado, $f_0$ começa em zero, que é a média. $P_0$ vem do chute de $A$ e $Q$ e começa na variância de longo prazo que eles implicam, a matriz que resolve $P = A P A' + Q$. Os dois também são atualizados a cada volta.
+
+Com o chute pronto **começa o passo E**. O filtro e o suavizador de Kalman rodam no painel original, com os buracos de volta e o PIB trimestral entrando pela equação de observação acima. O suavizador devolve o estado inteiro e, para cada mês, três objetos. O primeiro é $\hat f_t$, o valor suavizado do fator. O segundo é $P_t$, a variância dele, que mede a incerteza sobre esse valor. O terceiro é $P_{t,t-1}$, a covariância entre o erro de $f_t$ e o de $f_{t-1}$.
+
+Com eles vem o **passo M**, que refaz as regressões com três diferenças. A primeira é que não preenche mais os buracos. Cada regressão de carga usa só os meses em que a série foi observada. As demais usam todos os meses. A segunda é que, antes de regredir uma série no fator, desconta dela o idiossincrático que o suavizador já estimou, o que só é possível porque o AR(1) põe $e_{it}$ dentro do estado. A terceira, que é a que importa, é que usa a incerteza dos fatores. Onde a regressão ingênua usaria $\hat f_t \hat f_t'$, o passo M usa $\hat f_t \hat f_t' + P_t$.
+
+É o $P_t$ que separa o EM de um "estima o fator, roda a regressão, repete" ingênuo. Nos meses em que o fator está mal determinado, na ponta e no começo da amostra, a regressão não trata o valor estimado como se fosse dado. Para ver por quê, pense num fator só e numa série sem idiossincrático AR. A regressão que se quer rodar é a de $x_t$ contra o fator verdadeiro,
+
+$$
+\lambda = \frac{\sum_t x_t f_t}{\sum_t f_t^2}.
+$$
+
+Só que $f_t$ não se vê. O que se tem é $\hat f_t$. O $f_t$ verdadeiro é $\hat f_t$ mais um erro de variância $P_t$. Numerador e denominador reagem de forma diferente a isso. No numerador $x_t$ é dado, então a melhor estimativa de $x_t f_t$ é $x_t \hat f_t$ e nada muda. No denominador vale a regra de sempre, $E[Z^2] = (E[Z])^2 + \text{Var}(Z)$. A melhor estimativa de $f_t^2$ passa a ser $E[f_t^2 \mid \text{dados}] = \hat f_t^2 + P_t$. Fica
+
+$$
+\lambda_{\text{EM}} = \frac{\sum_t x_t \hat f_t}{\sum_t \left(\hat f_t^2 + P_t\right)}
+\qquad \text{contra} \qquad
+\lambda_{\text{ingênuo}} = \frac{\sum_t x_t \hat f_t}{\sum_t \hat f_t^2}.
+$$
+
+Como $P_t$ nunca é negativo, a carga do EM sai menor em módulo. A que erra é a ingênua. O suavizador puxa $\hat f_t$ para zero onde há pouca informação, então $\hat f_t$ varia menos que o $f_t$ verdadeiro.
+
+Com os parâmetros novos volto ao passo E, depois ao M. O ciclo se repete até convergir. No fim o EM devolve os parâmetros e a série dos fatores.
+
+O *nowcast* é o PIB trimestral que a equação de Mariano e Murasawa devolve no terceiro mês do trimestre alvo, aplicada aos PIBs mensais suavizados e com a padronização desfeita. De brinde, a equação de observação do PIB mensal dá uma série do PIB mensal, $\hat y^m_t = \lambda_y' \hat f_t + \hat e_{y,t}$.
+
+Quando sai um dado novo na ponta, ele chega com uma surpresa em relação ao que o modelo previa para aquela série naquele mês. A *news* só existe aqui porque o DFM prevê as próprias séries do painel. Antes de a PIM sair, o modelo tem uma previsão para ela. A surpresa é a diferença. O DFM refaz tudo do zero com o painel novo, do chute ao suavizador, até chegar a parâmetros e fatores novos. No core são 11 séries e o PIB, reestimados em todo *timing*. É esse o "**DFM pequeno**" da abertura.
+
+O **DFM em blocos**, mais abaixo, poupa custo computacional. Ele congela os parâmetros do fim de M1 e roda só o filtro e o suavizador no painel novo.
+
+Rodar o filtro de novo com parâmetros fixos e com os dados mascarados para a disponibilidade antiga é o que permite decompor a revisão do *nowcast* nas três partes descritas em "A revisão tem que fechar",
+
+$$
+\text{revisão} = \underbrace{\sum_j w_j\,(x_j - \hat x_j)}_{\textit{news}} + \text{revisão de dados} + \text{reestimação}.
+$$
+
+A *news* soma, para cada dado $j$ divulgado entre as duas datas, um peso vezes uma surpresa. $x_j$ é o valor divulgado e $\hat x_j$ o que o modelo previa para ele. O peso $w_j$ sai dos ganhos de Kalman com parâmetros fixos, não da mudança nas cargas.
+
+A revisão de dados é o X-13 rodando de novo e mudando o passado dessazonalizado. A reestimação é o quanto o *nowcast* muda só por trocar os parâmetros, com os dados antigos. É nela que mora a mudança nas cargas. No DFM em blocos ela é zero nas revisões de M1 para M2, de M2 para M3 e de M3 para a véspera, porque os parâmetros não mudam.
+
+O **DFM em blocos** acrescenta estrutura. A inspiração é o modelo do [Fed de Nova York](https://www.newyorkfed.org/research/staff_reports/sr830), mas não é exatamente aquele modelo. A estimação é o mesmo EM de Bańbura e Modugno descrito acima. No lugar de dois fatores que todas as séries carregam, há um fator comum a todo o painel e um fator local por bloco, que só as séries do bloco carregam. Para uma série $i$ do bloco $b$,
+
+$$
+x_{it} = \lambda^c_i f^c_t + \lambda^b_i f^b_t + e_{it}.
+$$
+
+O fator do bloco *soft* captura o que as sondagens têm em comum entre si depois de descontado o ciclo, que pode ser humor e não atividade. O PIB carrega o fator comum e o do bloco *hard*. Bloco com menos de duas séries no painel é desligado, o que no core acontece com o de trabalho. Ele é o único modelo que não reestima em todo timing. Os parâmetros saem do EM no fim de M1. Nos outros três timings só o filtro roda, com os parâmetros congelados. A razão é simplicidade e custo computacional.
+
+O **MF-BVAR** é o VAR de frequência mista de [Schorfheide e Song (2015)](https://doi.org/10.1080/07350015.2014.954707) no pacote [`mfbvar`](https://github.com/ankargren/mfbvar). Não há fatores. As 11 séries do core e o PIB mensal latente formam um vetor $z_t$ que segue um VAR com cinco defasagens,
+
+$$
+z_t = c + \Phi_1 z_{t-1} + \dots + \Phi_5 z_{t-5} + \epsilon_t,
+$$
+
+e o PIB trimestral observado entra pela mesma equação dos pesos em triângulo. A diferença para os DFMs está em quem fala com quem. Nos DFMs os indicadores só conversam com o PIB através dos fatores. No VAR cada indicador entra diretamente na equação do PIB e o PIB entra na de cada indicador.
+
+O preço é o número de parâmetros. São 12 variáveis. Cada equação tem 60 coeficientes e uma constante, 732 no total, para uma amostra de 100 a 180 meses. O prior de Minnesota resolve isso encolhendo os coeficientes na direção de um modelo simples, em que cada variável depende sobretudo do próprio passado recente.
+
+### Combinações
+
+As três combinações ficam para a seção *Combos e o FOCUS*. Duas são médias dos sete modelos, uma com pesos iguais e outra com pesos pelo inverso do RMSE passado. A terceira descarta os modelos que discordam do FOCUS antes de tirar a média.
+
+## Resultados de ponto
+
+```{r}
+#| label: numeros-aa
+#| echo: false
+
+avaliacao_aa <- ler("avaliacao_aa.csv")
+
+rotulos_modelo <- c(
+  sarima = "SARIMA",
+  focus = "FOCUS",
+  ridge = "Ridge",
+  lasso = "LASSO",
+  rf = "Random forest",
+  famidas = "FAMIDAS",
+  dfm_4a = "DFM",
+  dfm_4b = "DFM em blocos",
+  mfbvar = "MF-BVAR"
+)
+
+# Linhas principais da trilha SA: os nove modelos, sem combos, sem "esperar" e sem NSA.
+linhas_principais <- function(avaliacao) {
+  avaliacao %>%
+    filter(
+      modelo %in% names(rotulos_modelo),
+      variante == "principal",
+      trilha == "sa" | modelo == "focus"
+    ) %>%
+    mutate(
+      modelo_rotulo = factor(rotulos_modelo[modelo], levels = rotulos_modelo),
+      painel = if_else(painel == "nenhum", "", painel),
+      timing = factor(timing, levels = names(rotulos_timing))
+    )
+}
+
+aa_principal <- linhas_principais(avaliacao_aa)
+
+n_sem_covid <- aa_principal %>%
+  filter(amostra == "sem_covid") %>%
+  pull(n) %>%
+  unique()
+n_cheia <- aa_principal %>%
+  filter(amostra == "cheia") %>%
+  pull(n) %>%
+  unique()
+
+valor_de <- function(tabela, coluna) {
+  function(m, p, t, a = "sem_covid") {
+    tabela %>%
+      filter(modelo == m, painel == p, timing == t, amostra == a) %>%
+      pull({{ coluna }})
+  }
+}
+rmse_aa <- valor_de(aa_principal, rmse)
+p_focus_aa <- valor_de(aa_principal, p_focus)
+
+tabela_rmse <- function(principal) {
+  principal %>%
+    select(modelo_rotulo, painel, amostra, timing, rmse) %>%
+    mutate(rmse = fmt(rmse)) %>%
+    arrange(desc(amostra), timing) %>%
+    pivot_wider(names_from = c(amostra, timing), values_from = rmse) %>%
+    arrange(modelo_rotulo, painel) %>%
+    kable(
+      col.names = c(
+        "modelo",
+        "painel",
+        str_c(
+          rep(c("M1", "M2", "M3", "vésp."), 2),
+          rep(c("", " (cheia)"), each = 4)
+        )
+      ),
+      align = c("l", "l", rep("r", 8))
+    )
+}
+
+pior_2020 <- realizado %>%
+  filter(trimestre %in% c("2020Q2", "2020Q3")) %>%
+  select(trimestre, aa) %>%
+  deframe()
+
+# FAMIDAS no estendido, véspera: o erro de 2020Q1 contra o resto da amostra sem COVID.
+famidas_est <-
+  nowcasts %>%
+  filter(
+    modelo == "famidas",
+    painel == "estendido",
+    trilha == "sa",
+    variante == "principal",
+    timing == "vespera",
+    trimestre >= "2019Q1",
+    trimestre <= "2026Q2",
+    !trimestre %in% c("2020Q2", "2020Q3")
+  ) %>%
+  left_join(realizado %>% select(trimestre, real = aa), join_by(trimestre)) %>%
+  mutate(erro = aa - real)
+
+famidas_20q1 <- famidas_est %>% filter(trimestre == "2020Q1")
+rmse_famidas_sem_20q1 <- famidas_est %>%
+  filter(trimestre != "2020Q1") %>%
+  summarise(rmse = sqrt(mean(erro^2))) %>%
+  pull(rmse)
+```
+
+A métrica desta seção é a variação interanual do PIB, em pontos percentuais, contra o número que o IBGE publicou. A janela tem `r n_cheia` trimestres, de 2019Q1 a 2026Q2. Dou destaque à amostra sem 2020Q2 e 2020Q3, com `r n_sem_covid` trimestres. A amostra cheia fica ao lado. Os modelos foram estimados com 2020 na amostra, sem dummy nem outro tratamento para a pandemia.
+
+```{r}
+#| label: tbl-aa
+#| tbl-cap: "RMSE do nowcast em variação interanual, p.p., por timing. As quatro primeiras colunas são da amostra sem 2020Q2 e 2020Q3, as quatro últimas da amostra cheia."
+#| echo: false
+
+tabela_rmse(aa_principal)
+```
+
+```{r}
+#| label: fig-rmse-timing
+#| fig-cap: "RMSE por timing em variação interanual, painel core, amostra sem 2020Q2 e 2020Q3. Em cinza os demais modelos da tabela. O SARIMA fica fora da escala no fim de M1 e de M2."
+#| echo: false
+#| fig-height: 4.5
+
+destaques <- c("FOCUS", "DFM", "DFM em blocos", "FAMIDAS")
+
+rmse_f4 <-
+  aa_principal %>%
+  filter(amostra == "sem_covid", painel %in% c("core", "")) %>%
+  mutate(
+    timing = factor(
+      rotulos_timing[as.character(timing)],
+      levels = rotulos_timing
+    )
+  )
+
+ggplot(mapping = aes(x = timing, y = rmse, group = modelo_rotulo)) +
+  geom_line(
+    data = filter(rmse_f4, !modelo_rotulo %in% destaques),
+    colour = "lightgray",
+    linewidth = 0.5
+  ) +
+  geom_line(
+    data = filter(rmse_f4, modelo_rotulo %in% destaques),
+    aes(colour = modelo_rotulo),
+    linewidth = 0.9
+  ) +
+  geom_point(
+    data = filter(rmse_f4, modelo_rotulo %in% destaques),
+    aes(colour = modelo_rotulo),
+    size = 2
+  ) +
+  scale_colour_manual(
+    values = c(
+      "FOCUS" = accent_blog("cool"),
+      "DFM" = pal_blog("extended")[1],
+      "DFM em blocos" = pal_blog("extended")[3],
+      "FAMIDAS" = pal_blog("extended")[4]
+    )
+  ) +
+  coord_cartesian(ylim = c(0.5, 2.6)) +
+  labs(
+    title = "O modelo chega antes, o mercado chega melhor",
+    subtitle = "RMSE em p.p. de variação interanual, core, 2019Q1 a 2026Q2 sem 2020Q2 e 2020Q3",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB"))
+  ) +
+  theme_blog() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+::: {.zoomable-figure}
+:::
+
+Tiro quatro leituras da tabela e da figura.
+
+A primeira é que o DFM pequeno fica à frente do FOCUS enquanto o trimestre está em curso. O DFM no core erra `r fmt(rmse_aa("dfm_4a", "core", "m1"))` no fim de M1, `r fmt(rmse_aa("dfm_4a", "core", "m2"))` no fim de M2 e `r fmt(rmse_aa("dfm_4a", "core", "m3"))` no fim de M3, contra `r fmt(rmse_aa("focus", "", "m1"))`, `r fmt(rmse_aa("focus", "", "m2"))` e `r fmt(rmse_aa("focus", "", "m3"))` do FOCUS. O DFM no estendido também fica à frente em M1 e M2 e empata no M3. O que ele tem a oferecer é velocidade. Agrega cada divulgação no dia em que ela sai. A mediana do FOCUS demora a andar.
+
+A segunda é que na véspera a ordem se inverte. O FOCUS erra `r fmt(rmse_aa("focus", "", "vespera"))` e nenhum modelo chega lá. O DFM fica em `r fmt(rmse_aa("dfm_4a", "core", "vespera"))`, o DFM em blocos em `r fmt(rmse_aa("dfm_4b", "core", "vespera"))` e o FAMIDAS no core em `r fmt(rmse_aa("famidas", "core", "vespera"))`. Entre o fim de M3 e a véspera passam dois meses. O FOCUS é quem mais ganha com eles. Faz sentido. Quem responde à pesquisa nessa altura já rodou o próprio *tracking* com o trimestre inteiro de indicadores e sabe coisas que o painel não sabe, de greve a safra.
+
+A terceira é o que **não** ajuda. O estendido piora o DFM, que vai a `r fmt(rmse_aa("dfm_4a", "estendido", "vespera"))` na véspera com cinco vezes mais séries. Piora também o DFM em blocos. Os blocos, por sua vez, não compram nada. O DFM em blocos fica atrás do DFM nos quatro timings.
+
+O FAMIDAS no estendido erra `r fmt(rmse_aa("famidas", "estendido", "vespera"))` na véspera. Quase tudo vem de um único trimestre. Na véspera de 2020Q1 ele projetou `r fmt(famidas_20q1$aa, 1)`%, contra `r fmt(famidas_20q1$real, 1)`% do IBGE. Sem esse trimestre, o RMSE cai para `r fmt(rmse_famidas_sem_20q1)`. O recorte sem 2020Q2 e 2020Q3 olha o trimestre alvo, mas a véspera de 2020Q1 é o fim de maio de 2020, quando o painel já tinha abril. Minha hipótese é que alguma série do estendido que quase zerou em abril, como passageiros aéreos ou produção de veículos, entrou na janela de seis meses com um coeficiente estimado em anos de variações pequenas. O modelo é linear e não tem freio, então a queda passa inteira para o *nowcast*. Na leitura só com o trimestre, que para em março, o erro de 2020Q1 cai para cerca de um terço.
+
+A quarta é o que o teste consegue afirmar. Uso Diebold-Mariano com a correção de Harvey, Leybourne e Newbold. Entre o DFM no core e o FOCUS os p-valores são `r fmt(p_focus_aa("dfm_4a", "core", "m1"))`, `r fmt(p_focus_aa("dfm_4a", "core", "m2"))`, `r fmt(p_focus_aa("dfm_4a", "core", "m3"))` e `r fmt(p_focus_aa("dfm_4a", "core", "vespera"))`, do M1 à véspera. Com `r n_sem_covid` observações, nem a vantagem do modelo nos três primeiros timings nem a do FOCUS na véspera tem significância.
+
+```{r}
+#| label: tbl-dm
+#| tbl-cap: "P-valor do teste DM-HLN contra o FOCUS, variação interanual, amostra sem 2020Q2 e 2020Q3. O sinal diz quem erra menos. Com sinal negativo é o modelo, com positivo é o FOCUS."
+#| echo: false
+
+aa_principal %>%
+  filter(amostra == "sem_covid", modelo != "focus") %>%
+  mutate(
+    celula = str_c(if_else(dm_focus < 0, "(−) ", "(+) "), fmt(p_focus))
+  ) %>%
+  select(modelo_rotulo, painel, timing, celula) %>%
+  arrange(timing) %>%
+  pivot_wider(names_from = timing, values_from = celula) %>%
+  arrange(modelo_rotulo, painel) %>%
+  kable(
+    col.names = c("modelo", "painel", "M1", "M2", "M3", "vésp."),
+    align = c("l", "l", rep("r", 4))
+  )
+```
+
+A figura abaixo mostra os *nowcasts* de três modelos contra o realizado, de 2021Q3 em diante, para que os efeitos de base de 2020 não esmaguem a escala.
+
+```{r}
+#| label: fig-nowcast-realizado
+#| fig-cap: "Nowcast contra a variação interanual publicada pelo IBGE, no fim de M1 e na véspera, de 2021Q3 em diante. DFM e Ridge no painel core."
+#| echo: false
+#| fig-height: 5.5
+
+series_f5 <- c("Realizado", "FOCUS", "DFM", "Ridge")
+
+nowcasts_f5 <-
+  nowcasts %>%
+  filter(
+    variante == "principal",
+    timing %in% c("m1", "vespera"),
+    trimestre >= "2021Q3",
+    trimestre <= "2026Q2",
+    (modelo %in% c("dfm_4a", "ridge") & painel == "core" & trilha == "sa") |
+      modelo == "focus"
+  ) %>%
+  transmute(
+    trimestre,
+    timing,
+    serie = unname(rotulos_modelo[modelo]),
+    valor = aa
+  )
+
+realizado_f5 <-
+  realizado %>%
+  filter(trimestre >= "2021Q3", trimestre <= "2026Q2") %>%
+  expand_grid(timing = c("m1", "vespera")) %>%
+  transmute(trimestre, timing, serie = "Realizado", valor = aa)
+
+dados_f5 <-
+  bind_rows(nowcasts_f5, realizado_f5) %>%
+  mutate(
+    data = trimestre_data(trimestre),
+    timing = factor(rotulos_timing[timing], levels = rotulos_timing),
+    serie = factor(serie, levels = series_f5)
+  )
+
+ggplot(dados_f5, aes(x = data, y = valor, colour = serie, linewidth = serie)) +
+  geom_hline(yintercept = 0, colour = "lightgray", linewidth = 0.3) +
+  geom_line() +
+  facet_wrap(~timing, ncol = 1) +
+  scale_colour_manual(
+    values = c(
+      pal_blog("extended")[1],
+      accent_blog("cool"),
+      pal_blog("extended")[3],
+      accent_blog("gold")
+    )
+  ) +
+  scale_linewidth_manual(values = c(1, 0.6, 0.6, 0.6), guide = "none") +
+  scale_x_date_blog(dados_f5$data) +
+  labs(
+    title = "Onde cada um erra",
+    subtitle = "Variação interanual do PIB, %",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB"))
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+O erro de todo mundo mora no mesmo lugar. Entre 2022 e meados de 2023 o PIB cresceu, na maior parte dos trimestres, mais do que as três linhas previam no fim de M1. Nos erros maiores, em 2022Q2 e no primeiro semestre de 2023, o DFM ficou bem mais perto do realizado do que o FOCUS. É daí que vem a vantagem que a tabela mostra nos três primeiros *timings*. Na véspera as linhas se fecham em volta do realizado. De 2025 em diante, nesse *timing*, quase não há o que separar.
+
+## De onde vem a revisão
+
+Um nowcast que muda sem explicação serve pouco para quem tem que defender o número numa reunião. A *news*, que apresentei em *As regras do jogo*, transforma a revisão numa conta. Em símbolos, entre duas datas consecutivas $d_0 < d_1$,
+
+$$
+\hat{y}_{t \mid d_1} - \hat{y}_{t \mid d_0} \;=\; \sum_{j \in J} w_{j}\,\bigl(x_{j} - \hat{x}_{j \mid d_0}\bigr) \;+\; \text{revisão de dados} \;+\; \text{reestimação},
+$$
+
+em que $J$ é o conjunto de observações divulgadas entre as duas datas, $x_j$ é o valor divulgado, $\hat{x}_{j \mid d_0}$ é o que o modelo previa para ele com a informação anterior e $w_j$ é o peso, que sai do ganho de Kalman.
+
+```{r}
+#| label: fig-news-amostra
+#| fig-cap: "Impacto absoluto médio por bloco em cada revisão do nowcast do DFM, painel core, 2019Q1 a 2026Q2 sem 2020. A barra de M1 compara com o fim de M3 do trimestre anterior."
+#| echo: false
+#| fig-height: 4.5
+
+blocos_f6 <- c(
+  "hard",
+  "soft",
+  "financeiro",
+  "trabalho",
+  "revisão e reestimação"
+)
+
+news_f6 <-
+  news_bloco %>%
+  filter(
+    painel == "core",
+    trimestre >= "2019Q1",
+    trimestre <= "2026Q2",
+    !str_starts(trimestre, "2020")
+  ) %>%
+  mutate(
+    bloco = case_match(
+      bloco,
+      "sem_bloco" ~ "trabalho",
+      c("revisao", "reestimacao") ~ "revisão e reestimação",
+      .default = bloco
+    )
+  ) %>%
+  reframe(impacto = sum(impacto), .by = c(trimestre, timing, bloco)) %>%
+  reframe(impacto_abs = mean(abs(impacto)), .by = c(timing, bloco)) %>%
+  mutate(
+    timing = factor(rotulos_timing[timing], levels = rotulos_timing),
+    bloco = factor(bloco, levels = blocos_f6)
+  )
+
+f6_de <- function(b, t) {
+  news_f6 %>%
+    filter(bloco == b, timing == rotulos_timing[[t]]) %>%
+    pull(impacto_abs)
+}
+
+ggplot(news_f6, aes(x = timing, y = impacto_abs, fill = bloco)) +
+  geom_col(width = 0.6) +
+  scale_fill_blog("extended", 5) +
+  labs(
+    title = "Quem mexe no nowcast em cada momento do trimestre",
+    subtitle = "Impacto absoluto médio por bloco, p.p. de dlog trimestral dessaz.",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB", "FGV IBRE"))
+  ) +
+  theme_blog() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+::: {.zoomable-figure}
+:::
+
+O desenho geral é o que a figura do calendário prometia. No fim de M1 quem manda é o *soft*, com `r fmt(f6_de("soft", "m1"))` p.p. de impacto médio, seguido do financeiro. Do M2 em diante o *hard* assume, com `r fmt(f6_de("hard", "m2"))` p.p. O *soft* vai perdendo peso até sumir na véspera, quando as sondagens que saem já falam do trimestre seguinte.
+
+A revisão de dados, que é em boa parte o X-13 mudando de ideia sobre o passado recente, pesa `r fmt(f6_de("revisão e reestimação", "vespera"))` p.p. na véspera junto com a reestimação. É pouco (ainda bem), mas mostra que o filtro sazonal também mexe no *nowcast*.
+
+```{r}
+#| label: numeros-2026q2
+#| echo: false
+
+tri_cancela <- "2026Q2"
+news_cancela <- news_bloco %>%
+  filter(painel == "core", trimestre == tri_cancela)
+caminho_cancela <- news_cancela %>%
+  distinct(timing, nowcast_antes, nowcast_depois)
+
+bruto_cancela <- sum(abs(news_cancela$impacto))
+liquido_cancela <- sum(news_cancela$impacto)
+real_cancela <- realizado %>%
+  filter(trimestre == tri_cancela) %>%
+  pull(qoq_sa)
+nowcast_em <- function(t) {
+  caminho_cancela %>%
+    filter(timing == t) %>%
+    pull(nowcast_depois)
+}
+```
+
+O trimestre de abertura foi escolhido a dedo. O contraponto honesto é 2026Q2.
+
+O nowcast começou em `r fmt(caminho_cancela$nowcast_antes[1])`, foi a `r fmt(nowcast_em("m1"))` no fim de M1 com *hard*, financeiro e emprego puxando juntos para cima, devolveu boa parte no M2 ao cair para `r fmt(nowcast_em("m2"))`, subiu um pouco no M3 e terminou a véspera em `r fmt(nowcast_em("vespera"))`. Somando o valor absoluto de todos os impactos, o nowcast andou `r fmt(bruto_cancela, 1)` p.p. ao longo do trimestre. A revisão líquida, do começo ao fim, foi de `r fmt(liquido_cancela)` p.p. O PIB veio em `r fmt(real_cancela)`%.
+
+Os blocos se cancelam entre si e ao longo do tempo. O número final esconde um trimestre inteiro de idas e vindas. Para quem só olha o ponto, o modelo quase não mudou de opinião. A *news* mostra que mudou quatro vezes. Esse é um grande argumento pró-DFM.
+
+## Densidade
+
+Um número sozinho não diz quanto confiar nele. Três modelos do *lineup* devolvem uma distribuição para o *nowcast* (e o SARIMA devolve uma gaussiana de brinde). No MF-BVAR a distribuição é a posterior. Nos dois DFMs ela é uma normal em volta do valor suavizado, com a variância do estado que o filtro calcula mais a variância idiossincrática do PIB. Os sorteios nascem em variação trimestral dessazonalizada. Para chegar à interanual, cada sorteio passa pelo mesmo caminho do ponto, que é o nível do trimestre anterior, o fator sazonal projetado e o nível de um ano antes.
+
+```{r}
+#| label: numeros-densidade
+#| echo: false
+
+quantis_aa <- ler("quantis_aa.csv")
+
+# Fan chart: DFM no core, os oito trimestres de 2020 e 2021.
+fan <-
+  quantis_aa %>%
+  filter(
+    modelo == "dfm_4a",
+    painel == "core",
+    variante == "principal",
+    trimestre >= "2020Q1",
+    trimestre <= "2021Q4"
+  ) %>%
+  left_join(
+    realizado %>% select(trimestre, real_aa = aa),
+    join_by(trimestre)
+  ) %>%
+  mutate(timing = factor(timing, levels = names(rotulos_timing)))
+
+fan_vespera <- fan %>% filter(timing == "vespera")
+n_fan <- nrow(fan_vespera)
+n_fan_dentro90 <- sum(
+  fan_vespera$real_aa >= fan_vespera$q05 &
+    fan_vespera$real_aa <= fan_vespera$q95
+)
+fan_2020q2 <- fan %>%
+  filter(trimestre == "2020Q2") %>%
+  arrange(timing)
+```
+
+A figura mostra o que isso dá nos oito trimestres mais difíceis da janela.
+
+```{r}
+#| label: fig-fan
+#| fig-cap: "Densidade do nowcast do DFM, painel core, em variação interanual, nos quatro timings de cada trimestre de 2020 e 2021. A faixa clara vai do quantil 5% ao 95%, a escura do 16% ao 84%, a linha é a mediana e o traço em vinho é o número do IBGE. O eixo vertical muda de painel para painel."
+#| echo: false
+#| fig-height: 5.5
+
+ggplot(fan, aes(x = timing, group = 1)) +
+  geom_ribbon(
+    aes(ymin = q05, ymax = q95),
+    fill = pal_blog("extended")[3],
+    alpha = 0.25
+  ) +
+  geom_ribbon(
+    aes(ymin = q16, ymax = q84),
+    fill = pal_blog("extended")[3],
+    alpha = 0.45
+  ) +
+  geom_line(aes(y = q50), colour = pal_blog("extended")[1], linewidth = 0.8) +
+  geom_hline(
+    aes(yintercept = real_aa),
+    colour = accent_blog("cool"),
+    linewidth = 0.7
+  ) +
+  facet_wrap(~trimestre, ncol = 4, scales = "free_y") +
+  scale_x_discrete(labels = c("M1", "M2", "M3", "vésp.")) +
+  labs(
+    title = "A faixa fecha, e nem sempre no lugar certo",
+    subtitle = "Variação interanual do PIB, %, DFM no core",
+    x = NULL,
+    caption = caption_blog(c("IBGE"))
+  ) +
+  theme_blog() +
+  theme(axis.text.x = element_text(angle = 0, hjust = 0.5))
+```
+
+::: {.zoomable-figure}
+:::
+
+A faixa estreita a cada timing, como deveria. Em 2020Q2 a mediana sai de `r fmt(fan_2020q2$q50[1], 1)`% no fim de M1, quando abril ainda não tinha saído, vai a `r fmt(fan_2020q2$q50[2], 1)`% no fim de M2 e volta para `r fmt(fan_2020q2$q50[4], 1)`% na véspera, contra `r fmt(fan_2020q2$real_aa[1], 1)`% do IBGE. Na véspera, a faixa desse trimestre é a mais estreita das oito e mesmo assim erra por mais de 3 p.p. A densidade fica mais confiante justamente no trimestre em que o ponto erra mais. Na véspera o número publicado cai dentro da faixa de 90% em `r n_fan_dentro90` dos `r n_fan` trimestres.
+
+## Combos e o FOCUS
+
+Combinar previsões costuma funcionar para melhorar *performance* preditiva. Aqui, rodei três.
+
+As duas primeiras são médias dos sete modelos do core, ou dos seis do estendido, que não tem MF-BVAR, sempre na leitura com tudo. Uma usa pesos iguais. A outra pesa cada modelo pelo inverso do RMSE que ele tinha até ali,
+
+$$
+w_{i,t} = \frac{1/\text{RMSE}_{i,t}}{\sum_j 1/\text{RMSE}_{j,t}}, \qquad \text{RMSE}_{i,t} = \sqrt{\frac{1}{|S_t|} \sum_{s \in S_t} e_{i,s}^2},
+$$
+
+em que $S_t$ são os trimestres, de 2015Q1 em diante, cujo PIB já tinha sido publicado na data do *nowcast*, e $e_{i,s}$ é o erro do modelo $i$ no mesmo timing.
+
+A terceira, que chamo de peneira, é inspirada no *paper* do BID. Em cada data ela descarta os modelos cujo *nowcast* interanual tem sinal contrário ao do FOCUS ou está a mais de $\alpha$ pontos dele, tira a média simples dos que sobram e, se nenhum sobra, devolve o próprio FOCUS. Usei $\alpha$ de 2,0 p.p. no fim de M1, 1,5 no fim de M2 e 1,0 no fim de M3 e na véspera.
+
+```{r}
+#| label: tbl-combos
+#| tbl-cap: "RMSE em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, e p-valor do DM-HLN contra o FOCUS na véspera. DFM e FOCUS repetidos da primeira tabela para comparação."
+#| echo: false
+
+rotulos_combo <- c(
+  combo_igual = "Combo, pesos iguais",
+  combo_rmse = "Combo, pesos por RMSE",
+  combo_peneira = "Peneira",
+  dfm_4a = "DFM",
+  focus = "FOCUS"
+)
+
+combos_aa <-
+  avaliacao_aa %>%
+  filter(
+    amostra == "sem_covid",
+    modelo %in% names(rotulos_combo),
+    variante %in% c("principal", "aa")
+  ) %>%
+  mutate(
+    modelo_rotulo = factor(rotulos_combo[modelo], levels = rotulos_combo),
+    painel = if_else(painel == "nenhum", "", painel)
+  )
+
+rmse_combo <- function(m, p, t) {
+  combos_aa %>%
+    filter(modelo == m, painel == p, timing == t) %>%
+    pull(rmse)
+}
+p_combo <- function(m, p, t) {
+  combos_aa %>%
+    filter(modelo == m, painel == p, timing == t) %>%
+    pull(p_focus)
+}
+
+combos_aa %>%
+  select(modelo_rotulo, painel, timing, rmse, p_focus) %>%
+  pivot_wider(names_from = timing, values_from = c(rmse, p_focus)) %>%
+  arrange(modelo_rotulo, painel) %>%
+  transmute(
+    modelo_rotulo,
+    painel,
+    across(c(rmse_m1, rmse_m2, rmse_m3, rmse_vespera), fmt),
+    p = if_else(is.na(p_focus_vespera), "", fmt(p_focus_vespera))
+  ) %>%
+  kable(
+    col.names = c("modelo", "painel", "M1", "M2", "M3", "vésp.", "p (vésp.)"),
+    align = c("l", "l", rep("r", 5))
+  )
+```
+
+As duas médias não melhoram o melhor membro. No core o combo de pesos iguais erra `r fmt(rmse_combo("combo_igual", "core", "m1"))` no fim de M1 e `r fmt(rmse_combo("combo_igual", "core", "vespera"))` na véspera, contra `r fmt(rmse_combo("dfm_4a", "core", "m1"))` e `r fmt(rmse_combo("dfm_4a", "core", "vespera"))` do DFM. O peso por RMSE ajuda pouco, com `r fmt(rmse_combo("combo_rmse", "core", "m1"))` e `r fmt(rmse_combo("combo_rmse", "core", "vespera"))`. A razão está na primeira tabela. Nos dois primeiros *timings* Ridge, *random forest* e FAMIDAS erram bem mais que os outros.
+
+A peneira é outra conversa. Ela erra `r fmt(rmse_combo("combo_peneira", "core", "vespera"))` na véspera, contra `r fmt(rmse_combo("focus", "", "vespera"))` do FOCUS, com p-valor de `r fmt(p_combo("combo_peneira", "core", "vespera"))`. Lido assim, é um modelo que empata com o mercado.
+
+```{r}
+#| label: numeros-peneira
+#| echo: false
+
+diagnostico_combos <- ler("diagnostico_combos.csv")
+
+desvio_focus <-
+  nowcasts %>%
+  filter(
+    modelo %in% c("combo_peneira", "combo_igual"),
+    painel == "core",
+    variante == "principal",
+    trimestre >= "2019Q1",
+    trimestre <= "2026Q2",
+    !trimestre %in% c("2020Q2", "2020Q3")
+  ) %>%
+  left_join(
+    nowcasts %>%
+      filter(modelo == "focus") %>%
+      select(trimestre, timing, aa_focus = aa),
+    join_by(trimestre, timing)
+  ) %>%
+  mutate(desvio = aa - aa_focus)
+
+desvio_medio <- function(m, t) {
+  desvio_focus %>%
+    filter(modelo == m, timing == t) %>%
+    pull(desvio) %>%
+    abs() %>%
+    mean()
+}
+
+peneira_vespera <-
+  diagnostico_combos %>%
+  filter(
+    modelo == "combo_peneira",
+    painel == "core",
+    timing == "vespera",
+    trimestre >= "2019Q1",
+    trimestre <= "2026Q2"
+  )
+vetos <- peneira_vespera %>%
+  filter(n_sobreviventes < n_modelos, !trimestre %in% c("2020Q2", "2020Q3"))
+ultimo_veto <- max(vetos$trimestre)
+n_vetos <- nrow(vetos)
+```
+
+```{r}
+#| label: fig-peneira
+#| fig-cap: "Distância entre o nowcast e a mediana do FOCUS na véspera, em variação interanual, para a peneira e para o combo de pesos iguais, painel core. A faixa cinza é o limite de 1 p.p. da peneira."
+#| echo: false
+#| fig-height: 4
+
+dados_f9 <-
+  desvio_focus %>%
+  filter(timing == "vespera") %>%
+  mutate(
+    data = trimestre_data(trimestre),
+    serie = factor(
+      rotulos_combo[modelo],
+      levels = rotulos_combo[c("combo_peneira", "combo_igual")]
+    )
+  )
+
+ggplot(dados_f9, aes(x = data, y = desvio, colour = serie)) +
+  annotate(
+    "rect",
+    xmin = min(dados_f9$data),
+    xmax = max(dados_f9$data),
+    ymin = -1,
+    ymax = 1,
+    fill = "lightgray",
+    alpha = 0.4
+  ) +
+  geom_hline(yintercept = 0, colour = "gray40", linewidth = 0.3) +
+  geom_line(linewidth = 0.8) +
+  scale_colour_manual(
+    values = c(accent_blog("cool"), pal_blog("extended")[3])
+  ) +
+  scale_x_date_blog(dados_f9$data) +
+  labs(
+    title = "A peneira não sai de perto do FOCUS",
+    subtitle = "Nowcast menos mediana do FOCUS na véspera, p.p. de variação interanual",
+    x = NULL,
+    caption = caption_blog(c("IBGE", "BCB"))
+  ) +
+  theme_blog()
+```
+
+::: {.zoomable-figure}
+:::
+
+Só que o FOCUS é insumo dela. Por construção a peneira nunca fica a mais de $\alpha$ do FOCUS. Na prática, fica bem mais perto. Na véspera a distância média é de `r fmt(desvio_medio("combo_peneira", "vespera"))` p.p., contra `r fmt(desvio_medio("combo_igual", "vespera"))` do combo de pesos iguais, que usa os mesmos modelos sem olhar o mercado.
+
+A diferença entre `r fmt(rmse_combo("combo_igual", "core", "vespera"))` e `r fmt(rmse_combo("combo_peneira", "core", "vespera"))` vem toda dos `r n_vetos` trimestres em que o FOCUS vetou alguém. Na janela inteira sobrevivem em média `r fmt(mean(peneira_vespera$n_sobreviventes), 1)` dos sete. Em `r sum(peneira_vespera$caiu_no_focus)` das `r nrow(peneira_vespera)` vésperas não sobrou nenhum e o nowcast foi o próprio FOCUS. Uma combinação que só aceita quem concorda com o mercado vai errar parecido com o mercado.
+
+O *framing* dela é outro. No fim de M2 a peneira erra `r fmt(rmse_combo("combo_peneira", "core", "m2"))`, contra `r fmt(rmse_combo("focus", "", "m2"))` do FOCUS e `r fmt(rmse_combo("combo_igual", "core", "m2"))` do combo simples. Ali o FOCUS serve de filtro para tirar da média os modelos que ainda não viram dado do trimestre. É um resultado sobre usar o mercado para limpar os modelos.
+
+## O caminho mensal
+
+Os três modelos de espaço de estado supõem um PIB mensal que ninguém observa. O suavizador devolve uma estimativa dele. Na véspera de cada trimestre guardei a variação mensal dos três meses do trimestre alvo. A comparação natural é o [Monitor do PIB](https://portalibre.fgv.br/monitor-do-pib) da FGV IBRE, que estima o PIB mensal por outro caminho, a partir de indicadores setoriais desagregados e depois ajustado às Contas Trimestrais. Ele é outra estimativa e não o gabarito, porque PIB mensal oficial não existe.
+
+![Variação mensal dessazonalizada do PIB, em p.p. de log, nos três modelos de frequência mista, lidos na véspera de cada trimestre, e no Monitor do PIB. Os termos de uso do Monitor vedam a redistribuição do dado, então esta é a única figura do post que chega pronta da esteira, sem CSV ao lado.](images/nowcasting/caminho-mensal.png){#fig-caminho-mensal}
+
+```{r}
+#| label: numeros-caminho
+#| echo: false
+
+# O Monitor não está no congelado. Estes números saem do alvo caminho_mensal da esteira,
+# meses de dentro do trimestre alvo, 2019Q1 a 2026Q2 sem os quatro trimestres de 2020.
+cor_monitor <- c(dfm_4a = 0.75, dfm_4b = 0.64, mfbvar = 0.70)
+dp_monitor <- 1.15
+dp_4a <- 0.60
+sinal_4a <- 0.81
+```
+
+Os modelos e o Monitor contam a mesma história nos movimentos grandes, abril de 2020 e a volta. Fora de 2020 a correlação com o Monitor é de `r fmt(cor_monitor[["dfm_4a"]])` no DFM, `r fmt(cor_monitor[["mfbvar"]])` no MF-BVAR e `r fmt(cor_monitor[["dfm_4b"]])` no DFM em blocos. O DFM acerta o sinal do mês em `r fmt(100 * sinal_4a, 0)`% das vezes.
+
+A diferença está na amplitude. O desvio padrão da variação mensal do Monitor é `r fmt(dp_monitor)` p.p. O do DFM é `r fmt(dp_4a)`, cerca de metade. Os picos do começo de 2024, em que o Monitor cai quase 4% num mês e sobe 4% no seguinte, não existem em nenhum dos três modelos. Faz sentido.
+
+No DFM, o PIB latente é uma combinação de fatores que seguem um VAR. O suavizador reparte o trimestre entre os meses do jeito mais suave que os indicadores permitem. O Monitor herda o ruído mensal dos indicadores setoriais. No fim, os dois chegam a trimestres parecidos e discordam sobre o mês em que cada movimento aconteceu.
+
+## Robustez
+
+Três escolhas do exercício podiam ter sido outras.
+
+A primeira é deixar o *nowcast* da véspera olhar os meses posteriores ao trimestre. Uma alternativa natural é não permitir olhar dados após o trimestre alvo.
+
+A segunda é dessazonalizar tudo com o X-13 de cada data. A outra opção seria modelar a variação trimestral sem ajuste com algum tratamento sazonal no lado direito das equações, como *dummies* de mês.
+
+A terceira é começar a estimação em 2011 para ter onze séries. Aqui entra a base *core longo* apresentada anteriormente.
+
+Esta seção refaz a conta mudando uma de cada vez, sempre em variação interanual e na amostra sem 2020Q2 e 2020Q3.
+
+### Só o trimestre
+
+Na seção dos modelos ficou aberta uma pergunta. Na véspera, o que já saiu sobre o trimestre seguinte ajuda no *nowcast* do trimestre que fechou?
+
+```{r}
+#| label: tbl-vespera-variantes
+#| tbl-cap: "RMSE na véspera em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, nas duas leituras. Com tudo é a linha principal, que usa o que estava publicado na data. Só o trimestre para no último mês do trimestre alvo. O FOCUS está na última linha como referência."
+#| echo: false
+
+rotulos_variante <- c(principal = "com tudo", trimestre = "só o trimestre")
+
+vespera_variantes <-
+  avaliacao_aa %>%
+  filter(
+    amostra == "sem_covid",
+    timing == "vespera",
+    trilha == "sa",
+    modelo %in%
+      c("ridge", "lasso", "rf", "famidas", "dfm_4a", "dfm_4b", "mfbvar"),
+    variante %in% names(rotulos_variante)
+  ) %>%
+  mutate(
+    modelo_rotulo = factor(rotulos_modelo[modelo], levels = rotulos_modelo)
+  )
+
+rmse_vespera <- function(m, p, v) {
+  vespera_variantes %>%
+    filter(modelo == m, painel == p, variante == v) %>%
+    pull(rmse)
+}
+
+vespera_variantes %>%
+  transmute(
+    modelo_rotulo,
+    painel,
+    variante = factor(rotulos_variante[variante], levels = rotulos_variante),
+    rmse = fmt(rmse)
+  ) %>%
+  pivot_wider(names_from = variante, values_from = rmse, names_sort = TRUE) %>%
+  arrange(modelo_rotulo, painel) %>%
+  mutate(modelo_rotulo = as.character(modelo_rotulo)) %>%
+  bind_rows(tibble(
+    modelo_rotulo = "FOCUS",
+    painel = "",
+    `com tudo` = fmt(rmse_aa("focus", "", "vespera")),
+    `só o trimestre` = ""
+  )) %>%
+  kable(
+    col.names = c("modelo", "painel", "com tudo", "só o trimestre"),
+    align = c("l", "l", "r", "r")
+  )
+```
+
+Para os três modelos de espaço de estado a resposta é que tanto faz. Apagar os meses posteriores ao trimestre leva o DFM no core de `r fmt(rmse_vespera("dfm_4a", "core", "principal"), 3)` para `r fmt(rmse_vespera("dfm_4a", "core", "trimestre"), 3)`, o DFM em blocos de `r fmt(rmse_vespera("dfm_4b", "core", "principal"), 3)` para `r fmt(rmse_vespera("dfm_4b", "core", "trimestre"), 3)` e o MF-BVAR de `r fmt(rmse_vespera("mfbvar", "core", "principal"), 3)` para `r fmt(rmse_vespera("mfbvar", "core", "trimestre"), 3)`. Quando o trimestre inteiro de indicadores já está na mesa, o suavizador dá pouco peso a outubro e novembro.
+
+O FAMIDAS é quem mais ganha com o corte. No core ele vai de `r fmt(rmse_vespera("famidas", "core", "principal"))` para `r fmt(rmse_vespera("famidas", "core", "trimestre"))`, à frente do DFM. Os pesos MIDAS contam seis meses a partir do último publicado. Na leitura com tudo, nas séries rápidas, metade da curva cai sobre o trimestre seguinte.
+
+### Sem o X-13
+
+Tudo o que veio até aqui passou pelo X-13 de cada data. Falta saber quanto do resultado depende disso. A alternativa mais simples é deixar a sazonalidade dentro do modelo. É o que faz a trilha NSA. O PIB e os indicadores entram sem ajuste. A sazonalidade vai para o lado direito com um conjunto fixo de regressores determinísticos: *dummies* sazonais, dias úteis e Páscoa. O conjunto é o mesmo em todo *timing* e não passa por teste de AIC. Cada família recebe esse tratamento de um jeito.
+
+- **SARIMA.** O `auto.arima()` roda na variação trimestral do PIB sem ajuste, com três dummies de trimestre, dias úteis e Páscoa como regressores.
+- **Ridge e LASSO.** Cada linha da regressão é um trimestre, então as dummies são de trimestre. Elas entram sem penalização.
+- **FAMIDAS.** A mesma ideia. As dummies e o calendário entram ao lado dos fatores, fora da penalização do sg-LASSO.
+- **Random forest.** Árvore não parcializa nada, então o trimestre do alvo entra como mais uma variável. O modelo roda em duas versões, com os indicadores sem ajuste e com os indicadores dessazonalizados e só o alvo sem ajuste.
+- **DFM em blocos.** As dummies vão para a equação de observação de cada série, $x_{it} = \lambda_i' f_t + \gamma_i' d_t + e_{it}$, com 11 dummies de mês, dias úteis e Páscoa nas séries mensais e três dummies de trimestre no PIB. Os $\gamma_i$ saem do mesmo passo M que estima as cargas. O *nowcast* sem ajuste sai direto da equação de observação do PIB.
+- **DFM e MF-BVAR** ficam de fora. Nem o `dfms` nem o `mfbvar` aceitam regressores exógenos na forma de que a trilha precisa.
+
+```{r}
+#| label: tbl-nsa
+#| tbl-cap: "RMSE em variação interanual, p.p., painel core, amostra sem 2020Q2 e 2020Q3, nas duas trilhas, e p-valor do DM-HLN contra o FOCUS na véspera. Só entram os modelos que têm trilha NSA."
+#| echo: false
+
+rotulos_trilha <- c("SA", "NSA", "NSA, indicadores SA")
+
+trilhas_aa <-
+  avaliacao_aa %>%
+  filter(
+    amostra == "sem_covid",
+    painel == "core",
+    modelo %in% c("sarima", "ridge", "lasso", "rf", "famidas", "dfm_4b"),
+    (trilha == "sa" & variante == "principal") | trilha == "nsa"
+  ) %>%
+  mutate(
+    modelo_rotulo = factor(rotulos_modelo[modelo], levels = rotulos_modelo),
+    trilha_rotulo = case_when(
+      trilha == "sa" ~ "SA",
+      variante == "2" ~ "NSA, indicadores SA",
+      .default = "NSA"
+    ),
+    trilha_rotulo = factor(trilha_rotulo, levels = rotulos_trilha)
+  )
+
+rmse_trilha <- function(m, tr, t, v = if (tr == "sa") "principal" else "1") {
+  trilhas_aa %>%
+    filter(modelo == m, trilha == tr, variante == v, timing == t) %>%
+    pull(rmse)
+}
+p_4b_nsa <- trilhas_aa %>%
+  filter(modelo == "dfm_4b", trilha == "nsa") %>%
+  pull(p_focus)
+p_famidas_nsa <- trilhas_aa %>%
+  filter(modelo == "famidas", trilha == "nsa", timing == "vespera") %>%
+  pull(p_focus)
+
+trilhas_aa %>%
+  select(modelo_rotulo, trilha_rotulo, timing, rmse, p_focus) %>%
+  pivot_wider(names_from = timing, values_from = c(rmse, p_focus)) %>%
+  arrange(modelo_rotulo, trilha_rotulo) %>%
+  transmute(
+    modelo_rotulo = as.character(modelo_rotulo),
+    trilha_rotulo = as.character(trilha_rotulo),
+    across(c(rmse_m1, rmse_m2, rmse_m3, rmse_vespera), fmt),
+    p = fmt(p_focus_vespera)
+  ) %>%
+  bind_rows(tibble(
+    modelo_rotulo = "FOCUS",
+    trilha_rotulo = "",
+    rmse_m1 = fmt(rmse_aa("focus", "", "m1")),
+    rmse_m2 = fmt(rmse_aa("focus", "", "m2")),
+    rmse_m3 = fmt(rmse_aa("focus", "", "m3")),
+    rmse_vespera = fmt(rmse_aa("focus", "", "vespera")),
+    p = ""
+  )) %>%
+  kable(
+    col.names = c("modelo", "trilha", "M1", "M2", "M3", "vésp.", "p (vésp.)"),
+    align = c("l", "l", rep("r", 5))
+  )
+```
+
+Os números mudam. Quem mais perde é o DFM em blocos. No fim de M1 ele vai de `r fmt(rmse_trilha("dfm_4b", "sa", "m1"))` para `r fmt(rmse_trilha("dfm_4b", "nsa", "m1"))` e na véspera de `r fmt(rmse_trilha("dfm_4b", "sa", "vespera"))` para `r fmt(rmse_trilha("dfm_4b", "nsa", "vespera"))`. O FOCUS fica à frente dele nos quatro timings, com p-valor de no máximo `r fmt(max(p_4b_nsa))`.
+
+Nos lineares a diferença é menor. O Ridge piora nos quatro timings. O LASSO melhora um pouco no fim de M1 e de M2 e piora no M3 e na véspera, de `r fmt(rmse_trilha("lasso", "sa", "vespera"))` para `r fmt(rmse_trilha("lasso", "nsa", "vespera"))`.
+
+O FAMIDAS vai na direção contrária. Na véspera ele cai de `r fmt(rmse_trilha("famidas", "sa", "vespera"))` para `r fmt(rmse_trilha("famidas", "nsa", "vespera"))`, abaixo dos `r fmt(rmse_aa("focus", "", "vespera"))` do FOCUS. O teste não vê diferença.
+
+A trilha SA continua a principal porque é a única em que todos os modelos rodam, inclusive o DFM que lidera a tabela principal. A NSA mostra que a conclusão do post não é artefato do X-13. O ranking entre os modelos, em parte, é.
+
+### Vinte anos com nove séries
+
+A última pergunta é a que o estendido fez ao contrário. Em vez de mais séries, mais tempo. O **core longo**, descrito na seção dos dados, tira as três séries que prendem o core em 2011, acrescenta a ocupação da PNAD retropolada e começa a estimação em 2003, com 9 séries no lugar de 11.
+
+```{r}
+#| label: tbl-core-longo
+#| tbl-cap: "RMSE em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, no core e no core longo, e p-valor do DM-HLN contra o FOCUS na véspera. O MF-BVAR no core longo não tem a véspera de 2020Q1."
+#| echo: false
+
+core_longo_aa <-
+  ler("core_longo_aa.csv") %>%
+  filter(corte == "manchete", amostra == "sem_covid", painel == "core_longo")
+
+paineis_aa <-
+  bind_rows(
+    aa_principal %>%
+      filter(amostra == "sem_covid", painel == "core") %>%
+      mutate(timing = as.character(timing)),
+    core_longo_aa
+  ) %>%
+  mutate(
+    modelo_rotulo = factor(rotulos_modelo[modelo], levels = rotulos_modelo),
+    painel = if_else(painel == "core_longo", "core longo", painel)
+  )
+
+rmse_painel <- function(m, p, t) {
+  paineis_aa %>%
+    filter(modelo == m, painel == p, timing == t) %>%
+    pull(rmse)
+}
+p_painel <- function(m, p, t) {
+  paineis_aa %>%
+    filter(modelo == m, painel == p, timing == t) %>%
+    pull(p_focus)
+}
+
+paineis_aa %>%
+  select(modelo_rotulo, painel, timing, rmse, p_focus) %>%
+  pivot_wider(names_from = timing, values_from = c(rmse, p_focus)) %>%
+  arrange(modelo_rotulo, painel) %>%
+  transmute(
+    modelo_rotulo = as.character(modelo_rotulo),
+    painel,
+    across(c(rmse_m1, rmse_m2, rmse_m3, rmse_vespera), fmt),
+    p = fmt(p_focus_vespera)
+  ) %>%
+  bind_rows(tibble(
+    modelo_rotulo = "FOCUS",
+    painel = "",
+    rmse_m1 = fmt(rmse_aa("focus", "", "m1")),
+    rmse_m2 = fmt(rmse_aa("focus", "", "m2")),
+    rmse_m3 = fmt(rmse_aa("focus", "", "m3")),
+    rmse_vespera = fmt(rmse_aa("focus", "", "vespera")),
+    p = ""
+  )) %>%
+  kable(
+    col.names = c("modelo", "painel", "M1", "M2", "M3", "vésp.", "p (vésp.)"),
+    align = c("l", "l", rep("r", 5))
+  )
+```
+
+Mais tempo ajuda quase todo mundo, o contrário do que fizeram as séries a mais do estendido. O DFM vai de `r fmt(rmse_painel("dfm_4a", "core", "m1"))` para `r fmt(rmse_painel("dfm_4a", "core longo", "m1"))` no fim de M1 e de `r fmt(rmse_painel("dfm_4a", "core", "vespera"))` para `r fmt(rmse_painel("dfm_4a", "core longo", "vespera"))` na véspera. O MF-BVAR e o DFM em blocos ganham mais. Com o core longo, os três modelos de espaço de estado ficam à frente do FOCUS do fim de M1 ao fim de M3. O DFM em blocos no core longo e o FAMIDAS na trilha NSA são as duas únicas linhas do post que passam o FOCUS na véspera, nenhuma das duas com significância.
+
+Juntando as três perguntas, o desenho do post se mantém. Nenhuma variante produz um modelo que bata o FOCUS com significância. O que os modelos oferecem continua sendo chegar antes. O que muda de uma variante para outra é a ordem entre os modelos. Se eu tivesse que escolher uma mudança para a próxima rodada, seria a amostra. Vinte anos com nove séries fazem mais pelo *nowcast* do que cinco vezes mais séries em oito anos.
+
+## Conclusão
+
+Nenhum modelo deste exercício bate o FOCUS. Enquanto o trimestre está em curso, o DFM pequeno erra um pouco menos que a mediana do mercado. Na véspera o FOCUS passa à frente, porque quem responde à pesquisa já tem o trimestre inteiro de indicadores na mão. Com `r n_sem_covid` trimestres, o teste não separa um do outro em nenhum dos dois casos. O que o DFM entrega é um número atualizado no dia de cada divulgação, com uma conta que explica cada revisão, a um custo de manutenção baixo. Das escolhas testadas, a que mais ajudou foi alongar a amostra. Mais séries, no estendido, pioraram quase todos os modelos. A maior parte do trabalho, no fim, foi nas regras do jogo: o calendário, o X-13 refeito a cada data e a régua certa. Sem elas, qualquer tabela de RMSE sai melhor do que o modelo seria na vida real.

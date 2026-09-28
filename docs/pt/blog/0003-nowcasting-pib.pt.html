@@ -1,0 +1,2606 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="pt" xml:lang="pt"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Calendário de divulgações, X-13 a cada data, nove modelos e o que cada divulgação muda na previsão do trimestre.">
+
+<title>O PIB antes do PIB: um nowcasting em pseudo tempo real para o Brasil com FOCUS como régua – Raphael Ludwig</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../assets/img/monogram.svg" rel="icon" type="image/svg+xml">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-54c8e6fa4f5a32c10a0fc2649f353c31.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "Nenhum resultado",
+    "search-matching-documents-text": "documentos correspondentes",
+    "search-copy-link-title": "Copiar link para a busca",
+    "search-hide-matches-text": "Esconder correspondências adicionais",
+    "search-more-match-text": "mais correspondência neste documento",
+    "search-more-matches-text": "mais correspondências neste documento",
+    "search-clear-button-title": "Limpar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Procurar"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="../assets/css/site.css">
+</head>
+
+<body class="nav-fixed quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+            <div id="quarto-search" class="" title="Procurar"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Alternar de navegação" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../index.html"> 
+<span class="menu-text">Início</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../blog/index.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+</ul>
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/raphael-ludwig-167347414" target="_blank"> <i class="bi bi-linkedin" role="img" aria-label="LinkedIn">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="mailto:raphaludwig@gmail.com"> <i class="bi bi-envelope" role="img" aria-label="Email">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../en/index.html" rel="alternate"> 
+<span class="menu-text">EN</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Nesta página</h2>
+   
+  <ul>
+  <li><a href="#o-problema" id="toc-o-problema" class="nav-link active" data-scroll-target="#o-problema">O problema</a></li>
+  <li><a href="#as-regras-do-jogo" id="toc-as-regras-do-jogo" class="nav-link" data-scroll-target="#as-regras-do-jogo">As regras do jogo</a>
+  <ul class="collapse">
+  <li><a href="#o-calendário-de-divulgações" id="toc-o-calendário-de-divulgações" class="nav-link" data-scroll-target="#o-calendário-de-divulgações">O calendário de divulgações</a></li>
+  <li><a href="#information_set-e-o-pseudo-tempo-real" id="toc-information_set-e-o-pseudo-tempo-real" class="nav-link" data-scroll-target="#information_set-e-o-pseudo-tempo-real"><code>information_set()</code> e o pseudo tempo real</a></li>
+  <li><a href="#x-13-refeito-a-cada-data" id="toc-x-13-refeito-a-cada-data" class="nav-link" data-scroll-target="#x-13-refeito-a-cada-data">X-13 refeito a cada data</a></li>
+  <li><a href="#do-dessazonalizado-de-volta-ao-número-do-ibge" id="toc-do-dessazonalizado-de-volta-ao-número-do-ibge" class="nav-link" data-scroll-target="#do-dessazonalizado-de-volta-ao-número-do-ibge">Do dessazonalizado de volta ao número do IBGE</a></li>
+  <li><a href="#a-revisão-tem-que-fechar" id="toc-a-revisão-tem-que-fechar" class="nav-link" data-scroll-target="#a-revisão-tem-que-fechar">A revisão tem que fechar</a></li>
+  </ul></li>
+  <li><a href="#os-dados" id="toc-os-dados" class="nav-link" data-scroll-target="#os-dados">Os dados</a>
+  <ul class="collapse">
+  <li><a href="#quem-entra-no-painel" id="toc-quem-entra-no-painel" class="nav-link" data-scroll-target="#quem-entra-no-painel">Quem entra no painel</a></li>
+  <li><a href="#core-estendido-e-core-longo" id="toc-core-estendido-e-core-longo" class="nav-link" data-scroll-target="#core-estendido-e-core-longo">Core, estendido e core longo</a></li>
+  <li><a href="#de-onde-vêm" id="toc-de-onde-vêm" class="nav-link" data-scroll-target="#de-onde-vêm">De onde vêm</a></li>
+  </ul></li>
+  <li><a href="#os-modelos" id="toc-os-modelos" class="nav-link" data-scroll-target="#os-modelos">Os modelos</a>
+  <ul class="collapse">
+  <li><a href="#três-jeitos-de-juntar-mês-com-trimestre" id="toc-três-jeitos-de-juntar-mês-com-trimestre" class="nav-link" data-scroll-target="#três-jeitos-de-juntar-mês-com-trimestre">Três jeitos de juntar mês com trimestre</a></li>
+  <li><a href="#os-benchmarks" id="toc-os-benchmarks" class="nav-link" data-scroll-target="#os-benchmarks">Os benchmarks</a></li>
+  <li><a href="#regressão-com-realinhamento-vertical" id="toc-regressão-com-realinhamento-vertical" class="nav-link" data-scroll-target="#regressão-com-realinhamento-vertical">Regressão com realinhamento vertical</a></li>
+  <li><a href="#frequência-mista-em-espaço-de-estado" id="toc-frequência-mista-em-espaço-de-estado" class="nav-link" data-scroll-target="#frequência-mista-em-espaço-de-estado">Frequência mista em espaço de estado</a></li>
+  <li><a href="#combinações" id="toc-combinações" class="nav-link" data-scroll-target="#combinações">Combinações</a></li>
+  </ul></li>
+  <li><a href="#resultados-de-ponto" id="toc-resultados-de-ponto" class="nav-link" data-scroll-target="#resultados-de-ponto">Resultados de ponto</a></li>
+  <li><a href="#de-onde-vem-a-revisão" id="toc-de-onde-vem-a-revisão" class="nav-link" data-scroll-target="#de-onde-vem-a-revisão">De onde vem a revisão</a></li>
+  <li><a href="#densidade" id="toc-densidade" class="nav-link" data-scroll-target="#densidade">Densidade</a></li>
+  <li><a href="#combos-e-o-focus" id="toc-combos-e-o-focus" class="nav-link" data-scroll-target="#combos-e-o-focus">Combos e o FOCUS</a></li>
+  <li><a href="#o-caminho-mensal" id="toc-o-caminho-mensal" class="nav-link" data-scroll-target="#o-caminho-mensal">O caminho mensal</a></li>
+  <li><a href="#robustez" id="toc-robustez" class="nav-link" data-scroll-target="#robustez">Robustez</a>
+  <ul class="collapse">
+  <li><a href="#só-o-trimestre" id="toc-só-o-trimestre" class="nav-link" data-scroll-target="#só-o-trimestre">Só o trimestre</a></li>
+  <li><a href="#sem-o-x-13" id="toc-sem-o-x-13" class="nav-link" data-scroll-target="#sem-o-x-13">Sem o X-13</a></li>
+  <li><a href="#vinte-anos-com-nove-séries" id="toc-vinte-anos-com-nove-séries" class="nav-link" data-scroll-target="#vinte-anos-com-nove-séries">Vinte anos com nove séries</a></li>
+  </ul></li>
+  <li><a href="#conclusão" id="toc-conclusão" class="nav-link" data-scroll-target="#conclusão">Conclusão</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">O PIB antes do PIB: um nowcasting em pseudo tempo real para o Brasil com FOCUS como régua</h1>
+  <div class="quarto-categories">
+    <div class="quarto-category">nowcasting</div>
+    <div class="quarto-category">econometrics</div>
+    <div class="quarto-category">gdp</div>
+    <div class="quarto-category">dfm</div>
+    <div class="quarto-category">midas</div>
+    <div class="quarto-category">x13</div>
+  </div>
+  </div>
+
+<div>
+  <div class="description">
+    Calendário de divulgações, X-13 a cada data, nove modelos e o que cada divulgação muda na previsão do trimestre.
+  </div>
+</div>
+
+
+<div class="quarto-title-meta">
+
+    
+    <div>
+    <div class="quarto-title-meta-heading">Data de Publicação</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">28 de setembro de 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Um escopo no qual é particularmente interessante aplicar o <em>horse race</em> tradicional de modelos preditivos é o <em>nowcasting</em>. O analista monta um cardápio de especificações e <em>engines</em> diferentes; realiza projeções <em>out-of-sample</em> um passo à frente simulando atualizações em tempo real da sua base de dados escolhida; e coleta para os diversos pontos no tempo estatísticas de erro de projeção. Ao final, ele tem DFM contra MIDAS, BVAR contra <em>random forest</em>, uma tabela de RMSEs (ou qualquer outra métrica de erro) comparando os diversos modelos e um grupo de vencedores para serem utilizados no <em>nowcasting</em> da variável na próxima data alvo.</p>
+<blockquote class="blockquote">
+<p>Neste post, vou usar um vocabulário próprio para evitar confusões. O conceito de modelo ou modelo preditivo aparecerá aqui como o par ordenado {especificação, <em>engine</em> / estimador}, no qual especificação corresponde à matriz de regressores utilizada e, se necessário, hiperparâmetros solicitados pela <em>engine</em> escolhida, enquanto <em>engine</em> vai ser o método computacional escolhido para fitar o modelo (regressão simples, <em>random forest</em>, DFM etc.).</p>
+</blockquote>
+<p>Contudo, esse exercício que, no primeiro momento, busca a validação de algum modelo como o “melhor” tem várias armadilhas. Consequentemente, montei um exercício de <em>horse race</em> <em>nowcasting</em> como o descrito para o PIB brasileiro e busquei gastar a maior parte do tempo em algumas dessas armadilhas.</p>
+<p>Três decisões costumam vir antes de qualquer modelo e, às vezes, mexem mais no resultado do que a troca de um estimador por outro.</p>
+<ol type="1">
+<li><strong>O que se sabia em cada data?</strong> Aqui é uma dupla questão. A PIM de julho sai em setembro. Um <em>nowcast</em> datado de 31 de agosto que usa a PIM de julho está vendo o futuro. Respeito ao calendário é essencial. Além disso, a PIM, como vários outros indicadores, está sujeita a revisões. Portanto, o ideal é testar o modelo usando <em>vintages</em> dos períodos correspondentes para de fato simular qual era a informação disponível naquele momento.</li>
+<li><strong>Como dessazonalizar a série?</strong> A série com ajuste sazonal que o IBGE publica hoje passou por um filtro que olha para os dois lados. Ele sempre reestima o valor dos coeficientes e decide ex-post o tratamento para diversos <em>outliers</em>. Dessa forma, na série dessazonalizada corrente um ponto de 2019 foi calculado com dados de 2026. Usá-la num exercício histórico também é ver o futuro, só que de um jeito mais discreto.</li>
+<li><strong>Contra o que se compara?</strong> Bater um SARIMA é fácil [sic]. A previsão só vai ser útil de fato se o modelo acrescentar alguma coisa frente às projeções de especialistas, como a mediana do FOCUS (disponível de forma pública e gratuita).</li>
+</ol>
+<div class="cell">
+<details class="code-fold">
+<summary>Mostrar código</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/theme_blog.R"</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>dir_dados <span class="ot">&lt;-</span> <span class="st">"data/nowcasting"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>ler <span class="ot">&lt;-</span> <span class="cf">function</span>(arquivo) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="fu">file.path</span>(dir_dados, arquivo), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>news_bloco <span class="ot">&lt;-</span> <span class="fu">ler</span>(<span class="st">"news_4a_bloco.csv"</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>nowcasts <span class="ot">&lt;-</span> <span class="fu">ler</span>(<span class="st">"nowcasts.csv"</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>realizado <span class="ot">&lt;-</span> <span class="fu">ler</span>(<span class="st">"realizado.csv"</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>estabilidade <span class="ot">&lt;-</span> <span class="fu">ler</span>(<span class="st">"estabilidade_timings.csv"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>tempos <span class="ot">&lt;-</span> <span class="fu">ler</span>(<span class="st">"tempos.csv"</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Números no texto com vírgula decimal.</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>fmt <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">digitos =</span> <span class="dv">2</span>) {</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">formatC</span>(x, <span class="at">format =</span> <span class="st">"f"</span>, <span class="at">digits =</span> digitos, <span class="at">decimal.mark =</span> <span class="st">","</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="co"># "2024Q3" -&gt; data do primeiro dia do trimestre, para o eixo X.</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>trimestre_data <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">yq</span>(<span class="fu">str_replace</span>(x, <span class="st">"Q"</span>, <span class="st">" Q"</span>))</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Mas sem botar a carroça na frente dos bois. Antes de tudo, o que um <em>nowcasting</em> pode entregar e por que se digladiar com essas minúcias descritas acima?</p>
+<p>A beleza desse procedimento é, de formas diferentes a depender do modelo escolhido, atualizar em tempo real, conforme os dados vão sendo divulgados, a projeção da variável dependente escolhida. Por exemplo:</p>
+<p>No fim de junho de 2024, o DFM pequeno que uso neste post projetava -0,16% de variação trimestral dessazonalizada para o PIB do terceiro trimestre, uma leve queda. Um mês depois, em 31 de julho, projetava 1,01%. Dos 1,17 p.p. de diferença, 0,76 p.p. vieram das duas sondagens da FGV de julho, que saíram acima do que o modelo esperava. Dali até dezembro o <em>nowcast</em> andou pouco.</p>
+<p>Na véspera da divulgação, já em variação interanual, ele marcava 4,15%. A mediana do FOCUS estava em 3,80% e o IBGE publicou 4,14%.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-news-2024q3" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-news-2024q3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-news-2024q3-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-news-2024q3-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;1: Revisão do nowcast do DFM para 2024Q3 entre timings consecutivos, decomposta por bloco de séries. ‘Demais’ soma a série sem bloco, a revisão de dados já publicados e a reestimação dos parâmetros. Os números em vinho são o nowcast antes e depois de cada revisão.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Escolhi esse trimestre porque ele é bonito. Aviso desde já que a maioria não é. O intuito do post, contudo, não é apenas checar se o gráfico acima é regra ou sorte. A ideia aqui também é explicitar diferentes processos de <em>nowcasting</em> e pinçar alguns modelos que parecem melhores em fazer projeção nesse contexto.</p>
+<p>Adiantando a resposta, enquanto o trimestre está em curso, o DFM pequeno erra um pouco menos que o FOCUS. Na véspera da divulgação o FOCUS passa à frente. Entretanto, os testes estatísticos usados não separam um do outro.</p>
+<p>Olhando o copo meio cheio, é um modelo de baixa manutenção que replica o FOCUS. Não precisa fazer <em>tracker</em> projetando <em>bottom-up</em> abertura por abertura. Já o copo meio vazio é que, após tanto suor virtual e esforço cibernético, meu procedimento foi incapaz de bater o <em>benchmark</em>. Contudo, o que me interessa aqui não é o resultado, mas sim, como falei, <del>os amigos que fizemos durante</del> o caminho até ele e como lidei com as armadilhas.</p>
+<blockquote class="blockquote">
+<p>Todo o código está no repositório <a href="https://github.com/raphaludwig/nowcasting-pib-br"><code>nowcasting-pib-br</code></a>. Este post não estima nada. Ele lê os CSVs que a rodada gravou e desenha os gráficos. Os trechos de código que aparecem daqui para frente estão marcados como <code>eval: false</code> e são cópias do que roda lá.</p>
+</blockquote>
+<section id="o-problema" class="level2">
+<h2 class="anchored" data-anchor-id="o-problema">O problema</h2>
+<p>Começando do começo.</p>
+<p>O IBGE divulga as Contas Nacionais Trimestrais cerca de 60 dias depois do fim do trimestre. O PIB de julho a setembro de 2024 saiu em 3 de dezembro. Nesse intervalo de cinco meses entre o começo do trimestre e a divulgação saem dezenas de indicadores mensais que falam do mesmo período: a produção industrial, as vendas do varejo, o volume de serviços, as sondagens de confiança, os emplacamentos, o crédito, o câmbio.</p>
+<p>Um <strong>nowcast</strong> é a projeção do PIB do trimestre corrente feita com o que já saiu desses indicadores. A palavra “previsão” atrapalha um pouco aqui porque sugere horizonte. O alvo não muda de lugar. O que muda é quanta informação existe sobre ele.</p>
+<p>Para ser mais didático, avalio cada modelo em quatro datas por trimestre, as quais chamo de <strong>timings</strong>.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>timing</th>
+<th>data</th>
+<th>para 2024Q3</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>fim de M1</td>
+<td>último dia do primeiro mês do trimestre</td>
+<td>31/07/2024</td>
+</tr>
+<tr class="even">
+<td>fim de M2</td>
+<td>último dia do segundo mês</td>
+<td>31/08/2024</td>
+</tr>
+<tr class="odd">
+<td>fim de M3</td>
+<td>último dia do trimestre</td>
+<td>30/09/2024</td>
+</tr>
+<tr class="even">
+<td>véspera</td>
+<td>dia útil anterior à divulgação do PIB</td>
+<td>02/12/2024</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p>O trimestre de 2024Q3 vai ser usado recorrentemente ao longo das próximas seções como exemplo ilustrativo.</p>
+</blockquote>
+<p>A véspera é o <em>timing</em> mais duro para qualquer modelo. É quando o FOCUS está mais informado. Boa parte dos analistas (se não todos) que respondem à pesquisa já rodou o próprio <em>tracking</em> com todos os indicadores do trimestre na mão.</p>
+<p>A janela de avaliação vai de 2019Q1 a 2026Q2. A estimação começa em 2011 e a amostra cresce a cada trimestre, sem janela móvel.</p>
+</section>
+<section id="as-regras-do-jogo" class="level2">
+<h2 class="anchored" data-anchor-id="as-regras-do-jogo">As regras do jogo</h2>
+<section id="o-calendário-de-divulgações" class="level3">
+<h3 class="anchored" data-anchor-id="o-calendário-de-divulgações">O calendário de divulgações</h3>
+<p>O ponto de partida é compilar em uma tabela as datas em que cada observação de cada série foi publicada. Para as pesquisas do IBGE e para o PIB, as datas vêm do próprio instituto, pela API de calendário e pelo FTP de publicações antigas. Para crédito e IBC-Br, vêm do calendário do BCB. Onde não achei histórico, caso das sondagens da FGV e dos emplacamentos da Anfavea, uso uma regra de dia típico do mês. As séries de mercado entram como média dos dias disponíveis até a data.</p>
+<p>A figura abaixo mostra o resultado para o mesmo 2024Q3. Cada célula é o último mês de referência que estava publicado naquela data.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-calendario" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-calendario-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-calendario-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-calendario-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;2: O que já tinha saído em cada timing de 2024Q3, para o PIB e as onze séries do core.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Três fatos estilizados nessa figura chamam a atenção e norteiam o resto do post. No fim de M1 não existe nenhum dado <em>hard</em> do trimestre, só sondagens e mercado. Por isso, a revisão de julho de 2024 veio em boa parte do bloco <em>soft</em>. No fim de M3 o trimestre acabou e o modelo conhece só um mês de indústria, varejo e serviços. E, nesse trimestre, no fim de M1 e de M2 o PIB do trimestre <strong>anterior</strong> ainda não tinha saído, o que cria um problema próprio que trato abaixo.</p>
+<p>Esse formato de dados, com cada série terminando num mês diferente, é o que a literatura chama de <em>ragged edge</em>. Exercícios publicados o contornam de diferentes modos. Cortam todas as séries no mesmo mês, ou assumem uma defasagem fixa por série, ou agregam tudo a trimestral e esperam o trimestre fechar. Aqui a ponta irregular entra como ela é, com a data real de cada divulgação.</p>
+<p>Sobre o PIB do trimestre anterior. Como estou projetando a variação trimestral dessazonalizada e, no fim de M1 e às vezes no de M2, o PIB de t-1 ainda não saiu, a regra que adotei é que cada modelo usa o próprio <em>nowcast</em> mais recente do trimestre anterior. Um modelo que errou o trimestre passado carrega esse erro para o nível do trimestre corrente e, portanto, para a variação interanual.</p>
+</section>
+<section id="information_set-e-o-pseudo-tempo-real" class="level3">
+<h3 class="anchored" data-anchor-id="information_set-e-o-pseudo-tempo-real"><code>information_set()</code> e o pseudo tempo real</h3>
+<p>O calendário diz quando cada número saiu. Falta garantir que, em cada data de corte, nenhum modelo use um número publicado depois dela. Esse é o erro mais fácil de cometer num exercício assim e o mais difícil de perceber depois, porque ele não quebra nada. O modelo só fica melhor do que seria na vida real.</p>
+<p>A garantia que adotei está na estrutura do código. Todo modelo, em todo timing, recebe os dados por uma única função, <code>information_set()</code>, que estabelece os freios temporais necessários.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>information_set(): o painel cortado na data e dessazonalizado com o que existia</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cortar_na_data <span class="ot">&lt;-</span> <span class="cf">function</span>(painel, calendario, data) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(data)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  inicio_cal <span class="ot">&lt;-</span> <span class="fu">min</span>(calendario<span class="sc">$</span>periodo)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  painel <span class="ot">&lt;-</span> <span class="fu">filter</span>(painel, date <span class="sc">&lt;=</span> data)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  recente <span class="ot">&lt;-</span> <span class="fu">filter</span>(painel, date <span class="sc">&gt;=</span> inicio_cal)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  publicado <span class="ot">&lt;-</span> <span class="fu">data_publicacao</span>(recente<span class="sc">$</span>serie, recente<span class="sc">$</span>date, calendario) <span class="sc">&lt;=</span> data</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(<span class="fu">filter</span>(painel, date <span class="sc">&lt;</span> inicio_cal), recente[publicado, ]) <span class="sc">%&gt;%</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(serie, date)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>information_set <span class="ot">&lt;-</span> <span class="cf">function</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  data,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  painel,</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  catalogo,</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  calendario,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">trimestre =</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">timing =</span> <span class="cn">NA_character_</span>,</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">inicio_ajuste =</span> <span class="fu">as.Date</span>(<span class="st">"2003-01-01"</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>) {</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(data)</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  nsa <span class="ot">&lt;-</span> <span class="fu">cortar_na_data</span>(<span class="fu">cortar_painel</span>(painel, inicio_ajuste), calendario, data)</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">conferir_ultima_linha</span>(nsa, catalogo)</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  corte <span class="ot">&lt;-</span> <span class="fu">ajustar_corte</span>(nsa, catalogo, <span class="at">inicio =</span> inicio_ajuste)</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(corte<span class="sc">$</span>fatores)) {</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"information_set: o alvo não ajustou em "</span>, <span class="fu">format</span>(data))</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> data,</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">trimestre =</span> trimestre,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">timing =</span> timing,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">nsa =</span> nsa,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">sa =</span> corte<span class="sc">$</span>sa,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">fatores =</span> corte<span class="sc">$</span>fatores,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">status =</span> corte<span class="sc">$</span>status</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Dada uma data, a função faz três coisas.</p>
+<ol type="1">
+<li><strong>Corta o painel.</strong> Uma observação só entra se já tinha sido publicada naquela data, segundo o calendário da subseção anterior. Em 31 de julho de 2024 a PIM de maio entra e a de junho, que ainda não tinha saído, fica de fora. O histórico anterior ao início do calendário entra inteiro, porque foi todo publicado muito antes de qualquer data da grade.</li>
+<li><strong>Confere a ponta.</strong> Aqui é mais um <em>debugging</em>. Nenhuma série trimestral pode terminar num trimestre cujo último mês ainda não apareceu em nenhuma série mensal.</li>
+<li><strong>Dessazonaliza o que sobrou.</strong> O X-13 roda em cada série para cada ponto no tempo. A função devolve três coisas: as séries sem ajuste, as séries ajustadas e, para o PIB, os fatores sazonais projetados para os quatro trimestres seguintes. As duas próximas subseções explicam por que o ajuste é refeito a cada data e para que servem esses fatores.</li>
+</ol>
+<p>Como não existem <em>vintages</em> para todos os dados, o exercício aqui é <strong>pseudo tempo real</strong>. Ou seja, cada corte respeita <strong>quando</strong> cada número saiu, mas não <strong>qual</strong> número saiu naquele ponto do tempo. O painel é uma foto tirada em setembro de 2026, com os valores de hoje. A PIM de maio de 2024 que o modelo vê já traz as revisões que o IBGE fez depois dessa data. Por isso o nome é pseudo tempo real, não simplesmente tempo real.</p>
+</section>
+<section id="x-13-refeito-a-cada-data" class="level3">
+<h3 class="anchored" data-anchor-id="x-13-refeito-a-cada-data">X-13 refeito a cada data</h3>
+<p>Tratei de ajuste sazonal no <a href="../blog/0002-ajuste-sazonal-credito.pt.html">post anterior</a>, mas vale retomar um ponto aqui. Tanto o pré-ajuste com RegARIMA quanto o X-11 utilizam dados anteriores e posteriores à data nas suas estimações. Quando o IBGE publica hoje a série dessazonalizada do PIB, o ponto de 2019Q2 foi filtrado com dados de 2020 a 2026. Baixar essa série e cortá-la em 2019 entrega ao modelo uma informação que ninguém tinha em 2019.</p>
+<p>A saída adotada aqui é refazer o ajuste em cada data, só com a amostra que existia. O filtro continua bilateral, mas na ponta ele não tem futuro para olhar e se vira com projeções do próprio RegARIMA, como acontecia de verdade na época.</p>
+<blockquote class="blockquote">
+<p>O IBGE documenta o procedimento de ajuste do PIB em <a href="https://ftp.ibge.gov.br/Contas_Nacionais/Contas_Nacionais_Trimestrais/Ajuste_Sazonal/X13_NasContasTrimestrais.pdf">nota técnica</a>. Ajuste direto de cada série, X-11 dentro do X-13, transformação escolhida automaticamente, teste de AIC para dias úteis e Páscoa, <code>pickmdl</code> entre cinco modelos ARIMA e detecção de todos os tipos de outlier. O procedimento roda de novo a cada divulgação. O modelo que ele escolhe muda. Entre o quarto trimestre de 2025 e o primeiro de 2026 o ARIMA do PIB passou de (2 1 2)(0 1 1) para (2 1 0)(0 1 1), por exemplo. Rodando esse procedimento sobre a série sem ajuste inteira, desde 1996, a variação trimestral bate com a da série oficial até a quarta casa decimal.</p>
+</blockquote>
+<p>Copiei o procedimento do IBGE em cada ponto no tempo.</p>
+<div class="cell">
+<details open="" class="code-fold">
+<summary>A spec do X-13, igual para todas as séries</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x13_args <span class="ot">&lt;-</span> <span class="cf">function</span>(x, transform, alvo, <span class="at">pickmdl =</span> <span class="cn">TRUE</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  args <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> x,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">transform.function =</span> transform,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">regression.aictest =</span> <span class="fu">c</span>(<span class="st">"td"</span>, <span class="st">"easter"</span>),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">outlier.types =</span> <span class="st">"all"</span>,</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">x11 =</span> <span class="st">""</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  args <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    args,</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (pickmdl) {</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(<span class="at">pickmdl.method =</span> <span class="st">"best"</span>, <span class="at">pickmdl.identify =</span> <span class="st">"all"</span>, <span class="at">automdl =</span> <span class="cn">NULL</span>)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(<span class="at">automdl =</span> <span class="st">""</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (alvo) {</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    args <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>      args,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>      <span class="fu">list</span>(</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">forecast.maxlead =</span> MAXLEAD_ALVO,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="at">x11.appendfcst =</span> <span class="st">"yes"</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="at">x11.save =</span> <span class="fu">c</span>(<span class="st">"d10"</span>, <span class="st">"d16"</span>, <span class="st">"e18"</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>  args</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>No PIB a rodada também projeta quatro trimestres e guarda os fatores projetados. Eles levam o <em>nowcast</em> dessazonalizado de volta para a série sem ajuste, que é de onde sai a variação interanual. Assim, estou sempre comparando laranja com laranja.</p>
+<blockquote class="blockquote">
+<p>Nem toda série passa pelo filtro. As que reprovam num teste de sazonalidade identificável entram sem ajuste. Câmbio, bolsa e juros ficam de fora por decisão. O teste roda uma vez só, na amostra cheia. O veredito fica fixo no catálogo de séries.</p>
+</blockquote>
+</section>
+<section id="do-dessazonalizado-de-volta-ao-número-do-ibge" class="level3">
+<h3 class="anchored" data-anchor-id="do-dessazonalizado-de-volta-ao-número-do-ibge">Do dessazonalizado de volta ao número do IBGE</h3>
+<p>Os modelos projetam a série dessazonalizada, que é onde a dinâmica do ciclo fica visível.</p>
+<p>Entretanto, o FOCUS coleta a expectativa em variação interanual, sem ajuste. Por isso a métrica de avaliação do post é a <strong>variação interanual</strong>, tendo como gabarito a variação oficial publicada pelo IBGE. Para chegar nela a partir de um modelo em série dessazonalizada são feitos três passos:</p>
+<ol type="1">
+<li>O modelo devolve a variação trimestral dessazonalizada do trimestre alvo. Aplicada ao nível dessazonalizado do trimestre anterior, dá o nível dessazonalizado do trimestre alvo.</li>
+<li>A rodada do X-13 daquela data projetou os fatores sazonal e de calendário do PIB para os trimestres seguintes. O nível dessazonalizado vezes os fatores dá o nível sem ajuste implícito.</li>
+<li>O nível sem ajuste implícito sobre o nível publicado do mesmo trimestre do ano anterior, que sempre existe, dá a variação interanual projetada.</li>
+</ol>
+<p>Para evitar confusão, vale retomar que existem três séries dessazonalizadas do PIB nesta história:</p>
+<ol type="1">
+<li>A <strong>oficial</strong> do IBGE, que não entra em nenhuma conta do exercício.</li>
+<li>A minha série <strong>final</strong>, que sai de rodar o procedimento acima uma única vez sobre a série inteira do snapshot. É dela o realizado em variação trimestral que aparece ao lado da <em>news</em>.</li>
+<li>A de <strong>tempo real</strong>, que é a que cada modelo vê em cada data, com a amostra cortada. São 188 versões dela, uma por conjunto de informação.</li>
+</ol>
+<blockquote class="blockquote">
+<p>Por mais que o procedimento seja o mesmo do IBGE, o fato de, neste exercício, eu utilizar a série do PIB desde 2003 (em vez de 1996, como o dado oficial) faz com que a segunda série não crave a primeira. O <code>pickmdl</code> escolhe outro ARIMA, (0 1 2)(0 1 1), com fatores sazonais um pouco diferentes. Esse é mais um motivo para avaliar os modelos na variação interanual.</p>
+</blockquote>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-sa-propria-oficial" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sa-propria-oficial-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-sa-propria-oficial-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sa-propria-oficial-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3: Diferença entre a variação trimestral do PIB na dessazonalização própria (série final do snapshot, spec acima) e na série oficial do IBGE.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<blockquote class="blockquote">
+<p>A rodada principal, que chamo de <strong>trilha SA</strong>, é a descrita acima, com alvo e regressores ajustados pelo X-13 de cada data e depois recuperando a variação interanual não ajustada sazonalmente. Como robustez existe uma <strong>trilha NSA</strong>, em que o PIB entra sem ajuste e a sazonalidade vai para o lado direito da regressão. Ela só existe nos modelos que aceitam variáveis exógenas e aparece na seção de robustez, no fim do post.</p>
+</blockquote>
+</section>
+<section id="a-revisão-tem-que-fechar" class="level3">
+<h3 class="anchored" data-anchor-id="a-revisão-tem-que-fechar">A revisão tem que fechar</h3>
+<p>A última regra é sobre como explicar uma revisão do <em>nowcast</em>. O gráfico de abertura sai de uma decomposição que <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/jae.2306">Bańbura e Modugno (2014)</a> chamam de <em>news</em>. A ideia é que, com os parâmetros do DFM fixos e o passado intacto, o <em>nowcast</em> só muda entre duas datas por causa do que foi divulgado nesse intervalo. A contribuição de cada divulgação é a surpresa dela vezes um peso. A surpresa é o valor divulgado menos o que o próprio modelo previa para aquele número. Se a PIM vem exatamente como o modelo esperava, o <em>nowcast</em> não se mexe, por maior que seja o número.</p>
+<p>Neste exercício, nenhuma das duas condições vale. Entre duas datas o X-13 roda de novo e muda o passado dessazonalizado. O DFM também é reestimado e muda os parâmetros. O pacote <a href="https://cran.r-project.org/package=dfms"><code>dfms</code></a> calcula a <em>news</em>, mas sozinho não separa esses efeitos. Por isso quebro a revisão em três partes. Primeiro a <strong>reestimação</strong>, que é o quanto o <em>nowcast</em> muda só por trocar os parâmetros, com os dados antigos. Depois a <strong>revisão de dados</strong>, que é o quanto ele muda ao trocar os dados antigos pelos reajustados, sem acrescentar nenhuma observação nova. O que sobra é a <em>news</em> propriamente dita, só com o que saiu de novo. As três partes somam exatamente a revisão do <em>nowcast</em>.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>news_dfm_4a(): surpresa vezes peso, mais revisão de dados e reestimação</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>X_novo <span class="ot">&lt;-</span> <span class="fu">matriz_dfm</span>(info, catalogo, painel)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>X_antes <span class="ot">&lt;-</span> <span class="fu">matriz_dfm</span>(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  info_antes,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  catalogo,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  painel,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">trimestre =</span> t,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">linhas =</span> <span class="fu">rownames</span>(X_novo),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">colunas =</span> <span class="fu">colnames</span>(X_novo)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>X_mascara <span class="ot">&lt;-</span> X_novo</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>X_mascara[<span class="fu">is.na</span>(X_antes)] <span class="ot">&lt;-</span> <span class="cn">NA</span> <span class="co"># dados novos, disponibilidade velha</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>m_novo <span class="ot">&lt;-</span> <span class="fu">ajustar_dfm</span>(X_novo)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>m_antes <span class="ot">&lt;-</span> <span class="fu">ajustar_dfm</span>(X_antes)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>m_mascara <span class="ot">&lt;-</span> <span class="fu">ajustar_dfm</span>(X_mascara, <span class="at">estimar =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>linha <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="fu">rotulo_mes</span>(<span class="fu">terceiro_mes</span>(t)), <span class="fu">rownames</span>(X_novo))</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>nw <span class="ot">&lt;-</span> dfms<span class="sc">::</span><span class="fu">news</span>(m_mascara, m_novo, <span class="at">t.fcst =</span> linha, <span class="at">target.vars =</span> <span class="st">"pib"</span>) <span class="co"># news pura</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>nw_dados <span class="ot">&lt;-</span> dfms<span class="sc">::</span><span class="fu">news</span>(m_antes, m_novo, <span class="at">t.fcst =</span> linha, <span class="at">target.vars =</span> <span class="st">"pib"</span>) <span class="co"># dados velhos, parâmetros novos</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>termos <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">serie =</span> <span class="fu">c</span>(<span class="st">"revisao"</span>, <span class="st">"reestimacao"</span>),</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">impacto =</span> <span class="fu">c</span>(</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(nw<span class="sc">$</span>y_old) <span class="sc">-</span> <span class="fu">unname</span>(nw_dados<span class="sc">$</span>y_old),</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">unname</span>(nw_dados<span class="sc">$</span>y_old) <span class="sc">-</span> nowcast_antes</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+</section>
+<section id="os-dados" class="level2">
+<h2 class="anchored" data-anchor-id="os-dados">Os dados</h2>
+<section id="quem-entra-no-painel" class="level3">
+<h3 class="anchored" data-anchor-id="quem-entra-no-painel">Quem entra no painel</h3>
+<p>Foquei em dois critérios para adicionar uma série como regressor no painel.</p>
+<p>O primeiro é de reprodutibilidade. O leitor precisa conseguir baixar a série. O PMI da S&amp;P Global e o IDAT do Itaú, por exemplo, ficam de fora por isso.</p>
+<p>O segundo é cortar toda série cujo passado é refeito por um modelo de terceiro com informação posterior. O Monitor do PIB da FGV é o caso exemplar. A cada divulgação das Contas Trimestrais a FGV reescala os meses para que a média do trimestre case com o número do IBGE. Pelo mesmo motivo fica de fora o Google Trends, que é reamostrado a cada consulta. O IBC-Br também sai de um modelo e é revisado, mas a revisão é publicada e não usa o PIB do trimestre alvo para reconstruir o passado, então ele entra.</p>
+<p>O Monitor volta no fim do post com outro papel, como referência para o caminho mensal que os modelos estimam dentro do trimestre.</p>
+</section>
+<section id="core-estendido-e-core-longo" class="level3">
+<h3 class="anchored" data-anchor-id="core-estendido-e-core-longo">Core, estendido e core longo</h3>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">série</th>
+<th style="text-align: left;">fonte</th>
+<th style="text-align: left;">bloco</th>
+<th style="text-align: left;">tratamento</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">IBC-Br</td>
+<td style="text-align: left;">BCB</td>
+<td style="text-align: left;">hard</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PIM, indústria geral</td>
+<td style="text-align: left;">IBGE</td>
+<td style="text-align: left;">hard</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">PMC, varejo restrito</td>
+<td style="text-align: left;">IBGE</td>
+<td style="text-align: left;">hard</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PMS, volume de serviços</td>
+<td style="text-align: left;">IBGE</td>
+<td style="text-align: left;">hard</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Licenciamentos de veículos</td>
+<td style="text-align: left;">Anfavea</td>
+<td style="text-align: left;">hard</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ICI, confiança da indústria</td>
+<td style="text-align: left;">FGV IBRE</td>
+<td style="text-align: left;">soft</td>
+<td style="text-align: left;">nível, X-13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">ICC, confiança do consumidor</td>
+<td style="text-align: left;">FGV IBRE</td>
+<td style="text-align: left;">soft</td>
+<td style="text-align: left;">nível, X-13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Estoque de emprego formal</td>
+<td style="text-align: left;">CAGED</td>
+<td style="text-align: left;">trabalho</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Concessões de crédito</td>
+<td style="text-align: left;">BCB</td>
+<td style="text-align: left;">financeiro</td>
+<td style="text-align: left;">dlog, X-13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">PTAX</td>
+<td style="text-align: left;">BCB</td>
+<td style="text-align: left;">financeiro</td>
+<td style="text-align: left;">dlog, sem ajuste</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ibovespa</td>
+<td style="text-align: left;">B3</td>
+<td style="text-align: left;">financeiro</td>
+<td style="text-align: left;">dlog, sem ajuste</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>O <strong>core</strong> tem as 11 séries da tabela acima e alimenta todos os modelos. O <strong>estendido</strong> tem 59, que são as aberturas das séries das pesquisas do IBGE por categoria e atividade, o resto das sondagens da FGV, PNAD, comércio exterior, fluxo de veículos em pedágios, carga de energia, papelão ondulado, combustíveis, passageiros aéreos, arrecadação e a projeção de safra do LSPA. Ele alimenta os modelos que aguentam painel largo e aparece como linha extra nas tabelas. A pergunta que ele responde é se cinco vezes mais séries compram alguma coisa.</p>
+<p>Cada série pertence a um <strong>bloco</strong>, que vai importar no DFM em blocos e na leitura da news. No estendido são 36 séries <em>hard</em>, 10 <em>soft</em>, 7 financeiras, 3 de trabalho e 3 de agro.</p>
+<p>O terceiro painel é o <strong>core longo</strong>, com 9 séries, que existe só para a seção de robustez, no fim do post. Três séries do core forçam o início da estimação em 2011, que são a PMS, as concessões de crédito na metodologia atual e o ICC. Sem elas e com a ocupação da PNAD retropolada, dá para começar em 2003. O core longo testa se 20 anos de amostra com 9 séries valem mais do que 8 anos com 11.</p>
+</section>
+<section id="de-onde-vêm" class="level3">
+<h3 class="anchored" data-anchor-id="de-onde-vêm">De onde vêm</h3>
+<p>Como no <a href="../blog/0001-kalman-filter-pt1-nairu.pt.html">post da NAIRU</a>, os dados vêm de uma infra própria, um <em>data lake</em> em que cada rotina de coleta grava uma versão datada de cada tabela. O trecho abaixo está aqui para ilustrar o processo. Tudo o que é público dá para refazer com <a href="https://cran.r-project.org/web/packages/sidrar/vignettes/Introduction_to_sidrar.html"><code>sidrar</code></a>, <a href="https://cran.r-project.org/web/packages/GetBCBData/index.html"><code>GetBCBData</code></a> e <a href="https://cran.r-project.org/web/packages/rbcb/index.html"><code>rbcb</code></a>. O repositório traz o painel pronto em parquet para as fontes cuja licença permite redistribuição, mais um script para o leitor buscar na origem as que não permitem.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Três leituras do painel (datalake.utils, não executado)</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>lake <span class="ot">&lt;-</span> <span class="cf">function</span>(ds, tb) datalake.utils<span class="sc">::</span><span class="fu">read_vintage</span>(ds, <span class="at">table =</span> tb)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># IBGE: PIM, indústria geral e categorias de uso</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>painel_pim <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">lake</span>(<span class="st">"latam-brasil-pim"</span>, <span class="st">"headline"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(headline <span class="sc">==</span> <span class="st">"Indústria geral"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="fu">transmute</span>(date, <span class="at">serie =</span> <span class="st">"pim"</span>, <span class="at">valor =</span> indice),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">lake</span>(<span class="st">"latam-brasil-pim"</span>, <span class="st">"categoria"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="fu">filter</span>(categoria <span class="sc">%in%</span> <span class="fu">names</span>(categorias)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">transmute</span>(date, <span class="at">serie =</span> <span class="fu">unname</span>(categorias[categoria]), <span class="at">valor =</span> indice)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="co"># BCB: FOCUS trimestral, mediana do PIB total, uma linha por dia de coleta</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>ler_focus_lake <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> datalake.utils<span class="sc">::</span><span class="fu">read_vintage</span>(</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"latam-brasil-focus"</span>,</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="at">table =</span> <span class="st">"db_focus_quarterly"</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>  ref <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(x<span class="sc">$</span>DataReferencia, <span class="st">"/"</span>, <span class="at">fixed =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">%&gt;%</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>      <span class="at">trimestre =</span> <span class="fu">paste0</span>(</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="fu">vapply</span>(ref, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="st">""</span>, <span class="dv">2</span>L),</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Q"</span>,</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        <span class="fu">vapply</span>(ref, <span class="st">`</span><span class="at">[</span><span class="st">`</span>, <span class="st">""</span>, <span class="dv">1</span>L)</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>      )</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(Indicador <span class="sc">==</span> <span class="st">"PIB Total"</span>, baseCalculo <span class="sc">==</span> <span class="dv">0</span>L) <span class="sc">%&gt;%</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>      trimestre,</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>      <span class="at">data_coleta =</span> <span class="fu">as.Date</span>(Data),</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>      <span class="at">mediana =</span> Mediana,</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>      <span class="at">media =</span> Media,</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>      <span class="at">n_respondentes =</span> numeroRespondentes</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">%&gt;%</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(trimestre, data_coleta)</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Associação: Anfavea</span></span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>painel_anfavea <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>  nomes <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">licen_total =</span> <span class="st">"anfavea_licen"</span>,</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">prod_total =</span> <span class="st">"anfavea_prod"</span>,</span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">exp_total =</span> <span class="st">"anfavea_exp"</span></span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lake</span>(<span class="st">"latam-brasil-anfavea"</span>, <span class="st">"db_anfavea"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(name <span class="sc">%in%</span> <span class="fu">names</span>(nomes)) <span class="sc">%&gt;%</span></span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(date, <span class="at">serie =</span> <span class="fu">unname</span>(nomes[name]), <span class="at">valor =</span> value)</span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copiar para a área de transferência" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>O FOCUS é o único dado do exercício que é tempo real de verdade. A API do BCB guarda a mediana de cada dia de coleta, então em 31 de julho de 2024 leio a mediana que estava publicada em 31 de julho de 2024, sem aproximação nenhuma.</p>
+</section>
+</section>
+<section id="os-modelos" class="level2">
+<h2 class="anchored" data-anchor-id="os-modelos">Os modelos</h2>
+<p>São nove modelos em três famílias, mais três combinações feitas a partir deles. A ideia do <em>lineup</em> veio de três trabalhos, que são o <a href="https://doi.org/10.1016/j.jeconom.2020.11.006">MF-BAVART de Huber e coautores</a>, o toolkit de DFM e <em>machine learning</em> do FMI <a href="https://www.imf.org/en/publications/wp/issues/2022/03/11/nowcasting-gdp-a-scalable-approach-using-dfm-machine-learning-and-novel-data-applied-to-513703">(Dauphin e coautores, WP 2022/052)</a> e a comparação de métodos para o Brasil publicada pelo <a href="https://publications.iadb.org/en/which-one-predicts-better-comparing-different-gdp-nowcasting-methods-using-brazilian-data">BID em 2023</a>. O FAMIDAS veio depois, do <a href="https://arxiv.org/abs/2306.13362"><em>factor-augmented sparse MIDAS</em> de Beyhum e Striaukas</a>. Ele entrou no lugar do MF-BAVART.</p>
+<p>A derivação do filtro de Kalman que está por trás de alguns deles já apareceu neste blog, no <a href="../blog/0001-kalman-filter-pt1-nairu.pt.html">primeiro post</a>.</p>
+<div id="tbl-lineup" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-lineup-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;1: Lineup dos modelos
+</figcaption>
+<div aria-describedby="tbl-lineup-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>#</th>
+<th>modelo</th>
+<th>família</th>
+<th>painéis</th>
+<th>como vê a ponta irregular</th>
+<th>densidade</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>SARIMA</td>
+<td>benchmark</td>
+<td>só o PIB</td>
+<td>não vê</td>
+<td>gaussiana</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>FOCUS</td>
+<td>benchmark</td>
+<td>nenhum</td>
+<td>mediana do dia</td>
+<td>não</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Ridge</td>
+<td>regressão</td>
+<td>core, estendido</td>
+<td>realinhamento vertical</td>
+<td>não</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>LASSO</td>
+<td>regressão</td>
+<td>core, estendido</td>
+<td>realinhamento vertical</td>
+<td>não</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>Random forest</td>
+<td>regressão</td>
+<td>core, estendido</td>
+<td>realinhamento vertical</td>
+<td>não</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>FAMIDAS</td>
+<td>regressão</td>
+<td>core, estendido</td>
+<td>pesos MIDAS</td>
+<td>não</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>DFM</td>
+<td>espaço de estado</td>
+<td>core, estendido</td>
+<td>filtro de Kalman</td>
+<td>sim</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>DFM em blocos</td>
+<td>espaço de estado</td>
+<td>core, estendido</td>
+<td>filtro de Kalman</td>
+<td>sim</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>MF-BVAR</td>
+<td>espaço de estado</td>
+<td>core</td>
+<td>filtro de Kalman</td>
+<td>sim</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<section id="três-jeitos-de-juntar-mês-com-trimestre" class="level3">
+<h3 class="anchored" data-anchor-id="três-jeitos-de-juntar-mês-com-trimestre">Três jeitos de juntar mês com trimestre</h3>
+<p>O fato de o PIB ser trimestral e os indicadores serem mensais representa um problema que tem algumas soluções.</p>
+<p>Um jeito tradicional e bem utilizado é montar <em>bridge equations</em>. A ideia é agregar cada indicador em trimestre, completando os meses que faltam de alguma forma. Pode ser com um ARIMA ou outro modelo preditivo, com carrego dos dados ou com a expectativa do analista. Depois, regride-se o PIB nesse número trimestral. Por ser um método mais convencional, não vou me debruçar sobre ele. Fujo do problema de três outros jeitos.</p>
+<p>O <strong>primeiro</strong> jeito é não resolver, pois não precisa (!). O SARIMA só olha o PIB.</p>
+<p>O <strong>segundo</strong> é manter o PIB trimestral e colocar os meses dos indicadores numa regressão, cada mês numa coluna.</p>
+<p>Cada linha da regressão é um trimestre. À esquerda fica a variação trimestral do PIB. À direita ficam os últimos k meses publicados de cada indicador, um por coluna. No fim de M1 de 2024Q3, por exemplo, a última PIM publicada era a de maio, então a linha de 2024Q3 tem maio na primeira coluna, abril na segunda, março na terceira. No fim de M2 já saiu junho e as colunas andam um mês: junho, maio, abril.</p>
+<p>A regressão estima um coeficiente para cada coluna a partir dos trimestres passados. Assim, ninguém precisa dizer como os meses se somam para formar o trimestre. Se a PIM de três meses atrás diz pouco sobre o PIB, o coeficiente dela sai pequeno. É o MIDAS sem restrição nos pesos, que a literatura chama de U-MIDAS. Ridge, LASSO, <em>random forest</em> e FAMIDAS são variações dessa ideia, que diferem no modo de impedir que o número de colunas saia do controle.</p>
+<p>O <strong>terceiro</strong> é inverter o problema e supor que existe um PIB mensal que ninguém observa. Seja <span class="math inline">\(y^m_t\)</span> a variação mensal desse PIB latente, em log. Se o PIB do trimestre é a média dos três meses, a variação trimestral, que só se observa no terceiro mês de cada trimestre, é aproximadamente</p>
+<p><span class="math display">\[
+y^q_t \;=\; \tfrac{1}{3}\left(y^m_t + 2\,y^m_{t-1} + 3\,y^m_{t-2} + 2\,y^m_{t-3} + y^m_{t-4}\right).
+\]</span></p>
+<p>É a aproximação de <a href="https://doi.org/10.1002/jae.695">Mariano e Murasawa (2003)</a>. Os pesos em triângulo saem de comparar a média de três meses com a média dos três anteriores. Essa terceira forma aparece nos casos dos DFMs e do MF-BVAR que são explicados mais à frente.</p>
+</section>
+<section id="os-benchmarks" class="level3">
+<h3 class="anchored" data-anchor-id="os-benchmarks">Os benchmarks</h3>
+<p>O <strong>SARIMA</strong> é um <code>auto.arima()</code> na variação trimestral da série dessazonalizada do PIB. Sem parte sazonal, já que a série chega ajustada. Ele não enxerga nenhum indicador mensal. Serve de piso.</p>
+<p>O <strong>FOCUS</strong> é a régua. A pesquisa do BCB coleta a expectativa para o PIB trimestral em variação interanual, sem ajuste sazonal. Ele entra na avaliação exatamente assim, a mediana do dia contra o número do IBGE.</p>
+</section>
+<section id="regressão-com-realinhamento-vertical" class="level3">
+<h3 class="anchored" data-anchor-id="regressão-com-realinhamento-vertical">Regressão com realinhamento vertical</h3>
+<p>Ridge, LASSO e <em>random forest</em> são modelos de corte transversal, assim o <em>ragged edge</em> é um problema para eles, pois precisam de uma matriz retangular. A saída usual já citada, que é a do <em>toolkit</em> do FMI, é agregar cada série de alguma forma a trimestral.</p>
+<p>Aqui eu uso o que chamo de <strong>realinhamento vertical</strong>. Cada série é deslocada para que a última observação publicada na data do <em>timing</em> ocupe a primeira coluna. As k-1 colunas seguintes (aqui, k=6) são as observações anteriores. O significado da coluna muda de série para série. No fim de M1 de 2024Q3, a primeira coluna da PIM é maio e a primeira coluna do ICI é julho.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-realinhamento" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-realinhamento-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-realinhamento-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-realinhamento-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4: Realinhamento vertical no fim de M1 de 2024Q3. Cada série entra na regressão pelas seis últimas observações publicadas, L0 a L5, qualquer que seja o mês a que se referem.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>O preço é que o coeficiente de “L0 da PIM” não quer dizer a mesma coisa em M1 e em M3. Por isso estimo um modelo por <em>timing</em>. O treino, quando necessário, também é em pseudo tempo real. A linha de 2017Q2 do modelo de M1 usa o que estava publicado no fim de M1 de 2017Q2. O <em>cross-validation</em> que escolhe a penalização usa cinco blocos de trimestres adjacentes.</p>
+<p>No core são 11 séries com seis colunas cada, mais a última variação publicada do PIB, o que dá 67 regressores para uma amostra de treino que tem cerca de 30 trimestres no começo da janela de avaliação e cerca de 60 no fim. Sem penalização isso não se estima.</p>
+<p>O <strong>Ridge</strong> encolhe todos os coeficientes na direção de zero e não zera nenhum. O <strong>LASSO</strong> zera parte deles e, portanto, escolhe quais colunas ficam. O <strong><em>random forest</em></strong> troca a reta por uma média de árvores e captura não linearidade, ao custo de nunca prever fora do intervalo que viu no treino, o que cobra caro em 2020.</p>
+<p>Perceba o porquê de 6 colunas. No fim de M3 de 2024Q3 as três últimas observações do ICI e da PTAX são julho, agosto e setembro, exatamente o trimestre alvo. Na véspera, dois meses depois, as do ICI viraram setembro, outubro e novembro. As da PTAX viraram outubro, novembro e um dezembro com um dia útil de média. Tudo isso estava publicado na data, então não há vazamento. Seis é o menor número de colunas que mantém o trimestre alvo inteiro na janela de qualquer série em qualquer <em>timing</em>.</p>
+<p>Sobra uma pergunta. Na véspera, o que já saiu sobre outubro e novembro deve entrar no nowcast do terceiro trimestre? Não sei responder de antemão, então todo modelo que usa indicadores mensais roda nas duas leituras.</p>
+<ul>
+<li><strong>Com tudo.</strong> O modelo vê o que estava publicado na data, inclusive meses posteriores ao trimestre alvo. É a linha principal das tabelas.</li>
+<li><strong>Só o trimestre.</strong> O modelo só enxerga meses de referência até o fim do trimestre alvo. No nowcast de 2024Q3 os dados param em setembro. O que já saiu sobre outubro e novembro fica de fora. No treino vale o mesmo para cada linha. A comparação entre as duas leituras fica para a seção de robustez.</li>
+</ul>
+<p>O <strong>FAMIDAS</strong> é o <a href="https://arxiv.org/abs/2306.13362"><em>factor-augmented sparse MIDAS</em> de Beyhum e Striaukas</a>. Na especificação do paper, o modelo combina três ideias: MIDAS, sparse-group LASSO e fatores comuns.</p>
+<p>A <strong>primeira peça</strong> é o MIDAS (<em>Mixed-Data Sampling</em>), que permite relacionar indicadores de maior frequência ao PIB trimestral sem estimar um coeficiente independente para cada defasagem. A ideia é reduzir a dimensionalidade temporal. Em vez de estimar, por exemplo, seis coeficientes independentes para seis meses da PIM, estima-se uma pequena quantidade de parâmetros que descreve o formato da curva de pesos.</p>
+<p><span class="math display">\[
+PIB_t =
+\alpha+
+\beta
+\sum_{j=0}^{K}
+w(j;\theta)x_{3t-j}
++\varepsilon_t
+\]</span></p>
+<p>de forma que</p>
+<p><span class="math display">\[
+\beta_j=\beta w(j;\theta)
+\]</span></p>
+<p>Beyhum e Striaukas implementam essa ideia usando uma base de polinômios de Legendre. Aqui o índice <span class="math inline">\(j\)</span> não conta a partir do fim do trimestre no calendário. Ele conta a partir da última observação publicada de cada série na data do <em>timing</em>, o mesmo ponto de partida do realinhamento dos modelos acima.</p>
+<p>Cada série entra com os seus seis últimos meses publicados. As quatro colunas de Legendre são somas ponderadas desses seis valores. O objetivo é reduzir a dimensionalidade temporal sem ainda afetar a <em>cross-section</em> e preservando flexibilidade na forma como observações mais recentes e mais antigas afetam o PIB.</p>
+<p>Isso resolve parte do problema de dimensionalidade, mas ainda pode deixar centenas de regressores quando muitas séries entram no modelo. A <strong>segunda peça</strong> é, portanto, criar fatores através de PCA para procurar sinal comum entre os indicadores. Mas os autores deliberadamente não jogam fora as séries individuais depois de extrair os fatores. O problema óbvio é que agora, em vez de diminuir, o número de regressores aumentou.</p>
+<p>A <strong>terceira peça</strong> lida com essa questão. O <strong>sparse-group LASSO</strong> (sg-LASSO) decide quais séries individuais realmente merecem entrar. A penalização atua tanto entre grupos quanto dentro deles, permitindo eliminar uma variável inteira (os quatro regressores MIDAS dela) ou manter a variável selecionando apenas algumas de suas componentes MIDAS. Ele faz simultaneamente seleção entre variáveis e seleção dentro da parametrização temporal de cada variável. Os fatores não sofrem essa penalização.</p>
+<p>A ideia central é combinar dois tipos de sinal. Os fatores capturam o componente denso e comum da economia, enquanto o sg-LASSO permite que algumas séries tenham informação específica adicional para o PIB.</p>
+<p>O pacote <a href="https://cran.r-project.org/package=midasml"><code>midasml</code></a> traz a função pronta, precisando de poucas alterações.</p>
+</section>
+<section id="frequência-mista-em-espaço-de-estado" class="level3">
+<h3 class="anchored" data-anchor-id="frequência-mista-em-espaço-de-estado">Frequência mista em espaço de estado</h3>
+<p>Os outros três modelos tratam o PIB mensal como variável latente. O painel também não para no fim do trimestre alvo. Na véspera entram também os meses seguintes que já foram publicados. O suavizador decide quanto eles dizem sobre o trimestre que fechou. É a prática da literatura e o caso base neste exercício. Como nos outros casos, estimo também modelos com dados travados até o trimestre alvo do <em>nowcasting</em> para robustez.</p>
+<p>O <strong>DFM</strong> é o modelo de fatores dinâmicos de <a href="https://onlinelibrary.wiley.com/doi/abs/10.1002/jae.2306">Bańbura e Modugno</a> na implementação do <a href="https://cran.r-project.org/package=dfms"><code>dfms</code></a>. É o modelo em que mais me demoro, porque é dele que sai a <em>news</em> da abertura.</p>
+<p>Todo indicador entra padronizado, com média zero e variância um. Cada um é escrito como uma regressão contra fatores comuns que ninguém observa. São as equações de observação. Os coeficientes dos fatores eu chamo de cargas. Para a série <span class="math inline">\(i\)</span> no mês <span class="math inline">\(t\)</span>,</p>
+<p><span class="math display">\[
+x_{it} = \lambda_i' f_t + e_{it}, \qquad f_t = A f_{t-1} + u_t, \qquad e_{it} = \rho_i\, e_{i,t-1} + \varepsilon_{it},
+\]</span></p>
+<p>com <span class="math inline">\(Q = \text{Var}(u_t)\)</span> e <span class="math inline">\(\sigma_i^2 = \text{Var}(\varepsilon_{it})\)</span>.</p>
+<p>Os fatores <span class="math inline">\(f_t\)</span> são dois e seguem um VAR(1), a escolha tradicional. Eles resumem o estado da economia no mês. O componente idiossincrático <span class="math inline">\(e_{it}\)</span> é o que sobra de cada série depois de descontado o ciclo. Os idiossincráticos são independentes entre si, cada um com a sua variância. Eles podem ser ruído branco ou ter estrutura própria. Aqui cada um segue um AR(1).</p>
+<p>Uma consequência prática do AR(1) é que <span class="math inline">\(e_{it}\)</span> passa a morar no vetor de estado junto com os fatores. Quando a PIM surpreende, o filtro reparte a surpresa. A parte que é ciclo move <span class="math inline">\(f_t\)</span>. A parte que é desvio persistente da própria PIM move <span class="math inline">\(e_{\text{PIM},t}\)</span>.</p>
+<p>O PIB mensal latente é mais uma linha desse sistema, com carga própria e idiossincrático AR(1) próprio, <span class="math inline">\(y^m_t = \lambda_y' f_t + e_{y,t}\)</span>. Essa linha nunca é observada. O que se observa é o PIB trimestral. Basta substituir a equação do PIB mensal na equação dos pesos em triângulo de Mariano e Murasawa para juntar as duas:</p>
+<p><span class="math display">\[
+y^q_t = \tfrac{1}{3}\,\lambda_y' \left(f_t + 2f_{t-1} + 3f_{t-2} + 2f_{t-3} + f_{t-4}\right) + \tfrac{1}{3}\left(e_{y,t} + 2e_{y,t-1} + 3e_{y,t-2} + 2e_{y,t-3} + e_{y,t-4}\right).
+\]</span></p>
+<p>Essa é a equação de observação do PIB trimestral, que só tem dado no terceiro mês de cada trimestre.</p>
+<p>Os parâmetros <span class="math inline">\(\{\lambda_i, A, Q, \rho_i, \sigma_i^2\}\)</span> saem do algoritmo EM. O EM é o laço de fora. A cada volta ele chama por dentro o filtro e o suavizador de Kalman, que reconstroem os fatores dados os parâmetros. Depois, reestima os parâmetros dados os fatores. Para a primeira volta ele precisa de um chute.</p>
+<p>O chute, tanto em <a href="https://www.ecb.europa.eu/pub/pdf/scpwps/ecbwp1564.pdf">Doz, Giannone e Reichlin</a> quanto em Bańbura e Modugno, sai de um PCA. Os buracos do painel são preenchidos provisoriamente, inclusive os meses 1 e 2 de cada trimestre na coluna do PIB trimestral. Na matriz preenchida, o PCA estima os fatores. Com eles em mãos, uma regressão de cada série mensal nos componentes dá as cargas. Um AR(1) nos resíduos dessa regressão, só nos meses em que a série foi observada, dá <span class="math inline">\(\rho_i\)</span> e <span class="math inline">\(\sigma_i^2\)</span>. Um VAR(1) nos fatores dá <span class="math inline">\(A\)</span> e <span class="math inline">\(Q\)</span>.</p>
+<p>O PIB é o caso especial. É aqui que Mariano-Murasawa já aparece. Não dá para regredir o PIB mensal nos componentes, porque ele não existe nos dados, mas a equação acima resolve. A carga inicial do PIB sai de uma regressão restrita do PIB trimestral observado nos componentes de <span class="math inline">\(t\)</span>, <span class="math inline">\(t-1\)</span>, <span class="math inline">\(t-2\)</span>, <span class="math inline">\(t-3\)</span> e <span class="math inline">\(t-4\)</span>, com os cinco coeficientes forçados a ficar na proporção 1:2:3:2:1. O AR(1) do idiossincrático do PIB não é estimado no chute. O <span class="math inline">\(\rho\)</span> e a variância começam fixos.</p>
+<p>Falta o estado inicial. O filtro precisa de um <span class="math inline">\(f_0\)</span> e da variância dele, <span class="math inline">\(P_0\)</span>. Como tudo está padronizado, <span class="math inline">\(f_0\)</span> começa em zero, que é a média. <span class="math inline">\(P_0\)</span> vem do chute de <span class="math inline">\(A\)</span> e <span class="math inline">\(Q\)</span> e começa na variância de longo prazo que eles implicam, a matriz que resolve <span class="math inline">\(P = A P A' + Q\)</span>. Os dois também são atualizados a cada volta.</p>
+<p>Com o chute pronto <strong>começa o passo E</strong>. O filtro e o suavizador de Kalman rodam no painel original, com os buracos de volta e o PIB trimestral entrando pela equação de observação acima. O suavizador devolve o estado inteiro e, para cada mês, três objetos. O primeiro é <span class="math inline">\(\hat f_t\)</span>, o valor suavizado do fator. O segundo é <span class="math inline">\(P_t\)</span>, a variância dele, que mede a incerteza sobre esse valor. O terceiro é <span class="math inline">\(P_{t,t-1}\)</span>, a covariância entre o erro de <span class="math inline">\(f_t\)</span> e o de <span class="math inline">\(f_{t-1}\)</span>.</p>
+<p>Com eles vem o <strong>passo M</strong>, que refaz as regressões com três diferenças. A primeira é que não preenche mais os buracos. Cada regressão de carga usa só os meses em que a série foi observada. As demais usam todos os meses. A segunda é que, antes de regredir uma série no fator, desconta dela o idiossincrático que o suavizador já estimou, o que só é possível porque o AR(1) põe <span class="math inline">\(e_{it}\)</span> dentro do estado. A terceira, que é a que importa, é que usa a incerteza dos fatores. Onde a regressão ingênua usaria <span class="math inline">\(\hat f_t \hat f_t'\)</span>, o passo M usa <span class="math inline">\(\hat f_t \hat f_t' + P_t\)</span>.</p>
+<p>É o <span class="math inline">\(P_t\)</span> que separa o EM de um “estima o fator, roda a regressão, repete” ingênuo. Nos meses em que o fator está mal determinado, na ponta e no começo da amostra, a regressão não trata o valor estimado como se fosse dado. Para ver por quê, pense num fator só e numa série sem idiossincrático AR. A regressão que se quer rodar é a de <span class="math inline">\(x_t\)</span> contra o fator verdadeiro,</p>
+<p><span class="math display">\[
+\lambda = \frac{\sum_t x_t f_t}{\sum_t f_t^2}.
+\]</span></p>
+<p>Só que <span class="math inline">\(f_t\)</span> não se vê. O que se tem é <span class="math inline">\(\hat f_t\)</span>. O <span class="math inline">\(f_t\)</span> verdadeiro é <span class="math inline">\(\hat f_t\)</span> mais um erro de variância <span class="math inline">\(P_t\)</span>. Numerador e denominador reagem de forma diferente a isso. No numerador <span class="math inline">\(x_t\)</span> é dado, então a melhor estimativa de <span class="math inline">\(x_t f_t\)</span> é <span class="math inline">\(x_t \hat f_t\)</span> e nada muda. No denominador vale a regra de sempre, <span class="math inline">\(E[Z^2] = (E[Z])^2 + \text{Var}(Z)\)</span>. A melhor estimativa de <span class="math inline">\(f_t^2\)</span> passa a ser <span class="math inline">\(E[f_t^2 \mid \text{dados}] = \hat f_t^2 + P_t\)</span>. Fica</p>
+<p><span class="math display">\[
+\lambda_{\text{EM}} = \frac{\sum_t x_t \hat f_t}{\sum_t \left(\hat f_t^2 + P_t\right)}
+\qquad \text{contra} \qquad
+\lambda_{\text{ingênuo}} = \frac{\sum_t x_t \hat f_t}{\sum_t \hat f_t^2}.
+\]</span></p>
+<p>Como <span class="math inline">\(P_t\)</span> nunca é negativo, a carga do EM sai menor em módulo. A que erra é a ingênua. O suavizador puxa <span class="math inline">\(\hat f_t\)</span> para zero onde há pouca informação, então <span class="math inline">\(\hat f_t\)</span> varia menos que o <span class="math inline">\(f_t\)</span> verdadeiro.</p>
+<p>Com os parâmetros novos volto ao passo E, depois ao M. O ciclo se repete até convergir. No fim o EM devolve os parâmetros e a série dos fatores.</p>
+<p>O <em>nowcast</em> é o PIB trimestral que a equação de Mariano e Murasawa devolve no terceiro mês do trimestre alvo, aplicada aos PIBs mensais suavizados e com a padronização desfeita. De brinde, a equação de observação do PIB mensal dá uma série do PIB mensal, <span class="math inline">\(\hat y^m_t = \lambda_y' \hat f_t + \hat e_{y,t}\)</span>.</p>
+<p>Quando sai um dado novo na ponta, ele chega com uma surpresa em relação ao que o modelo previa para aquela série naquele mês. A <em>news</em> só existe aqui porque o DFM prevê as próprias séries do painel. Antes de a PIM sair, o modelo tem uma previsão para ela. A surpresa é a diferença. O DFM refaz tudo do zero com o painel novo, do chute ao suavizador, até chegar a parâmetros e fatores novos. No core são 11 séries e o PIB, reestimados em todo <em>timing</em>. É esse o “<strong>DFM pequeno</strong>” da abertura.</p>
+<p>O <strong>DFM em blocos</strong>, mais abaixo, poupa custo computacional. Ele congela os parâmetros do fim de M1 e roda só o filtro e o suavizador no painel novo.</p>
+<p>Rodar o filtro de novo com parâmetros fixos e com os dados mascarados para a disponibilidade antiga é o que permite decompor a revisão do <em>nowcast</em> nas três partes descritas em “A revisão tem que fechar”,</p>
+<p><span class="math display">\[
+\text{revisão} = \underbrace{\sum_j w_j\,(x_j - \hat x_j)}_{\textit{news}} + \text{revisão de dados} + \text{reestimação}.
+\]</span></p>
+<p>A <em>news</em> soma, para cada dado <span class="math inline">\(j\)</span> divulgado entre as duas datas, um peso vezes uma surpresa. <span class="math inline">\(x_j\)</span> é o valor divulgado e <span class="math inline">\(\hat x_j\)</span> o que o modelo previa para ele. O peso <span class="math inline">\(w_j\)</span> sai dos ganhos de Kalman com parâmetros fixos, não da mudança nas cargas.</p>
+<p>A revisão de dados é o X-13 rodando de novo e mudando o passado dessazonalizado. A reestimação é o quanto o <em>nowcast</em> muda só por trocar os parâmetros, com os dados antigos. É nela que mora a mudança nas cargas. No DFM em blocos ela é zero nas revisões de M1 para M2, de M2 para M3 e de M3 para a véspera, porque os parâmetros não mudam.</p>
+<p>O <strong>DFM em blocos</strong> acrescenta estrutura. A inspiração é o modelo do <a href="https://www.newyorkfed.org/research/staff_reports/sr830">Fed de Nova York</a>, mas não é exatamente aquele modelo. A estimação é o mesmo EM de Bańbura e Modugno descrito acima. No lugar de dois fatores que todas as séries carregam, há um fator comum a todo o painel e um fator local por bloco, que só as séries do bloco carregam. Para uma série <span class="math inline">\(i\)</span> do bloco <span class="math inline">\(b\)</span>,</p>
+<p><span class="math display">\[
+x_{it} = \lambda^c_i f^c_t + \lambda^b_i f^b_t + e_{it}.
+\]</span></p>
+<p>O fator do bloco <em>soft</em> captura o que as sondagens têm em comum entre si depois de descontado o ciclo, que pode ser humor e não atividade. O PIB carrega o fator comum e o do bloco <em>hard</em>. Bloco com menos de duas séries no painel é desligado, o que no core acontece com o de trabalho. Ele é o único modelo que não reestima em todo timing. Os parâmetros saem do EM no fim de M1. Nos outros três timings só o filtro roda, com os parâmetros congelados. A razão é simplicidade e custo computacional.</p>
+<p>O <strong>MF-BVAR</strong> é o VAR de frequência mista de <a href="https://doi.org/10.1080/07350015.2014.954707">Schorfheide e Song (2015)</a> no pacote <a href="https://github.com/ankargren/mfbvar"><code>mfbvar</code></a>. Não há fatores. As 11 séries do core e o PIB mensal latente formam um vetor <span class="math inline">\(z_t\)</span> que segue um VAR com cinco defasagens,</p>
+<p><span class="math display">\[
+z_t = c + \Phi_1 z_{t-1} + \dots + \Phi_5 z_{t-5} + \epsilon_t,
+\]</span></p>
+<p>e o PIB trimestral observado entra pela mesma equação dos pesos em triângulo. A diferença para os DFMs está em quem fala com quem. Nos DFMs os indicadores só conversam com o PIB através dos fatores. No VAR cada indicador entra diretamente na equação do PIB e o PIB entra na de cada indicador.</p>
+<p>O preço é o número de parâmetros. São 12 variáveis. Cada equação tem 60 coeficientes e uma constante, 732 no total, para uma amostra de 100 a 180 meses. O prior de Minnesota resolve isso encolhendo os coeficientes na direção de um modelo simples, em que cada variável depende sobretudo do próprio passado recente.</p>
+</section>
+<section id="combinações" class="level3">
+<h3 class="anchored" data-anchor-id="combinações">Combinações</h3>
+<p>As três combinações ficam para a seção <em>Combos e o FOCUS</em>. Duas são médias dos sete modelos, uma com pesos iguais e outra com pesos pelo inverso do RMSE passado. A terceira descarta os modelos que discordam do FOCUS antes de tirar a média.</p>
+</section>
+</section>
+<section id="resultados-de-ponto" class="level2">
+<h2 class="anchored" data-anchor-id="resultados-de-ponto">Resultados de ponto</h2>
+<p>A métrica desta seção é a variação interanual do PIB, em pontos percentuais, contra o número que o IBGE publicou. A janela tem 30 trimestres, de 2019Q1 a 2026Q2. Dou destaque à amostra sem 2020Q2 e 2020Q3, com 28 trimestres. A amostra cheia fica ao lado. Os modelos foram estimados com 2020 na amostra, sem dummy nem outro tratamento para a pandemia.</p>
+<div class="cell">
+<div id="tbl-aa" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-aa-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;2: RMSE do nowcast em variação interanual, p.p., por timing. As quatro primeiras colunas são da amostra sem 2020Q2 e 2020Q3, as quatro últimas da amostra cheia.
+</figcaption>
+<div aria-describedby="tbl-aa-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 10%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">painel</th>
+<th style="text-align: right;">M1</th>
+<th style="text-align: right;">M2</th>
+<th style="text-align: right;">M3</th>
+<th style="text-align: right;">vésp.</th>
+<th style="text-align: right;">M1 (cheia)</th>
+<th style="text-align: right;">M2 (cheia)</th>
+<th style="text-align: right;">M3 (cheia)</th>
+<th style="text-align: right;">vésp. (cheia)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">3,82</td>
+<td style="text-align: right;">3,78</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">4,28</td>
+<td style="text-align: right;">4,04</td>
+<td style="text-align: right;">3,43</td>
+<td style="text-align: right;">3,43</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FOCUS</td>
+<td style="text-align: left;"></td>
+<td style="text-align: right;">1,55</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,66</td>
+<td style="text-align: right;">1,67</td>
+<td style="text-align: right;">1,58</td>
+<td style="text-align: right;">1,16</td>
+<td style="text-align: right;">0,65</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,48</td>
+<td style="text-align: right;">2,30</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">3,18</td>
+<td style="text-align: right;">2,74</td>
+<td style="text-align: right;">2,19</td>
+<td style="text-align: right;">2,20</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">2,48</td>
+<td style="text-align: right;">1,68</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">3,17</td>
+<td style="text-align: right;">2,38</td>
+<td style="text-align: right;">2,18</td>
+<td style="text-align: right;">2,39</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,85</td>
+<td style="text-align: right;">1,70</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,77</td>
+<td style="text-align: right;">2,44</td>
+<td style="text-align: right;">2,31</td>
+<td style="text-align: right;">2,20</td>
+<td style="text-align: right;">1,95</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,87</td>
+<td style="text-align: right;">2,14</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">1,67</td>
+<td style="text-align: right;">2,78</td>
+<td style="text-align: right;">2,74</td>
+<td style="text-align: right;">2,16</td>
+<td style="text-align: right;">2,66</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,67</td>
+<td style="text-align: right;">2,55</td>
+<td style="text-align: right;">1,13</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">3,32</td>
+<td style="text-align: right;">3,00</td>
+<td style="text-align: right;">2,38</td>
+<td style="text-align: right;">2,38</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">3,10</td>
+<td style="text-align: right;">2,88</td>
+<td style="text-align: right;">1,21</td>
+<td style="text-align: right;">1,11</td>
+<td style="text-align: right;">3,66</td>
+<td style="text-align: right;">3,29</td>
+<td style="text-align: right;">2,55</td>
+<td style="text-align: right;">2,52</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,56</td>
+<td style="text-align: right;">1,71</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">3,87</td>
+<td style="text-align: right;">1,68</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,12</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">4,18</td>
+<td style="text-align: right;">3,45</td>
+<td style="text-align: right;">2,01</td>
+<td style="text-align: right;">4,38</td>
+<td style="text-align: right;">6,93</td>
+<td style="text-align: right;">4,34</td>
+<td style="text-align: right;">4,72</td>
+<td style="text-align: right;">4,43</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,42</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,74</td>
+<td style="text-align: right;">1,94</td>
+<td style="text-align: right;">1,16</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">0,95</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,47</td>
+<td style="text-align: right;">1,31</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,87</td>
+<td style="text-align: right;">2,71</td>
+<td style="text-align: right;">1,28</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,86</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,62</td>
+<td style="text-align: right;">1,37</td>
+<td style="text-align: right;">1,03</td>
+<td style="text-align: right;">0,82</td>
+<td style="text-align: right;">2,58</td>
+<td style="text-align: right;">1,33</td>
+<td style="text-align: right;">1,14</td>
+<td style="text-align: right;">0,88</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,96</td>
+<td style="text-align: right;">1,80</td>
+<td style="text-align: right;">1,11</td>
+<td style="text-align: right;">0,91</td>
+<td style="text-align: right;">2,69</td>
+<td style="text-align: right;">1,74</td>
+<td style="text-align: right;">1,47</td>
+<td style="text-align: right;">1,43</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MF-BVAR</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,59</td>
+<td style="text-align: right;">1,37</td>
+<td style="text-align: right;">1,07</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">2,16</td>
+<td style="text-align: right;">1,50</td>
+<td style="text-align: right;">1,36</td>
+<td style="text-align: right;">1,42</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-rmse-timing" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rmse-timing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-rmse-timing-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rmse-timing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5: RMSE por timing em variação interanual, painel core, amostra sem 2020Q2 e 2020Q3. Em cinza os demais modelos da tabela. O SARIMA fica fora da escala no fim de M1 e de M2.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Tiro quatro leituras da tabela e da figura.</p>
+<p>A primeira é que o DFM pequeno fica à frente do FOCUS enquanto o trimestre está em curso. O DFM no core erra 1,42 no fim de M1, 1,18 no fim de M2 e 0,92 no fim de M3, contra 1,55, 1,35 e 1,02 do FOCUS. O DFM no estendido também fica à frente em M1 e M2 e empata no M3. O que ele tem a oferecer é velocidade. Agrega cada divulgação no dia em que ela sai. A mediana do FOCUS demora a andar.</p>
+<p>A segunda é que na véspera a ordem se inverte. O FOCUS erra 0,66 e nenhum modelo chega lá. O DFM fica em 0,74, o DFM em blocos em 0,82 e o FAMIDAS no core em 0,86. Entre o fim de M3 e a véspera passam dois meses. O FOCUS é quem mais ganha com eles. Faz sentido. Quem responde à pesquisa nessa altura já rodou o próprio <em>tracking</em> com o trimestre inteiro de indicadores e sabe coisas que o painel não sabe, de greve a safra.</p>
+<p>A terceira é o que <strong>não</strong> ajuda. O estendido piora o DFM, que vai a 0,87 na véspera com cinco vezes mais séries. Piora também o DFM em blocos. Os blocos, por sua vez, não compram nada. O DFM em blocos fica atrás do DFM nos quatro timings.</p>
+<p>O FAMIDAS no estendido erra 4,38 na véspera. Quase tudo vem de um único trimestre. Na véspera de 2020Q1 ele projetou -22,2%, contra 0,4% do IBGE. Sem esse trimestre, o RMSE cai para 0,96. O recorte sem 2020Q2 e 2020Q3 olha o trimestre alvo, mas a véspera de 2020Q1 é o fim de maio de 2020, quando o painel já tinha abril. Minha hipótese é que alguma série do estendido que quase zerou em abril, como passageiros aéreos ou produção de veículos, entrou na janela de seis meses com um coeficiente estimado em anos de variações pequenas. O modelo é linear e não tem freio, então a queda passa inteira para o <em>nowcast</em>. Na leitura só com o trimestre, que para em março, o erro de 2020Q1 cai para cerca de um terço.</p>
+<p>A quarta é o que o teste consegue afirmar. Uso Diebold-Mariano com a correção de Harvey, Leybourne e Newbold. Entre o DFM no core e o FOCUS os p-valores são 0,47, 0,31, 0,59 e 0,50, do M1 à véspera. Com 28 observações, nem a vantagem do modelo nos três primeiros timings nem a do FOCUS na véspera tem significância.</p>
+<div class="cell">
+<div id="tbl-dm" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-dm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;3: P-valor do teste DM-HLN contra o FOCUS, variação interanual, amostra sem 2020Q2 e 2020Q3. O sinal diz quem erra menos. Com sinal negativo é o modelo, com positivo é o FOCUS.
+</figcaption>
+<div aria-describedby="tbl-dm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">painel</th>
+<th style="text-align: right;">M1</th>
+<th style="text-align: right;">M2</th>
+<th style="text-align: right;">M3</th>
+<th style="text-align: right;">vésp.</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,18</td>
+<td style="text-align: right;">(+) 0,18</td>
+<td style="text-align: right;">(+) 0,08</td>
+<td style="text-align: right;">(+) 0,05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,25</td>
+<td style="text-align: right;">(+) 0,25</td>
+<td style="text-align: right;">(+) 0,64</td>
+<td style="text-align: right;">(+) 0,01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(+) 0,21</td>
+<td style="text-align: right;">(+) 0,07</td>
+<td style="text-align: right;">(+) 0,57</td>
+<td style="text-align: right;">(+) 0,03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,30</td>
+<td style="text-align: right;">(+) 0,19</td>
+<td style="text-align: right;">(−) 0,99</td>
+<td style="text-align: right;">(+) 0,46</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(+) 0,41</td>
+<td style="text-align: right;">(+) 0,26</td>
+<td style="text-align: right;">(−) 0,83</td>
+<td style="text-align: right;">(+) 0,24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,24</td>
+<td style="text-align: right;">(+) 0,22</td>
+<td style="text-align: right;">(+) 0,56</td>
+<td style="text-align: right;">(+) 0,01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(+) 0,24</td>
+<td style="text-align: right;">(+) 0,23</td>
+<td style="text-align: right;">(+) 0,23</td>
+<td style="text-align: right;">(+) 0,00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,15</td>
+<td style="text-align: right;">(+) 0,22</td>
+<td style="text-align: right;">(+) 0,32</td>
+<td style="text-align: right;">(+) 0,19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(+) 0,28</td>
+<td style="text-align: right;">(+) 0,24</td>
+<td style="text-align: right;">(+) 0,18</td>
+<td style="text-align: right;">(+) 0,31</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(−) 0,47</td>
+<td style="text-align: right;">(−) 0,31</td>
+<td style="text-align: right;">(−) 0,59</td>
+<td style="text-align: right;">(+) 0,50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(−) 0,67</td>
+<td style="text-align: right;">(−) 0,81</td>
+<td style="text-align: right;">(−) 0,99</td>
+<td style="text-align: right;">(+) 0,05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,77</td>
+<td style="text-align: right;">(+) 0,88</td>
+<td style="text-align: right;">(+) 0,96</td>
+<td style="text-align: right;">(+) 0,24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">(+) 0,29</td>
+<td style="text-align: right;">(+) 0,26</td>
+<td style="text-align: right;">(+) 0,51</td>
+<td style="text-align: right;">(+) 0,03</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MF-BVAR</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">(+) 0,89</td>
+<td style="text-align: right;">(+) 0,94</td>
+<td style="text-align: right;">(+) 0,86</td>
+<td style="text-align: right;">(+) 0,29</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>A figura abaixo mostra os <em>nowcasts</em> de três modelos contra o realizado, de 2021Q3 em diante, para que os efeitos de base de 2020 não esmaguem a escala.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-nowcast-realizado" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-nowcast-realizado-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-nowcast-realizado-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-nowcast-realizado-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;6: Nowcast contra a variação interanual publicada pelo IBGE, no fim de M1 e na véspera, de 2021Q3 em diante. DFM e Ridge no painel core.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>O erro de todo mundo mora no mesmo lugar. Entre 2022 e meados de 2023 o PIB cresceu, na maior parte dos trimestres, mais do que as três linhas previam no fim de M1. Nos erros maiores, em 2022Q2 e no primeiro semestre de 2023, o DFM ficou bem mais perto do realizado do que o FOCUS. É daí que vem a vantagem que a tabela mostra nos três primeiros <em>timings</em>. Na véspera as linhas se fecham em volta do realizado. De 2025 em diante, nesse <em>timing</em>, quase não há o que separar.</p>
+</section>
+<section id="de-onde-vem-a-revisão" class="level2">
+<h2 class="anchored" data-anchor-id="de-onde-vem-a-revisão">De onde vem a revisão</h2>
+<p>Um nowcast que muda sem explicação serve pouco para quem tem que defender o número numa reunião. A <em>news</em>, que apresentei em <em>As regras do jogo</em>, transforma a revisão numa conta. Em símbolos, entre duas datas consecutivas <span class="math inline">\(d_0 &lt; d_1\)</span>,</p>
+<p><span class="math display">\[
+\hat{y}_{t \mid d_1} - \hat{y}_{t \mid d_0} \;=\; \sum_{j \in J} w_{j}\,\bigl(x_{j} - \hat{x}_{j \mid d_0}\bigr) \;+\; \text{revisão de dados} \;+\; \text{reestimação},
+\]</span></p>
+<p>em que <span class="math inline">\(J\)</span> é o conjunto de observações divulgadas entre as duas datas, <span class="math inline">\(x_j\)</span> é o valor divulgado, <span class="math inline">\(\hat{x}_{j \mid d_0}\)</span> é o que o modelo previa para ele com a informação anterior e <span class="math inline">\(w_j\)</span> é o peso, que sai do ganho de Kalman.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-news-amostra" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-news-amostra-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-news-amostra-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-news-amostra-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;7: Impacto absoluto médio por bloco em cada revisão do nowcast do DFM, painel core, 2019Q1 a 2026Q2 sem 2020. A barra de M1 compara com o fim de M3 do trimestre anterior.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>O desenho geral é o que a figura do calendário prometia. No fim de M1 quem manda é o <em>soft</em>, com 0,27 p.p. de impacto médio, seguido do financeiro. Do M2 em diante o <em>hard</em> assume, com 0,27 p.p. O <em>soft</em> vai perdendo peso até sumir na véspera, quando as sondagens que saem já falam do trimestre seguinte.</p>
+<p>A revisão de dados, que é em boa parte o X-13 mudando de ideia sobre o passado recente, pesa 0,07 p.p. na véspera junto com a reestimação. É pouco (ainda bem), mas mostra que o filtro sazonal também mexe no <em>nowcast</em>.</p>
+<p>O trimestre de abertura foi escolhido a dedo. O contraponto honesto é 2026Q2.</p>
+<p>O nowcast começou em 0,15, foi a 1,22 no fim de M1 com <em>hard</em>, financeiro e emprego puxando juntos para cima, devolveu boa parte no M2 ao cair para 0,53, subiu um pouco no M3 e terminou a véspera em 0,34. Somando o valor absoluto de todos os impactos, o nowcast andou 2,7 p.p. ao longo do trimestre. A revisão líquida, do começo ao fim, foi de 0,19 p.p. O PIB veio em 0,53%.</p>
+<p>Os blocos se cancelam entre si e ao longo do tempo. O número final esconde um trimestre inteiro de idas e vindas. Para quem só olha o ponto, o modelo quase não mudou de opinião. A <em>news</em> mostra que mudou quatro vezes. Esse é um grande argumento pró-DFM.</p>
+</section>
+<section id="densidade" class="level2">
+<h2 class="anchored" data-anchor-id="densidade">Densidade</h2>
+<p>Um número sozinho não diz quanto confiar nele. Três modelos do <em>lineup</em> devolvem uma distribuição para o <em>nowcast</em> (e o SARIMA devolve uma gaussiana de brinde). No MF-BVAR a distribuição é a posterior. Nos dois DFMs ela é uma normal em volta do valor suavizado, com a variância do estado que o filtro calcula mais a variância idiossincrática do PIB. Os sorteios nascem em variação trimestral dessazonalizada. Para chegar à interanual, cada sorteio passa pelo mesmo caminho do ponto, que é o nível do trimestre anterior, o fator sazonal projetado e o nível de um ano antes.</p>
+<p>A figura mostra o que isso dá nos oito trimestres mais difíceis da janela.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-fan" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-fan-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8: Densidade do nowcast do DFM, painel core, em variação interanual, nos quatro timings de cada trimestre de 2020 e 2021. A faixa clara vai do quantil 5% ao 95%, a escura do 16% ao 84%, a linha é a mediana e o traço em vinho é o número do IBGE. O eixo vertical muda de painel para painel.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>A faixa estreita a cada timing, como deveria. Em 2020Q2 a mediana sai de -2,7% no fim de M1, quando abril ainda não tinha saído, vai a -8,9% no fim de M2 e volta para -6,8% na véspera, contra -10,1% do IBGE. Na véspera, a faixa desse trimestre é a mais estreita das oito e mesmo assim erra por mais de 3 p.p. A densidade fica mais confiante justamente no trimestre em que o ponto erra mais. Na véspera o número publicado cai dentro da faixa de 90% em 5 dos 8 trimestres.</p>
+</section>
+<section id="combos-e-o-focus" class="level2">
+<h2 class="anchored" data-anchor-id="combos-e-o-focus">Combos e o FOCUS</h2>
+<p>Combinar previsões costuma funcionar para melhorar <em>performance</em> preditiva. Aqui, rodei três.</p>
+<p>As duas primeiras são médias dos sete modelos do core, ou dos seis do estendido, que não tem MF-BVAR, sempre na leitura com tudo. Uma usa pesos iguais. A outra pesa cada modelo pelo inverso do RMSE que ele tinha até ali,</p>
+<p><span class="math display">\[
+w_{i,t} = \frac{1/\text{RMSE}_{i,t}}{\sum_j 1/\text{RMSE}_{j,t}}, \qquad \text{RMSE}_{i,t} = \sqrt{\frac{1}{|S_t|} \sum_{s \in S_t} e_{i,s}^2},
+\]</span></p>
+<p>em que <span class="math inline">\(S_t\)</span> são os trimestres, de 2015Q1 em diante, cujo PIB já tinha sido publicado na data do <em>nowcast</em>, e <span class="math inline">\(e_{i,s}\)</span> é o erro do modelo <span class="math inline">\(i\)</span> no mesmo timing.</p>
+<p>A terceira, que chamo de peneira, é inspirada no <em>paper</em> do BID. Em cada data ela descarta os modelos cujo <em>nowcast</em> interanual tem sinal contrário ao do FOCUS ou está a mais de <span class="math inline">\(\alpha\)</span> pontos dele, tira a média simples dos que sobram e, se nenhum sobra, devolve o próprio FOCUS. Usei <span class="math inline">\(\alpha\)</span> de 2,0 p.p. no fim de M1, 1,5 no fim de M2 e 1,0 no fim de M3 e na véspera.</p>
+<div class="cell">
+<div id="tbl-combos" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-combos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;4: RMSE em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, e p-valor do DM-HLN contra o FOCUS na véspera. DFM e FOCUS repetidos da primeira tabela para comparação.
+</figcaption>
+<div aria-describedby="tbl-combos-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">painel</th>
+<th style="text-align: right;">M1</th>
+<th style="text-align: right;">M2</th>
+<th style="text-align: right;">M3</th>
+<th style="text-align: right;">vésp.</th>
+<th style="text-align: right;">p (vésp.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Combo, pesos iguais</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,67</td>
+<td style="text-align: right;">1,51</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">0,81</td>
+<td style="text-align: right;">0,27</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Combo, pesos iguais</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,60</td>
+<td style="text-align: right;">1,49</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">1,15</td>
+<td style="text-align: right;">0,04</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Combo, pesos por RMSE</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,59</td>
+<td style="text-align: right;">1,41</td>
+<td style="text-align: right;">1,00</td>
+<td style="text-align: right;">0,80</td>
+<td style="text-align: right;">0,32</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Combo, pesos por RMSE</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,51</td>
+<td style="text-align: right;">1,51</td>
+<td style="text-align: right;">1,04</td>
+<td style="text-align: right;">1,11</td>
+<td style="text-align: right;">0,03</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Peneira</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,53</td>
+<td style="text-align: right;">1,20</td>
+<td style="text-align: right;">1,04</td>
+<td style="text-align: right;">0,70</td>
+<td style="text-align: right;">0,66</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Peneira</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,50</td>
+<td style="text-align: right;">1,22</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,75</td>
+<td style="text-align: right;">0,17</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,42</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,74</td>
+<td style="text-align: right;">0,50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,47</td>
+<td style="text-align: right;">1,31</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,87</td>
+<td style="text-align: right;">0,05</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FOCUS</td>
+<td style="text-align: left;"></td>
+<td style="text-align: right;">1,55</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,66</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>As duas médias não melhoram o melhor membro. No core o combo de pesos iguais erra 1,67 no fim de M1 e 0,81 na véspera, contra 1,42 e 0,74 do DFM. O peso por RMSE ajuda pouco, com 1,59 e 0,80. A razão está na primeira tabela. Nos dois primeiros <em>timings</em> Ridge, <em>random forest</em> e FAMIDAS erram bem mais que os outros.</p>
+<p>A peneira é outra conversa. Ela erra 0,70 na véspera, contra 0,66 do FOCUS, com p-valor de 0,66. Lido assim, é um modelo que empata com o mercado.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-peneira" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-peneira-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="0003-nowcasting-pib.pt_files/figure-html/fig-peneira-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-peneira-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;9: Distância entre o nowcast e a mediana do FOCUS na véspera, em variação interanual, para a peneira e para o combo de pesos iguais, painel core. A faixa cinza é o limite de 1 p.p. da peneira.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="zoomable-figure">
+
+</div>
+<p>Só que o FOCUS é insumo dela. Por construção a peneira nunca fica a mais de <span class="math inline">\(\alpha\)</span> do FOCUS. Na prática, fica bem mais perto. Na véspera a distância média é de 0,35 p.p., contra 0,53 do combo de pesos iguais, que usa os mesmos modelos sem olhar o mercado.</p>
+<p>A diferença entre 0,81 e 0,70 vem toda dos 11 trimestres em que o FOCUS vetou alguém. Na janela inteira sobrevivem em média 5,3 dos sete. Em 3 das 30 vésperas não sobrou nenhum e o nowcast foi o próprio FOCUS. Uma combinação que só aceita quem concorda com o mercado vai errar parecido com o mercado.</p>
+<p>O <em>framing</em> dela é outro. No fim de M2 a peneira erra 1,20, contra 1,35 do FOCUS e 1,51 do combo simples. Ali o FOCUS serve de filtro para tirar da média os modelos que ainda não viram dado do trimestre. É um resultado sobre usar o mercado para limpar os modelos.</p>
+</section>
+<section id="o-caminho-mensal" class="level2">
+<h2 class="anchored" data-anchor-id="o-caminho-mensal">O caminho mensal</h2>
+<p>Os três modelos de espaço de estado supõem um PIB mensal que ninguém observa. O suavizador devolve uma estimativa dele. Na véspera de cada trimestre guardei a variação mensal dos três meses do trimestre alvo. A comparação natural é o <a href="https://portalibre.fgv.br/monitor-do-pib">Monitor do PIB</a> da FGV IBRE, que estima o PIB mensal por outro caminho, a partir de indicadores setoriais desagregados e depois ajustado às Contas Trimestrais. Ele é outra estimativa e não o gabarito, porque PIB mensal oficial não existe.</p>
+<div id="fig-caminho-mensal" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-caminho-mensal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/nowcasting/caminho-mensal.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-caminho-mensal-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;10: Variação mensal dessazonalizada do PIB, em p.p. de log, nos três modelos de frequência mista, lidos na véspera de cada trimestre, e no Monitor do PIB. Os termos de uso do Monitor vedam a redistribuição do dado, então esta é a única figura do post que chega pronta da esteira, sem CSV ao lado.
+</figcaption>
+</figure>
+</div>
+<p>Os modelos e o Monitor contam a mesma história nos movimentos grandes, abril de 2020 e a volta. Fora de 2020 a correlação com o Monitor é de 0,75 no DFM, 0,70 no MF-BVAR e 0,64 no DFM em blocos. O DFM acerta o sinal do mês em 81% das vezes.</p>
+<p>A diferença está na amplitude. O desvio padrão da variação mensal do Monitor é 1,15 p.p. O do DFM é 0,60, cerca de metade. Os picos do começo de 2024, em que o Monitor cai quase 4% num mês e sobe 4% no seguinte, não existem em nenhum dos três modelos. Faz sentido.</p>
+<p>No DFM, o PIB latente é uma combinação de fatores que seguem um VAR. O suavizador reparte o trimestre entre os meses do jeito mais suave que os indicadores permitem. O Monitor herda o ruído mensal dos indicadores setoriais. No fim, os dois chegam a trimestres parecidos e discordam sobre o mês em que cada movimento aconteceu.</p>
+</section>
+<section id="robustez" class="level2">
+<h2 class="anchored" data-anchor-id="robustez">Robustez</h2>
+<p>Três escolhas do exercício podiam ter sido outras.</p>
+<p>A primeira é deixar o <em>nowcast</em> da véspera olhar os meses posteriores ao trimestre. Uma alternativa natural é não permitir olhar dados após o trimestre alvo.</p>
+<p>A segunda é dessazonalizar tudo com o X-13 de cada data. A outra opção seria modelar a variação trimestral sem ajuste com algum tratamento sazonal no lado direito das equações, como <em>dummies</em> de mês.</p>
+<p>A terceira é começar a estimação em 2011 para ter onze séries. Aqui entra a base <em>core longo</em> apresentada anteriormente.</p>
+<p>Esta seção refaz a conta mudando uma de cada vez, sempre em variação interanual e na amostra sem 2020Q2 e 2020Q3.</p>
+<section id="só-o-trimestre" class="level3">
+<h3 class="anchored" data-anchor-id="só-o-trimestre">Só o trimestre</h3>
+<p>Na seção dos modelos ficou aberta uma pergunta. Na véspera, o que já saiu sobre o trimestre seguinte ajuda no <em>nowcast</em> do trimestre que fechou?</p>
+<div class="cell">
+<div id="tbl-vespera-variantes" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-vespera-variantes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;5: RMSE na véspera em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, nas duas leituras. Com tudo é a linha principal, que usa o que estava publicado na data. Só o trimestre para no último mês do trimestre alvo. O FOCUS está na última linha como referência.
+</figcaption>
+<div aria-describedby="tbl-vespera-variantes-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">painel</th>
+<th style="text-align: right;">com tudo</th>
+<th style="text-align: right;">só o trimestre</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">1,05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">1,15</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,77</td>
+<td style="text-align: right;">0,88</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,67</td>
+<td style="text-align: right;">1,02</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">1,11</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">1,11</td>
+<td style="text-align: right;">1,18</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">0,68</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">4,38</td>
+<td style="text-align: right;">1,71</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,74</td>
+<td style="text-align: right;">0,74</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">0,87</td>
+<td style="text-align: right;">0,87</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,82</td>
+<td style="text-align: right;">0,82</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">estendido</td>
+<td style="text-align: right;">0,91</td>
+<td style="text-align: right;">0,91</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MF-BVAR</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,93</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FOCUS</td>
+<td style="text-align: left;"></td>
+<td style="text-align: right;">0,66</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Para os três modelos de espaço de estado a resposta é que tanto faz. Apagar os meses posteriores ao trimestre leva o DFM no core de 0,742 para 0,738, o DFM em blocos de 0,817 para 0,820 e o MF-BVAR de 0,921 para 0,928. Quando o trimestre inteiro de indicadores já está na mesa, o suavizador dá pouco peso a outubro e novembro.</p>
+<p>O FAMIDAS é quem mais ganha com o corte. No core ele vai de 0,86 para 0,68, à frente do DFM. Os pesos MIDAS contam seis meses a partir do último publicado. Na leitura com tudo, nas séries rápidas, metade da curva cai sobre o trimestre seguinte.</p>
+</section>
+<section id="sem-o-x-13" class="level3">
+<h3 class="anchored" data-anchor-id="sem-o-x-13">Sem o X-13</h3>
+<p>Tudo o que veio até aqui passou pelo X-13 de cada data. Falta saber quanto do resultado depende disso. A alternativa mais simples é deixar a sazonalidade dentro do modelo. É o que faz a trilha NSA. O PIB e os indicadores entram sem ajuste. A sazonalidade vai para o lado direito com um conjunto fixo de regressores determinísticos: <em>dummies</em> sazonais, dias úteis e Páscoa. O conjunto é o mesmo em todo <em>timing</em> e não passa por teste de AIC. Cada família recebe esse tratamento de um jeito.</p>
+<ul>
+<li><strong>SARIMA.</strong> O <code>auto.arima()</code> roda na variação trimestral do PIB sem ajuste, com três dummies de trimestre, dias úteis e Páscoa como regressores.</li>
+<li><strong>Ridge e LASSO.</strong> Cada linha da regressão é um trimestre, então as dummies são de trimestre. Elas entram sem penalização.</li>
+<li><strong>FAMIDAS.</strong> A mesma ideia. As dummies e o calendário entram ao lado dos fatores, fora da penalização do sg-LASSO.</li>
+<li><strong>Random forest.</strong> Árvore não parcializa nada, então o trimestre do alvo entra como mais uma variável. O modelo roda em duas versões, com os indicadores sem ajuste e com os indicadores dessazonalizados e só o alvo sem ajuste.</li>
+<li><strong>DFM em blocos.</strong> As dummies vão para a equação de observação de cada série, <span class="math inline">\(x_{it} = \lambda_i' f_t + \gamma_i' d_t + e_{it}\)</span>, com 11 dummies de mês, dias úteis e Páscoa nas séries mensais e três dummies de trimestre no PIB. Os <span class="math inline">\(\gamma_i\)</span> saem do mesmo passo M que estima as cargas. O <em>nowcast</em> sem ajuste sai direto da equação de observação do PIB.</li>
+<li><strong>DFM e MF-BVAR</strong> ficam de fora. Nem o <code>dfms</code> nem o <code>mfbvar</code> aceitam regressores exógenos na forma de que a trilha precisa.</li>
+</ul>
+<div class="cell">
+<div id="tbl-nsa" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-nsa-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;6: RMSE em variação interanual, p.p., painel core, amostra sem 2020Q2 e 2020Q3, nas duas trilhas, e p-valor do DM-HLN contra o FOCUS na véspera. Só entram os modelos que têm trilha NSA.
+</figcaption>
+<div aria-describedby="tbl-nsa-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 30%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 7%">
+<col style="width: 9%">
+<col style="width: 15%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">trilha</th>
+<th style="text-align: right;">M1</th>
+<th style="text-align: right;">M2</th>
+<th style="text-align: right;">M3</th>
+<th style="text-align: right;">vésp.</th>
+<th style="text-align: right;">p (vésp.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">3,82</td>
+<td style="text-align: right;">3,78</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">0,05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">2,93</td>
+<td style="text-align: right;">2,86</td>
+<td style="text-align: right;">1,93</td>
+<td style="text-align: right;">1,93</td>
+<td style="text-align: right;">0,07</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">2,48</td>
+<td style="text-align: right;">2,30</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">0,01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">2,68</td>
+<td style="text-align: right;">2,42</td>
+<td style="text-align: right;">1,39</td>
+<td style="text-align: right;">1,34</td>
+<td style="text-align: right;">0,00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">1,85</td>
+<td style="text-align: right;">1,70</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,77</td>
+<td style="text-align: right;">0,46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">1,80</td>
+<td style="text-align: right;">1,64</td>
+<td style="text-align: right;">1,24</td>
+<td style="text-align: right;">0,93</td>
+<td style="text-align: right;">0,09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">2,67</td>
+<td style="text-align: right;">2,55</td>
+<td style="text-align: right;">1,13</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">0,01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">2,60</td>
+<td style="text-align: right;">2,49</td>
+<td style="text-align: right;">1,15</td>
+<td style="text-align: right;">1,22</td>
+<td style="text-align: right;">0,00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">NSA, indicadores SA</td>
+<td style="text-align: right;">3,07</td>
+<td style="text-align: right;">2,89</td>
+<td style="text-align: right;">1,85</td>
+<td style="text-align: right;">1,81</td>
+<td style="text-align: right;">0,00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">2,56</td>
+<td style="text-align: right;">1,71</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">0,19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">2,18</td>
+<td style="text-align: right;">1,80</td>
+<td style="text-align: right;">1,34</td>
+<td style="text-align: right;">0,62</td>
+<td style="text-align: right;">0,76</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">SA</td>
+<td style="text-align: right;">1,62</td>
+<td style="text-align: right;">1,37</td>
+<td style="text-align: right;">1,03</td>
+<td style="text-align: right;">0,82</td>
+<td style="text-align: right;">0,24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">NSA</td>
+<td style="text-align: right;">2,70</td>
+<td style="text-align: right;">2,35</td>
+<td style="text-align: right;">1,60</td>
+<td style="text-align: right;">1,58</td>
+<td style="text-align: right;">0,00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FOCUS</td>
+<td style="text-align: left;"></td>
+<td style="text-align: right;">1,55</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,66</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Os números mudam. Quem mais perde é o DFM em blocos. No fim de M1 ele vai de 1,62 para 2,70 e na véspera de 0,82 para 1,58. O FOCUS fica à frente dele nos quatro timings, com p-valor de no máximo 0,06.</p>
+<p>Nos lineares a diferença é menor. O Ridge piora nos quatro timings. O LASSO melhora um pouco no fim de M1 e de M2 e piora no M3 e na véspera, de 0,77 para 0,93.</p>
+<p>O FAMIDAS vai na direção contrária. Na véspera ele cai de 0,86 para 0,62, abaixo dos 0,66 do FOCUS. O teste não vê diferença.</p>
+<p>A trilha SA continua a principal porque é a única em que todos os modelos rodam, inclusive o DFM que lidera a tabela principal. A NSA mostra que a conclusão do post não é artefato do X-13. O ranking entre os modelos, em parte, é.</p>
+</section>
+<section id="vinte-anos-com-nove-séries" class="level3">
+<h3 class="anchored" data-anchor-id="vinte-anos-com-nove-séries">Vinte anos com nove séries</h3>
+<p>A última pergunta é a que o estendido fez ao contrário. Em vez de mais séries, mais tempo. O <strong>core longo</strong>, descrito na seção dos dados, tira as três séries que prendem o core em 2011, acrescenta a ocupação da PNAD retropolada e começa a estimação em 2003, com 9 séries no lugar de 11.</p>
+<div class="cell">
+<div id="tbl-core-longo" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-core-longo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Tabela&nbsp;7: RMSE em variação interanual, p.p., amostra sem 2020Q2 e 2020Q3, no core e no core longo, e p-valor do DM-HLN contra o FOCUS na véspera. O MF-BVAR no core longo não tem a véspera de 2020Q1.
+</figcaption>
+<div aria-describedby="tbl-core-longo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">modelo</th>
+<th style="text-align: left;">painel</th>
+<th style="text-align: right;">M1</th>
+<th style="text-align: right;">M2</th>
+<th style="text-align: right;">M3</th>
+<th style="text-align: right;">vésp.</th>
+<th style="text-align: right;">p (vésp.)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">3,82</td>
+<td style="text-align: right;">3,78</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">1,88</td>
+<td style="text-align: right;">0,05</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">SARIMA</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">3,63</td>
+<td style="text-align: right;">3,62</td>
+<td style="text-align: right;">1,17</td>
+<td style="text-align: right;">1,17</td>
+<td style="text-align: right;">0,01</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,48</td>
+<td style="text-align: right;">2,30</td>
+<td style="text-align: right;">1,10</td>
+<td style="text-align: right;">0,99</td>
+<td style="text-align: right;">0,01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Ridge</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,77</td>
+<td style="text-align: right;">1,54</td>
+<td style="text-align: right;">1,04</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">0,26</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,85</td>
+<td style="text-align: right;">1,70</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,77</td>
+<td style="text-align: right;">0,46</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">LASSO</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,56</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,06</td>
+<td style="text-align: right;">0,85</td>
+<td style="text-align: right;">0,22</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,67</td>
+<td style="text-align: right;">2,55</td>
+<td style="text-align: right;">1,13</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">0,01</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Random forest</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">2,33</td>
+<td style="text-align: right;">2,18</td>
+<td style="text-align: right;">1,01</td>
+<td style="text-align: right;">0,98</td>
+<td style="text-align: right;">0,07</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">2,56</td>
+<td style="text-align: right;">1,71</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">0,19</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">FAMIDAS</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,52</td>
+<td style="text-align: right;">1,47</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,76</td>
+<td style="text-align: right;">0,51</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,42</td>
+<td style="text-align: right;">1,18</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,74</td>
+<td style="text-align: right;">0,50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,29</td>
+<td style="text-align: right;">1,09</td>
+<td style="text-align: right;">0,86</td>
+<td style="text-align: right;">0,71</td>
+<td style="text-align: right;">0,75</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,62</td>
+<td style="text-align: right;">1,37</td>
+<td style="text-align: right;">1,03</td>
+<td style="text-align: right;">0,82</td>
+<td style="text-align: right;">0,24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DFM em blocos</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,43</td>
+<td style="text-align: right;">1,14</td>
+<td style="text-align: right;">0,91</td>
+<td style="text-align: right;">0,64</td>
+<td style="text-align: right;">0,86</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">MF-BVAR</td>
+<td style="text-align: left;">core</td>
+<td style="text-align: right;">1,59</td>
+<td style="text-align: right;">1,37</td>
+<td style="text-align: right;">1,07</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,29</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MF-BVAR</td>
+<td style="text-align: left;">core longo</td>
+<td style="text-align: right;">1,34</td>
+<td style="text-align: right;">1,19</td>
+<td style="text-align: right;">0,92</td>
+<td style="text-align: right;">0,82</td>
+<td style="text-align: right;">0,29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">FOCUS</td>
+<td style="text-align: left;"></td>
+<td style="text-align: right;">1,55</td>
+<td style="text-align: right;">1,35</td>
+<td style="text-align: right;">1,02</td>
+<td style="text-align: right;">0,66</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>Mais tempo ajuda quase todo mundo, o contrário do que fizeram as séries a mais do estendido. O DFM vai de 1,42 para 1,29 no fim de M1 e de 0,74 para 0,71 na véspera. O MF-BVAR e o DFM em blocos ganham mais. Com o core longo, os três modelos de espaço de estado ficam à frente do FOCUS do fim de M1 ao fim de M3. O DFM em blocos no core longo e o FAMIDAS na trilha NSA são as duas únicas linhas do post que passam o FOCUS na véspera, nenhuma das duas com significância.</p>
+<p>Juntando as três perguntas, o desenho do post se mantém. Nenhuma variante produz um modelo que bata o FOCUS com significância. O que os modelos oferecem continua sendo chegar antes. O que muda de uma variante para outra é a ordem entre os modelos. Se eu tivesse que escolher uma mudança para a próxima rodada, seria a amostra. Vinte anos com nove séries fazem mais pelo <em>nowcast</em> do que cinco vezes mais séries em oito anos.</p>
+</section>
+</section>
+<section id="conclusão" class="level2">
+<h2 class="anchored" data-anchor-id="conclusão">Conclusão</h2>
+<p>Nenhum modelo deste exercício bate o FOCUS. Enquanto o trimestre está em curso, o DFM pequeno erra um pouco menos que a mediana do mercado. Na véspera o FOCUS passa à frente, porque quem responde à pesquisa já tem o trimestre inteiro de indicadores na mão. Com 28 trimestres, o teste não separa um do outro em nenhum dos dois casos. O que o DFM entrega é um número atualizado no dia de cada divulgação, com uma conta que explica cada revisão, a um custo de manutenção baixo. Das escolhas testadas, a que mais ajudou foi alongar a amostra. Mais séries, no estendido, pioraram quase todos os modelos. A maior parte do trabalho, no fim, foi nas regras do jogo: o calendário, o X-13 refeito a cada data e a régua certa. Sem elas, qualquer tabela de RMSE sai melhor do que o modelo seria na vida real.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script>
+// Language switch. The navbar link (rel="alternate", declared in _quarto-en.yml /
+// _quarto-pt.yml) ships with a static href pointing at the other language's home.
+// This upgrades it to the counterpart of the *current* page, and emits the
+// matching hreflang <link>s.
+//
+// Degradation is deliberate: if the fetch fails (opening docs/ over file://, for
+// instance) the static home href stays and the button still works.
+(function () {
+  var link = document.querySelector('.navbar a.nav-link[rel="alternate"]');
+  if (!link) return;
+
+  var isPT = document.documentElement.lang === "pt";
+
+  // Derive both site roots from the href Quarto already resolved for this page's
+  // depth - more reliable than assuming the site is served from the domain root.
+  // The two trees are siblings (/en/ and /pt/), so the declared href always points
+  // at the *other* one's home and the pair follows by swapping the last segment.
+  var declared = new URL(link.getAttribute("href"), location.href).pathname;
+  var there0 = declared.replace(/index\.html$/, "");
+  var enRoot = isPT ? there0 : there0.replace(/pt\/$/, "en/");
+  var ptRoot = isPT ? there0.replace(/en\/$/, "pt/") : there0;
+
+  var here = isPT ? ptRoot : enRoot;
+  var there = isPT ? enRoot : ptRoot;
+  if (location.pathname.indexOf(here) !== 0) return;
+  var rel = location.pathname.slice(here.length) || "index.html";
+
+  // Match on the slug with the .pt suffix made optional, rather than on the raw
+  // path: a post's EN file drops the .pt (0001-x.pt.qmd -> 0001-x.qmd), so once
+  // it is translated the two trees stop mirroring each other path-for-path.
+  //
+  // Not matched on the numeric prefix - it is a *series* number here, shared by
+  // every part of a multi-post series (0001-...-pt1-, 0001-...-pt2-).
+  var stem = rel.replace(/\.html$/, "").replace(/\.pt$/, "");
+  var isPost = rel.indexOf("blog/") === 0 && rel !== "blog/index.html";
+
+  fetch(there + "search.json")
+    .then(function (r) { return r.json(); })
+    .then(function (entries) {
+      var pages = {};
+      entries.forEach(function (e) { pages[e.href.split("#")[0]] = true; });
+
+      // Both profiles render every post, so each tree holds both language files.
+      // Prefer the one actually written in the target language; the other is the
+      // untranslated placeholder and only wins when the preferred one is absent.
+      var order = isPT
+        ? [stem + ".html", stem + ".pt.html"]   // going to EN
+        : [stem + ".pt.html", stem + ".html"];  // going to PT
+      var target = order.filter(function (c) {
+        return pages[c];
+      })[0] || (isPost ? "blog/index.html" : "index.html");
+
+      link.setAttribute("href", there + target);
+
+      var alt = document.createElement("link");
+      alt.rel = "alternate";
+      alt.hreflang = isPT ? "en" : "pt";
+      alt.href = new URL(there + target, location.href).href;
+      document.head.appendChild(alt);
+
+      var self = document.createElement("link");
+      self.rel = "alternate";
+      self.hreflang = isPT ? "pt" : "en";
+      self.href = location.href.split("#")[0];
+      document.head.appendChild(self);
+    })
+    .catch(function () { /* keep the static home fallback */ });
+})();
+</script>
+<script src="../assets/js/lightbox.js"></script>
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiada");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiada");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp("https:\/\/raphaludwig\.github\.io\/pt");
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>© 2026 Raphael Ludwig</p>
+</div>   
+    <div class="nav-footer-center">
+<p>Feito com <a href="https://quarto.org">Quarto</a></p>
+</div>
+    <div class="nav-footer-right">
+      <ul class="footer-items list-unstyled">
+    <li class="nav-item compact">
+    <a class="nav-link" href="mailto:raphaludwig@gmail.com">
+      <i class="bi bi-envelope" role="img">
+</i> 
+    </a>
+  </li>  
+    <li class="nav-item compact">
+    <a class="nav-link" href="https://www.linkedin.com/in/raphael-ludwig-167347414">
+      <i class="bi bi-linkedin" role="img">
+</i> 
+    </a>
+  </li>  
+</ul>
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,40 @@
+"etapa","painel","trilha","n","segundos_mediana","segundos_soma","workers","parede_min","parede_de"
+"Leitura do lake",NA,NA,1,545.391,545.391,6,NA,NA
+"Teste combinado",NA,NA,1,43.703,43.703,6,NA,NA
+"Conjunto de informação (X-13)",NA,NA,188,28.2965,5729.8,6,35.8,"manchete, 124 ramos, 2 workers, com o teste combinado dentro (ticket 04)"
+"SARIMA","core_longo",NA,124,0.266,34.532,6,NA,NA
+"SARIMA",NA,"nsa",188,0.75,143.144,6,NA,NA
+"SARIMA",NA,"sa",188,0.2265,44.795,6,NA,NA
+"FOCUS convertido",NA,NA,188,0.046,8.494,6,NA,NA
+"Ridge, LASSO e RF","core","nsa",752,0.437,331.87,6,NA,NA
+"Ridge, LASSO e RF","core","sa",1128,0.406,464.356,6,NA,NA
+"Ridge, LASSO e RF","core_longo","sa",372,0.547,207.609,6,NA,NA
+"Ridge, LASSO e RF","estendido","nsa",752,0.531,406.958,6,NA,NA
+"Ridge, LASSO e RF","estendido","sa",1128,0.531,595.828,6,NA,NA
+"FAMIDAS","core","nsa",188,1.6715,338.552,6,NA,NA
+"FAMIDAS","core","sa",188,1.547,345.191,6,NA,NA
+"FAMIDAS","core_longo","sa",124,2.1095,271.696,6,NA,NA
+"FAMIDAS","estendido","nsa",188,1.594,327.24,6,NA,NA
+"FAMIDAS","estendido","sa",188,1.3435,287.427,6,NA,NA
+"DFM 4a","core",NA,188,0.359,66.824,6,0.8,"manchete, 124 ramos, 2 workers (ticket 07)"
+"DFM 4a","core_longo",NA,124,0.578,74.591,6,NA,NA
+"DFM 4a","estendido",NA,188,6.484,1317.699,6,15,"manchete, 124 ramos, 2 workers (ticket 07)"
+"DFM 4a, draws","core",NA,188,0.3675,69.048,6,NA,NA
+"DFM 4a, draws","estendido",NA,188,8.1565,1560.415,6,NA,NA
+"News do 4a","core",NA,123,1.89,243.638,6,4,"manchete, 2 workers (ticket 07)"
+"News do 4a","estendido",NA,123,42.266,5445.348,6,90,"manchete, 2 workers (ticket 07)"
+"MF-BVAR","core",NA,188,21.9295,4218.86,6,32,"manchete, 124 ramos, 2 workers (ticket 09)"
+"MF-BVAR","core_longo",NA,124,30.25,4102.801,6,NA,NA
+"DFM 4b, estimação no M1","core","nsa",47,10.421,479.701,6,NA,NA
+"DFM 4b, estimação no M1","core","sa",47,3.641,168.578,6,NA,NA
+"DFM 4b, estimação no M1","core_longo","sa",31,6.954,198.326,6,NA,NA
+"DFM 4b, estimação no M1","estendido","nsa",47,1482.671,68835.128,6,227,"rodada inteira do 4b na manchete, as quatro linhas com os filtros, 6 workers (ticket 10)"
+"DFM 4b, estimação no M1","estendido","sa",47,485.422,22491.692,6,NA,NA
+"DFM 4b, filtro","core","nsa",141,0.36,52.083,6,NA,NA
+"DFM 4b, filtro","core","sa",141,0.234,34.059,6,NA,NA
+"DFM 4b, filtro","core_longo","sa",93,0.266,25.753,6,NA,NA
+"DFM 4b, filtro","estendido","nsa",141,14.875,2090.912,6,NA,NA
+"DFM 4b, filtro","estendido","sa",141,15.203,2053.344,6,NA,NA
+"Caminho mensal","core",NA,109,0.39,1035.56,6,NA,NA
+"Combos",NA,NA,2,0.125,0.25,6,4,"tar_make() de 15 alvos com 8.573 pulados, 6 workers (ticket 13): quase tudo é o targets conferindo o store"
+"Densidade",NA,NA,2,7.156,14.312,6,NA,NA
